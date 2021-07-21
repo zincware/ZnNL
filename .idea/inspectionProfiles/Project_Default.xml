@@ -1,0 +1,88 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="DuplicatedCode" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <Languages>
+        <language minSize="76" name="Python" />
+      </Languages>
+    </inspection_tool>
+    <inspection_tool class="PyClassicStyleClassInspection" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="PyMissingOrEmptyDocstringInspection" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <value>
+          <list size="6">
+            <item index="0" class="java.lang.String" itemvalue="h5py" />
+            <item index="1" class="java.lang.String" itemvalue="matplotlib" />
+            <item index="2" class="java.lang.String" itemvalue="sphinxcontrib.bibtex" />
+            <item index="3" class="java.lang.String" itemvalue="PyYAML" />
+            <item index="4" class="java.lang.String" itemvalue="psutil" />
+            <item index="5" class="java.lang.String" itemvalue="lightkurve" />
+          </list>
+        </value>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyPep8Inspection" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <option name="ignoredErrors">
+        <list>
+          <option value="E262" />
+        </list>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyPep8NamingInspection" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <option name="ignoredErrors">
+        <list>
+          <option value="N802" />
+          <option value="N806" />
+          <option value="N803" />
+          <option value="N801" />
+        </list>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyShadowingBuiltinsInspection" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <option name="ignoredNames">
+        <list>
+          <option value="copyright" />
+        </list>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyUnresolvedReferencesInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredIdentifiers">
+        <list>
+          <option value="Methods" />
+          <option value="Meta_Functions" />
+          <option value="temperatrue" />
+          <option value="object.species" />
+          <option value="object.number_of_atoms" />
+          <option value="object.number_of_configurations" />
+          <option value="object.property_groups" />
+          <option value="object.__getitem__" />
+          <option value="object.analysis_name" />
+          <option value="object.storage_path" />
+          <option value="object.batch_size" />
+          <option value="object.perform_transformation" />
+          <option value="typing.Iterable.__setitem__" />
+          <option value="object.box_array" />
+          <option value="object.load_matrix" />
+          <option value="object.collect_memory_information" />
+          <option value="object.save_class" />
+          <option value="object.database_path" />
+          <option value="object.trajectory_file" />
+          <option value="object.time_step" />
+          <option value="object.sample_rate" />
+          <option value="object.temperature" />
+          <option value="object.units" />
+          <option value="object.volume" />
+          <option value="object.thermal_conductivity" />
+          <option value="tensorflow.tensor" />
+          <option value="object.molecules" />
+          <option value="object.export_property_data" />
+          <option value="object.cluster_mode" />
+          <option value="mdsuite.calculators.calculator.Calculator.x_label" />
+          <option value="mdsuite.calculators.calculator.Calculator.y_label" />
+          <option value="object.figures_path" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
