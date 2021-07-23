@@ -24,7 +24,8 @@ class DenseModel:
                  in_d: int = 2,
                  out_d: int = 1,
                  activation: str = "relu",
-                 learning_rate: float = 1e-2):
+                 learning_rate: float = 1e-2,
+                 tolerance: float = 1e-5):
         """
         Constructor for the Feed forward network module.
 
@@ -42,6 +43,8 @@ class DenseModel:
                 Activation function to use in the training.
         learning_rate : float
                 Learning rate for the network.
+        tolerance : float
+                Minimum value of the loss before the model is considered trained.
         """
         # User arguments
         self.units = units
@@ -50,6 +53,7 @@ class DenseModel:
         self.out_d = out_d
         self.activation = activation
         self.learning_rate = learning_rate
+        self.tolerance = tolerance
 
         # Model parameters
         self.model = tf.keras.Sequential()
@@ -112,8 +116,9 @@ class DenseModel:
         -------
 
         """
+        loss = self.model.evaluate(dataset)[0]
 
-
+        return loss <= self.tolerance
 
     def train_model(self,
                     dataset: tf.data.Dataset,
@@ -151,6 +156,4 @@ class DenseModel:
                            epochs=epochs,
                            shuffle=True,
                            verbose=0)
-
-
-
+            converged = self._evaluate_model(dataset)
