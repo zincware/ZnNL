@@ -6,5 +6,5 @@ SPDX-License-Identifier: EPL-2.0
 
 Copyright Contributors to the Zincware Project.
 
-Description: 
+Description: c
 """
