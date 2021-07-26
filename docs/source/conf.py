@@ -42,7 +42,6 @@ extensions = [
     "IPython.sphinxext.ipython_console_highlighting",
     "IPython.sphinxext.ipython_directive",
     "sphinx.ext.autosectionlabel",
-    "sphinxcontrib.bibtex",
 ]
 
 # Avoid name clashing
