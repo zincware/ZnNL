@@ -1,7 +1,7 @@
 """
-This program and the accompanying materials are made available under the terms of the
-Eclipse Public License v2.0 which accompanies this distribution, and is available at
-https://www.eclipse.org/legal/epl-v20.html
+This program and the accompanying materials are made available under the terms
+of the Eclipse Public License v2.0 which accompanies this distribution, and is
+available at https://www.eclipse.org/legal/epl-v20.html
 SPDX-License-Identifier: EPL-2.0
 
 Copyright Contributors to the Zincware Project.
@@ -25,8 +25,8 @@ class TestDenseModels(unittest.TestCase):
 
         Returns
         -------
-        Assess that all parameters are correctly initialized. At the moment this is just
-        the number of layers.
+        Assess that all parameters are correctly initialized. At the moment
+        this is just the number of layers.
 
         Notes
         -----
@@ -48,18 +48,12 @@ class TestDenseModels(unittest.TestCase):
 
         Returns
         -------
-        Ensure that the model can train under different epoch numbers and that the
-        training exit occurs after the required loss is achieved.
+        Ensure that the model can train under different epoch numbers and that
+        the training exit occurs after the required loss is achieved.
         """
-        model = pyrnd.DenseModel(layers=2,
-                                 tolerance=2)
+        model = pyrnd.DenseModel(layers=2, tolerance=2)
 
-        inputs = np.array([[1, 2],
-                           [4, 5],
-                           [3, 6],
-                           [9, 7],
-                           [3, 4],
-                           [8, 8]])
+        inputs = np.array([[1, 2], [4, 5], [3, 6], [9, 7], [3, 4], [8, 8]])
         labels = np.log(np.prod(inputs, axis=1)).reshape(6, 1)
         labels = tf.data.Dataset.from_tensor_slices(labels)
         inputs = tf.data.Dataset.from_tensor_slices(np.log(inputs))

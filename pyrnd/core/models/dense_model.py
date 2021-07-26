@@ -1,7 +1,7 @@
 """
-This program and the accompanying materials are made available under the terms of the
-Eclipse Public License v2.0 which accompanies this distribution, and is available at
-https://www.eclipse.org/legal/epl-v20.html
+This program and the accompanying materials are made available under the terms
+of the Eclipse Public License v2.0 which accompanies this distribution, and is
+available at https://www.eclipse.org/legal/epl-v20.html
 SPDX-License-Identifier: EPL-2.0
 
 Copyright Contributors to the Zincware Project.
@@ -39,15 +39,17 @@ class DenseModel:
             Machine learning model to be trained.
     """
 
-    def __init__(self,
-                 units: int = 12,
-                 layers: int = 4,
-                 in_d: int = 2,
-                 out_d: int = 1,
-                 activation: str = "relu",
-                 learning_rate: float = 1e-2,
-                 tolerance: float = 1e-5,
-                 loss='mean_squared_error'):
+    def __init__(
+        self,
+        units: int = 12,
+        layers: int = 4,
+        in_d: int = 2,
+        out_d: int = 1,
+        activation: str = "relu",
+        learning_rate: float = 1e-2,
+        tolerance: float = 1e-5,
+        loss="mean_squared_error",
+    ):
         """
         Constructor for the Feed forward network module.
 
@@ -66,7 +68,8 @@ class DenseModel:
         learning_rate : float
                 Learning rate for the network.
         tolerance : float
-                Minimum value of the loss before the model is considered trained.
+                Minimum value of the loss before the model is considered
+                trained.
         loss : str
                 Loss to use during the training.
         """
@@ -125,7 +128,8 @@ class DenseModel:
         TODO: Add options for the loss function. Make some nice classes.
 
         """
-        opt = tf.keras.optimizers.Adam(learning_rate=self.learning_rate, decay=0.0)
+        opt = tf.keras.optimizers.Adam(learning_rate=self.learning_rate,
+                                       decay=0.0)
         self.model.compile(optimizer=opt, loss=self.loss)
 
     def _evaluate_model(self, dataset: tf.data.Dataset):
@@ -190,10 +194,12 @@ class DenseModel:
         """
         return self.model.predict(point)
 
-    def train_model(self,
-                    dataset: tf.data.Dataset = None,
-                    re_initialize: bool = False,
-                    epochs: int = 10):
+    def train_model(
+        self,
+        dataset: tf.data.Dataset = None,
+        re_initialize: bool = False,
+        epochs: int = 10,
+    ):
         """
         Train the model on data.
 
@@ -222,11 +228,9 @@ class DenseModel:
 
         counter = 1
         while converged is False:
-            self.model.fit(dataset,
-                           batch_size=5,
-                           epochs=epochs,
-                           shuffle=True,
-                           verbose=0)
+            self.model.fit(
+                dataset, batch_size=5, epochs=epochs, shuffle=True, verbose=0
+            )
             converged = self._evaluate_model(dataset)
 
             self._lr_reduction(counter)
