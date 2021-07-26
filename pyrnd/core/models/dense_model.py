@@ -128,8 +128,7 @@ class DenseModel:
         TODO: Add options for the loss function. Make some nice classes.
 
         """
-        opt = tf.keras.optimizers.Adam(learning_rate=self.learning_rate,
-                                       decay=0.0)
+        opt = tf.keras.optimizers.Adam(learning_rate=self.learning_rate, decay=0.0)
         self.model.compile(optimizer=opt, loss=self.loss)
 
     def _evaluate_model(self, dataset: tf.data.Dataset):
