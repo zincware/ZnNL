@@ -11,9 +11,10 @@ Description: Module for a standard feed forward neural network.
 import tensorflow as tf
 from tensorflow.keras.layers import InputLayer
 from tensorflow.keras.layers import Dense
+from pyrnd.core.models.model import Model
 
 
-class DenseModel:
+class DenseModel(Model):
     """
     Class for the feed forward network implementation.
 
@@ -73,6 +74,7 @@ class DenseModel:
         loss : str
                 Loss to use during the training.
         """
+        super().__init__()  # update parent.
         # User arguments
         self.units = units
         self.layers = layers
@@ -185,6 +187,11 @@ class DenseModel:
     def predict(self, point: tf.Tensor):
         """
         Make a prediction on a point.
+
+        Parameters
+        ----------
+        point : tf.Tensor
+                Point on which to perform a prediction.
 
         Returns
         -------
