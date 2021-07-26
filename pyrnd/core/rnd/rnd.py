@@ -14,6 +14,7 @@ class RND:
     """
     Class for the implementation of random network distillation.
     """
+
     def __init__(self):
         """
         Constructor for the RND class.

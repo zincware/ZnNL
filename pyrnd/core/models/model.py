@@ -16,6 +16,7 @@ class Model:
     """
     Parent class for PyRND Models.
     """
+
     @abc.abstractmethod
     def predict(self, point: tf.Tensor):
         """
