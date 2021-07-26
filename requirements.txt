@@ -1,1 +1,11 @@
 tensorflow
+numpy
+matplotlib
+sphinx
+flake8
+black
+ipython
+numpydoc
+sphinx_copybutton
+sphinx_rtd_theme
+nbsphinx
