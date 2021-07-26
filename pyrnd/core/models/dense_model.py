@@ -9,13 +9,34 @@ Copyright Contributors to the Zincware Project.
 Description: Module for a standard feed forward neural network.
 """
 import tensorflow as tf
-from tensorflow.keras.layers import Input
+from tensorflow.keras.layers import InputLayer
 from tensorflow.keras.layers import Dense
 
 
 class DenseModel:
     """
     Class for the feed forward network implementation.
+
+    Attributes
+    ----------
+    units : int
+                Number of units to have in the NN.
+    layers : int
+            Number of hidden layers to have of size units.
+    in_d : int
+            Input dimension of the data.
+    out_d : int
+            Output dimension of the representation.
+    activation : str
+            Activation function to use in the training.
+    learning_rate : float
+            Learning rate for the network.
+    tolerance : float
+            Minimum value of the loss before the model is considered trained.
+    loss : str
+            Loss to use during the training.
+    model : tf.Model
+            Machine learning model to be trained.
     """
 
     def __init__(self,
@@ -25,7 +46,8 @@ class DenseModel:
                  out_d: int = 1,
                  activation: str = "relu",
                  learning_rate: float = 1e-2,
-                 tolerance: float = 1e-5):
+                 tolerance: float = 1e-5,
+                 loss='mean_squared_error'):
         """
         Constructor for the Feed forward network module.
 
@@ -45,6 +67,8 @@ class DenseModel:
                 Learning rate for the network.
         tolerance : float
                 Minimum value of the loss before the model is considered trained.
+        loss : str
+                Loss to use during the training.
         """
         # User arguments
         self.units = units
@@ -54,6 +78,7 @@ class DenseModel:
         self.activation = activation
         self.learning_rate = learning_rate
         self.tolerance = tolerance
+        self.loss = loss
 
         # Model parameters
         self.model = tf.keras.Sequential()
@@ -68,7 +93,7 @@ class DenseModel:
 
         """
         # Add the input layer
-        input_layer = Input(shape=[self.in_d])
+        input_layer = InputLayer(input_shape=(self.in_d, 1))
         self.model.add(input_layer)
 
         # Add the hidden layers
@@ -101,7 +126,7 @@ class DenseModel:
 
         """
         opt = tf.keras.optimizers.Adam(learning_rate=self.learning_rate, decay=0.0)
-        self.model.compile(optimizer=opt, loss="cosine_similarity")
+        self.model.compile(optimizer=opt, loss=self.loss)
 
     def _evaluate_model(self, dataset: tf.data.Dataset):
         """
@@ -116,12 +141,57 @@ class DenseModel:
         -------
 
         """
-        loss = self.model.evaluate(dataset)[0]
+        loss = self.model.evaluate(dataset)
 
         return loss <= self.tolerance
 
+    def _lr_reduction(self, counter: int):
+        """
+        Perform learning rate reduction.
+
+        Parameters
+        ----------
+        counter : int
+                Counter determining whether or not to perform the reduction.
+
+        Returns
+        -------
+        Changes the learning rate and re-compiles the model.
+        """
+        if counter % 10 == 0:
+            self.learning_rate = 0.8 * self.learning_rate
+            self._compile_model()
+
+    def _model_rebuild(self, counter: int):
+        """
+        Perform learning rate reduction.
+
+        Parameters
+        ----------
+        counter : int
+                Counter determining whether or not to perform rebuild.
+
+        Returns
+        -------
+        Rebuilds and re-compiles the model.
+        """
+        if counter % 100 == 0:
+            self._build_model()
+            self._compile_model()
+
+    def predict(self, point: tf.Tensor):
+        """
+        Make a prediction on a point.
+
+        Returns
+        -------
+        prediction : tf.Tensor
+                Model prediction on the point.
+        """
+        return self.model.predict(point)
+
     def train_model(self,
-                    dataset: tf.data.Dataset,
+                    dataset: tf.data.Dataset = None,
                     re_initialize: bool = False,
                     epochs: int = 10):
         """
@@ -150,6 +220,7 @@ class DenseModel:
         self._compile_model()  # compile the network.
         converged = False  # set the converged flag.
 
+        counter = 1
         while converged is False:
             self.model.fit(dataset,
                            batch_size=5,
@@ -157,3 +228,7 @@ class DenseModel:
                            shuffle=True,
                            verbose=0)
             converged = self._evaluate_model(dataset)
+
+            self._lr_reduction(counter)
+            self._model_rebuild(counter)
+            counter += 1

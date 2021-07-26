@@ -6,6 +6,10 @@ __pycache__/
 # Jetbrains
 .idea
 
+# Documentation
+./docs/build
+./docs/source/_modules/
+
 # C extensions
 *.so
 

@@ -42,8 +42,6 @@ setuptools.setup(
         "License :: OSI Approved :: Eclipse Public License 2.0 (EPL-2.0)",
         "Operating System :: OS Independent",
     ],
-    package_data={'': ['form_fac_coeffs.csv']},
-    include_package_data=True,
     python_requires='>=3.7',
     install_requires=requirements,
 )

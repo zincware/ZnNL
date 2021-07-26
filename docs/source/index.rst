@@ -10,6 +10,8 @@ Welcome to PyRND's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   modules_index
+
 
 
 Indices and tables
