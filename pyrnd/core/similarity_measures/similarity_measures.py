@@ -6,16 +6,18 @@ SPDX-License-Identifier: EPL-2.0
 
 Copyright Contributors to the Zincware Project.
 
-Description: Module for the distance metrics.
+Description: Module for the similarity measures.
+
+Notes
+-----
+These similarity measures will return 1 - S(A, B). This is because we need
+a quasi-distance for the comparison to occur.
 """
 import tensorflow as tf
 
 
-@tf.function
-def euclidean_distance(point_1: tf.Tensor, point_2: tf.Tensor):
+def cosine_similarity(point_1: tf.Tensor, point_2: tf.Tensor):
     """
-    Compute the Euclidean distance metric.
-
     Parameters
     ----------
     point_1 : tf.Tensor
@@ -23,4 +25,7 @@ def euclidean_distance(point_1: tf.Tensor, point_2: tf.Tensor):
     point_2 : tf.Tensor
             Second point in the comparison.
     """
-    return tf.norm(point_1 - point_2)
+    numerator = tf.tensordot(point_1, point_2, 1)
+    denominator = tf.sqrt(tf.tensordot(point_1, point_1, 1),
+                          tf.tensordot(point_2, point_2, 1))
+    return 1 - tf.divide(numerator, denominator)
