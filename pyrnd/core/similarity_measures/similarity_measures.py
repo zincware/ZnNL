@@ -25,7 +25,7 @@ def cosine_similarity(point_1: tf.Tensor, point_2: tf.Tensor):
     point_2 : tf.Tensor
             Second point in the comparison.
     """
-    numerator = tf.tensordot(point_1, point_2, 1)
-    denominator = tf.sqrt(tf.tensordot(point_1, point_1, 1),
-                          tf.tensordot(point_2, point_2, 1))
+    numerator = tf.cast(tf.tensordot(point_1, point_2, 1), tf.float32)
+    denominator = tf.sqrt(tf.cast(tf.tensordot(point_1, point_1, 1) *
+                          tf.tensordot(point_2, point_2, 1), tf.float32))
     return 1 - tf.divide(numerator, denominator)

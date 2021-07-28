@@ -11,7 +11,6 @@ Description: Module for the distance metrics.
 import tensorflow as tf
 
 
-@tf.function
 def euclidean_distance(point_1: tf.Tensor, point_2: tf.Tensor):
     """
     Compute the Euclidean distance metric.

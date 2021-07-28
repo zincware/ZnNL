@@ -33,4 +33,18 @@ class TestSimilarityMeasures(unittest.TestCase):
         # Test orthogonal vectors
         point_1 = tf.convert_to_tensor([1, 0, 0, 0])
         point_2 = tf.convert_to_tensor([0, 1, 0, 0])
-        print(metric(point_1, point_2))
+        self.assertEqual(metric(point_1, point_2), 1)
+
+        # Test parallel vectors
+        point_1 = tf.convert_to_tensor([1, 0, 0, 0])
+        point_2 = tf.convert_to_tensor([1, 0, 0, 0])
+        self.assertEqual(metric(point_1, point_2), 0)
+
+        # Somewhere in between
+        # Test parallel vectors
+        point_1 = tf.convert_to_tensor([1.0, 0, 0, 0])
+        point_2 = tf.convert_to_tensor([0.5, 1.0, 0, 3.0])
+        self.assertEqual(metric(point_1, point_2), 0.84382623)
+
+
+
