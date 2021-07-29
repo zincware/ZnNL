@@ -6,17 +6,23 @@ SPDX-License-Identifier: EPL-2.0
 
 Copyright Contributors to the Zincware Project.
 
-Description: Module for the parent class of the data generator.
+Description: Module for the particles in a box generator class.
 """
-import abc
+from abc import ABC
+from pyrnd.core.data.data_generator import DataGenerator
 
 
-class DataGenerator(metaclass=abc.ABCMet):
+class ConfinedParticles(DataGenerator, ABC):
     """
-    Parent class for the data generator.
+    A class to generate data for particles in a box.
     """
 
-    @abc.abstractmethod
+    def __init__(self):
+        """
+        Constructor for the ConfinedParticles data generator.
+        """
+        pass
+
     def get_points(self, n_points: int):
         """
         Fetch N points from the data pool.
@@ -30,4 +36,4 @@ class DataGenerator(metaclass=abc.ABCMet):
         -------
 
         """
-        raise NotImplemented("Implemented in the child class.")
+        pass
