@@ -18,7 +18,10 @@ class GreedySelection(PointSelection):
     Class for the greedy selection routine.
     """
 
-    def __init__(self, agent: RND, selected_points: int = -1):
+    def __init__(self,
+                 agent: RND,
+                 selected_points: int = -1,
+                 threshold: float = 0.01):
         """
         Constructor for the GreedySelection class.
 
@@ -28,11 +31,14 @@ class GreedySelection(PointSelection):
                 An agent used to select and operate on points.
         selected_points (default = -1) : int
                 Number of points to be selected by the algorithm.
+        threshold : float
+                A value after which points are considered far away.
         """
         super(GreedySelection, self).__init__()
         self.drawn_points = -1  # draw all points
         self.selected_points = selected_points
         self.agent = agent
+        self.threshold = threshold
 
     def select_points(self):
         """
@@ -46,4 +52,7 @@ class GreedySelection(PointSelection):
         data = self.agent.generate_points(-1)  # get all points in the pool.
         distances = self.agent.compute_distance(tf.convert_to_tensor(data))
 
-        return data[tf.math.argmax(distances)]
+        if all(distances < self.threshold):
+            return None
+        else:
+            return [data[tf.math.argmax(distances)]]

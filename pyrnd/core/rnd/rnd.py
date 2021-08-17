@@ -8,6 +8,7 @@ Copyright Contributors to the Zincware Project.
 
 Description: Module for the implementation of random network distillation.
 """
+import pyrnd
 from pyrnd.core.models.model import Model
 from pyrnd.core.point_selection.point_selection import PointSelection
 from pyrnd.core.data.data_generator import DataGenerator
@@ -32,11 +33,11 @@ class RND:
 
     def __init__(
         self,
-        target_network: Model,
-        predictor_network: Model,
-        distance_metric: Callable,
         data_generator: DataGenerator,
-        point_selector: PointSelection,
+        target_network: Model = None,
+        predictor_network: Model = None,
+        distance_metric: Callable = None,
+        point_selector: PointSelection = None,
         optimizers: list = None,
         tolerance: int = 100,
     ):
@@ -77,6 +78,33 @@ class RND:
         self.iterations = 0
         self.stationary_iterations = 0
 
+        # Run the class initialization
+        self._set_defaults()
+
+    def _set_defaults(self):
+        """
+        Set the default parameters if necessary.
+
+        Returns
+        -------
+        Updates the class state for the following:
+           * self.point_selector (default = greedy selection)
+           * self.metric (default = cosine similarity)
+           * Models (default = dense model.)
+        """
+        # Update the point selector
+        if self.point_selector is None:
+            self.point_selector = pyrnd.GreedySelection(self)
+        # Update the metric
+        if self.metric is None:
+            self.metric = pyrnd.similarity_measures.cosine_similarity
+        # Update the target
+        if self.target is None:
+            self.target = pyrnd.DenseModel()
+        # Update the predictor.
+        if self.predictor is None:
+            self.predictor = pyrnd.DenseModel()
+
     def compute_distance(self, points: tf.Tensor):
         """
         Compute the distance between neural network representations.
@@ -91,8 +119,9 @@ class RND:
         distances : tf.Tensor
                 A tensor of distances computed using the attached metric.
         """
-        target_predictions = self.target.predict(points)
-        predictor_predictions = self.predictor.predict(points)
+        predictor_predictions = self.predictor.predict(points)  # returns (4, 12)
+        target_predictions = self.target.predict(points)  # returns (100, 12)
+
         return self.metric(target_predictions, predictor_predictions)
 
     def generate_points(self, n_points: int):
@@ -120,7 +149,7 @@ class RND:
 
         """
         points = self.point_selector.select_points()
-        self._update_target_set(points.numpy())
+        self._update_target_set(points)
 
     def _update_target_set(self, points: np.ndarray):
         """
@@ -135,8 +164,11 @@ class RND:
         -------
 
         """
-        for item in points:
-            self.target_set.append(item)
+        if points is None:
+            return
+        else:
+            for item in points:
+                self.target_set.append(list(item))
 
     def _retrain_network(self):
         """
@@ -146,12 +178,10 @@ class RND:
         -------
 
         """
-        domain = tf.data.Dataset.from_tensor_slices(
-            tf.convert_to_tensor(self.target_set)
-        )
-        codomain = tf.data.Dataset.from_tensor_slices(self.target.predict(domain))
-        dataset = tf.data.Dataset.zip((domain, codomain))
-        self.predictor.train_model(dataset)
+        domain = tf.convert_to_tensor(self.target_set)
+        codomain = self.target.predict(domain)
+
+        #self.predictor.train_model(dataset)
 
     def _seed_process(self):
         """
@@ -162,7 +192,7 @@ class RND:
         Initializes an RND process.
         """
         seed_point = self.generate_points(1)
-        self._update_target_set(np.array([seed_point]))
+        self._update_target_set(np.array(seed_point))
         self._retrain_network()
 
     def _evaluate_agent(self):
@@ -196,7 +226,6 @@ class RND:
 
         """
         self._seed_process()
-
         criteria = False
         while not criteria:
             self._choose_points()

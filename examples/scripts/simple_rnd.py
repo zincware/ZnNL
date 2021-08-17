@@ -6,5 +6,27 @@ SPDX-License-Identifier: EPL-2.0
 
 Copyright Contributors to the Zincware Project.
 
-Description:
+Description: An example script to compute the number of unique places in a box.
 """
+import pyrnd
+
+if __name__ == '__main__':
+    """
+    Main method to run the routine.
+    """
+    data_generator = pyrnd.ConfinedParticles()
+    data_generator.build_pool(100)
+
+    target = pyrnd.DenseModel(units=12,
+                              layers=4,
+                              in_d=2,
+                              out_d=12)
+    predictor = pyrnd.DenseModel(units=12,
+                                 layers=4,
+                                 in_d=2,
+                                 out_d=12)
+    agent = pyrnd.RND(data_generator=data_generator,
+                      target_network=target,
+                      predictor_network=predictor,
+                      tolerance=10)
+    agent.run_rnd()

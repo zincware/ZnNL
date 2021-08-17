@@ -98,7 +98,7 @@ class DenseModel(Model):
 
         """
         # Add the input layer
-        input_layer = InputLayer(input_shape=(self.in_d, 1))
+        input_layer = InputLayer(input_shape=(self.in_d,))
         self.model.add(input_layer)
 
         # Add the hidden layers
@@ -192,13 +192,14 @@ class DenseModel(Model):
         Parameters
         ----------
         point : tf.Tensor
-                Point on which to perform a prediction.
+                Point(s) on which to perform a prediction.
 
         Returns
         -------
         prediction : tf.Tensor
                 Model prediction on the point.
         """
+        print(point.shape)
         return self.model.predict(point)
 
     def train_model(
@@ -237,7 +238,7 @@ class DenseModel(Model):
         counter = 1
         while converged is False:
             self.model.fit(
-                dataset, batch_size=5, epochs=epochs, shuffle=True, verbose=0
+                dataset, epochs=epochs, shuffle=True, verbose=0
             )
             converged = self._evaluate_model(dataset)
 
