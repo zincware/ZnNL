@@ -38,7 +38,7 @@ class RND:
         data_generator: DataGenerator,
         point_selector: PointSelection,
         optimizers: list = None,
-        tolerance: int = 100
+        tolerance: int = 100,
     ):
         """
         Constructor for the RND class.
@@ -149,9 +149,7 @@ class RND:
         domain = tf.data.Dataset.from_tensor_slices(
             tf.convert_to_tensor(self.target_set)
         )
-        codomain = tf.data.Dataset.from_tensor_slices(
-            self.target.predict(domain)
-        )
+        codomain = tf.data.Dataset.from_tensor_slices(self.target.predict(domain))
         dataset = tf.data.Dataset.zip((domain, codomain))
         self.predictor.train_model(dataset)
 

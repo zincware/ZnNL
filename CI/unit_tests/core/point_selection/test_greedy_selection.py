@@ -18,6 +18,7 @@ class Agent:
     """
     A dummy class to mimic an agent.
     """
+
     @staticmethod
     def generate_points(n_points: int = 1):
         """

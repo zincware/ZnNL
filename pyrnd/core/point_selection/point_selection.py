@@ -23,6 +23,7 @@ class PointSelection:
     selected_points : int
             Number of points selected from the drawn points.
     """
+
     def __init__(self):
         """
         Constructor for the point selection class.
