@@ -11,7 +11,7 @@ Description: Module for the parent class of the data generator.
 import abc
 
 
-class DataGenerator(metaclass=abc.ABCMet):
+class DataGenerator(metaclass=abc.ABCMeta):
     """
     Parent class for the data generator.
     """

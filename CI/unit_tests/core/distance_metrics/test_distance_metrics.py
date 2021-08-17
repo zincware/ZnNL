@@ -38,5 +38,3 @@ class TestDistanceMetrics(unittest.TestCase):
         point_1 = tf.convert_to_tensor([1.0, 0, 0, 3.0])
         point_2 = tf.convert_to_tensor([1.0, 0, 0, 3.0])
         self.assertEqual(metric(point_1, point_2), 0)
-
-

@@ -49,9 +49,9 @@ class ConfinedParticles(DataGenerator, ABC):
         -------
 
         """
-        return tf.random.uniform((n_points, int(self.dimension)),
-                                 minval=0,
-                                 maxval=self.box_length)
+        return tf.random.uniform(
+            (n_points, int(self.dimension)), minval=0, maxval=self.box_length
+        )
 
     def build_pool(self, n_points: int = 100, data: np.ndarray = None):
         """
@@ -74,8 +74,7 @@ class ConfinedParticles(DataGenerator, ABC):
                 self.data_pool = self._generate_points(n_points).numpy()
             else:
                 new_data = self._generate_points(n_points).numpy()
-                self.data_pool = np.concatenate((self.data_pool, new_data),
-                                                axis=0)
+                self.data_pool = np.concatenate((self.data_pool, new_data), axis=0)
         else:
             self.data_pool = np.concatenate((self.data_pool, data), axis=0)
 
@@ -121,8 +120,7 @@ class ConfinedParticles(DataGenerator, ABC):
             return self._return_new_data(n_points)
         else:
             try:
-                indices = random.sample(range(0, len(self.data_pool) - 1),
-                                        n_points)
+                indices = random.sample(range(0, len(self.data_pool) - 1), n_points)
                 data = self.data_pool[indices]
             except ValueError:
                 data = self._return_new_data(n_points)

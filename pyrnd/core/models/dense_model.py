@@ -130,7 +130,10 @@ class DenseModel(Model):
         TODO: Add options for the loss function. Make some nice classes.
 
         """
-        opt = tf.keras.optimizers.Adam(learning_rate=self.learning_rate, decay=0.0)
+        opt = tf.keras.optimizers.Adam(
+            learning_rate=self.learning_rate, decay=0.0
+        )
+
         self.model.compile(optimizer=opt, loss=self.loss)
 
     def _evaluate_model(self, dataset: tf.data.Dataset):
@@ -217,6 +220,7 @@ class DenseModel(Model):
                 If true, the network should be re-built and compiled.
         epochs : int
                 Number epochs to train with on each batch.
+
         Returns
         -------
         Trains the model.

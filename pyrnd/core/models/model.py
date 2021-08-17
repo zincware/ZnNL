@@ -34,7 +34,10 @@ class Model:
         """
         raise NotImplemented("Implemented in child class.")
 
-    def train_model(self):
+    def train_model(self,
+                    dataset: tf.data.Dataset = None,
+                    re_initialize: bool = False,
+                    epochs: int = 10, ):
         """
         Train the model on data.
 

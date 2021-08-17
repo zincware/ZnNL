@@ -9,6 +9,11 @@ Copyright Contributors to the Zincware Project.
 Description: Module for the implementation of random network distillation.
 """
 from pyrnd.core.models.model import Model
+from pyrnd.core.point_selection.point_selection import PointSelection
+from pyrnd.core.data.data_generator import DataGenerator
+from typing import Callable
+import tensorflow as tf
+import numpy as np
 
 
 class RND:
@@ -25,12 +30,16 @@ class RND:
             Target set to be built iteratively.
     """
 
-    def __init__(self,
-                 target_network: Model,
-                 predictor_network: Model,
-                 distance_metric: object,
-                 data_generator: object,
-                 optimizers: list = None):
+    def __init__(
+        self,
+        target_network: Model,
+        predictor_network: Model,
+        distance_metric: Callable,
+        data_generator: DataGenerator,
+        point_selector: PointSelection,
+        optimizers: list = None,
+        tolerance: int = 100
+    ):
         """
         Constructor for the RND class.
 
@@ -45,38 +54,61 @@ class RND:
         data_generator : objector
                 Class to generate or select new points from the point cloud
                 being studied.
+        point_selector : PointSelection
+                Class to select points from the data pool.
         optimizers : list
                 A list of optimizers to use during the training.
+        tolerance : int
+                Number of stationary iterations to go through before ending the
+                run.
         """
         # User defined attributes.
         self.target = target_network
         self.predictor = predictor_network
         self.metric = distance_metric
         self.generator = data_generator
+        self.point_selector = point_selector
         self.optimizers = optimizers
+        self.tolerance = tolerance
 
         # Class defined attributes
         self.target_set: list = []
+        self.historical_length = None
+        self.iterations = 0
+        self.stationary_iterations = 0
 
-    def _compute_distance(self):
+    def compute_distance(self, points: tf.Tensor):
         """
         Compute the distance between neural network representations.
 
+        Parameters
+        ----------
+        points : tf.Tensor
+                Points on which distances should be computed.
+
         Returns
         -------
-
+        distances : tf.Tensor
+                A tensor of distances computed using the attached metric.
         """
-        pass
+        target_predictions = self.target.predict(points)
+        predictor_predictions = self.predictor.predict(points)
+        return self.metric(target_predictions, predictor_predictions)
 
-    def _generate_points(self):
+    def generate_points(self, n_points: int):
         """
         Call the data generator and get new data.
 
+        Parameters
+        ----------
+        n_points : int
+                Number of points to generate.
+
         Returns
         -------
 
         """
-        pass
+        return self.generator.get_points(n_points)
 
     def _choose_points(self):
         """
@@ -87,17 +119,24 @@ class RND:
         -------
 
         """
-        pass
+        points = self.point_selector.select_points()
+        self._update_target_set(points.numpy())
 
-    def _update_target_set(self):
+    def _update_target_set(self, points: np.ndarray):
         """
         Add point/s to the target set.
+
+        Parameters
+        ----------
+        points : np.ndarray
+                Array of points to be added to the target set.
 
         Returns
         -------
 
         """
-        pass
+        for item in points:
+            self.target_set.append(item)
 
     def _retrain_network(self):
         """
@@ -107,7 +146,48 @@ class RND:
         -------
 
         """
-        pass
+        domain = tf.data.Dataset.from_tensor_slices(
+            tf.convert_to_tensor(self.target_set)
+        )
+        codomain = tf.data.Dataset.from_tensor_slices(
+            self.target.predict(domain)
+        )
+        dataset = tf.data.Dataset.zip((domain, codomain))
+        self.predictor.train_model(dataset)
+
+    def _seed_process(self):
+        """
+        Seed an RND process.
+
+        Returns
+        -------
+        Initializes an RND process.
+        """
+        seed_point = self.generate_points(1)
+        self._update_target_set(np.array([seed_point]))
+        self._retrain_network()
+
+    def _evaluate_agent(self):
+        """
+        Determine whether or not it is time to stop the searching.
+
+        Returns
+        -------
+        Will end the search loop if criteria is met.
+        """
+        # First iteration handling
+        if self.historical_length is None:
+            return False
+        # Stationary iteration handling
+        elif len(self.target_set) == self.historical_length:
+            if self.stationary_iterations >= self.tolerance:
+                return True  # loop timeout
+            else:
+                self.stationary_iterations += 1
+                return False  # update stationary
+        else:
+            self.stationary_iterations = 0  # reset stationary
+            return False
 
     def run_rnd(self):
         """
@@ -117,9 +197,11 @@ class RND:
         -------
 
         """
-        # Seed the process
-        # Select new point/s
-        # Check distances
-        # Choose points and update target set
-        # Re-train model
-        # Select new point.
+        self._seed_process()
+
+        criteria = False
+        while not criteria:
+            self._choose_points()
+            self._retrain_network()
+            criteria = self._evaluate_agent()
+            self.iterations += 1
