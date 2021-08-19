@@ -39,6 +39,7 @@ class RND:
         distance_metric: Callable = None,
         point_selector: PointSelection = None,
         optimizers: list = None,
+        target_size: int = None,
         tolerance: int = 100,
     ):
         """
@@ -59,6 +60,8 @@ class RND:
                 Class to select points from the data pool.
         optimizers : list
                 A list of optimizers to use during the training.
+        target_size : int
+                A size of a target set you want to enforce
         tolerance : int
                 Number of stationary iterations to go through before ending the
                 run.
@@ -71,6 +74,7 @@ class RND:
         self.point_selector = point_selector
         self.optimizers = optimizers
         self.tolerance = tolerance
+        self.target_size = target_size
 
         # Class defined attributes
         self.target_set: list = []
@@ -119,8 +123,8 @@ class RND:
         distances : tf.Tensor
                 A tensor of distances computed using the attached metric.
         """
-        predictor_predictions = self.predictor.predict(points)  # returns (4, 12)
-        target_predictions = self.target.predict(points)  # returns (100, 12)
+        predictor_predictions = self.predictor.predict(points)
+        target_predictions = self.target.predict(points)
 
         return self.metric(target_predictions, predictor_predictions)
 
@@ -167,6 +171,7 @@ class RND:
         if points is None:
             return
         else:
+            self.historical_length = len(self.target_set)
             for item in points:
                 self.target_set.append(list(item))
 
@@ -181,7 +186,7 @@ class RND:
         domain = tf.convert_to_tensor(self.target_set)
         codomain = self.target.predict(domain)
 
-        #self.predictor.train_model(dataset)
+        self.predictor.train_model(domain, codomain)
 
     def _seed_process(self):
         """
@@ -213,6 +218,9 @@ class RND:
             else:
                 self.stationary_iterations += 1
                 return False  # update stationary
+        elif self.target_size is not None:
+            if len(self.target_set) == self.target_size:
+                return True
         else:
             self.stationary_iterations = 0  # reset stationary
             return False
@@ -230,5 +238,8 @@ class RND:
         while not criteria:
             self._choose_points()
             self._retrain_network()
+            print(len(self.target_set))
             criteria = self._evaluate_agent()
             self.iterations += 1
+
+        print("FINISHED")

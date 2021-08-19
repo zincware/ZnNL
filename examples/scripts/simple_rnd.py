@@ -20,13 +20,16 @@ if __name__ == '__main__':
     target = pyrnd.DenseModel(units=12,
                               layers=4,
                               in_d=2,
-                              out_d=12)
+                              out_d=12,
+                              tolerance=1e-3)
     predictor = pyrnd.DenseModel(units=12,
                                  layers=4,
                                  in_d=2,
-                                 out_d=12)
+                                 out_d=12,
+                                 tolerance=1e-3)
     agent = pyrnd.RND(data_generator=data_generator,
                       target_network=target,
                       predictor_network=predictor,
-                      tolerance=10)
+                      tolerance=10,
+                      target_size=10)
     agent.run_rnd()

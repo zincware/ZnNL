@@ -41,15 +41,15 @@ class DenseModel(Model):
     """
 
     def __init__(
-        self,
-        units: int = 12,
-        layers: int = 4,
-        in_d: int = 2,
-        out_d: int = 1,
-        activation: str = "relu",
-        learning_rate: float = 1e-2,
-        tolerance: float = 1e-5,
-        loss="mean_squared_error",
+            self,
+            units: int = 12,
+            layers: int = 4,
+            in_d: int = 2,
+            out_d: int = 1,
+            activation: str = "relu",
+            learning_rate: float = 1e-2,
+            tolerance: float = 1e-5,
+            loss="mean_squared_error",
     ):
         """
         Constructor for the Feed forward network module.
@@ -130,11 +130,12 @@ class DenseModel(Model):
         TODO: Add options for the loss function. Make some nice classes.
 
         """
-        opt = tf.keras.optimizers.Adam(learning_rate=self.learning_rate, decay=0.0)
+        opt = tf.keras.optimizers.Adam(learning_rate=self.learning_rate,
+                                       decay=0.0)
 
         self.model.compile(optimizer=opt, loss=self.loss)
 
-    def _evaluate_model(self, dataset: tf.data.Dataset):
+    def _evaluate_model(self, x, y):
         """
         Evaluate the model.
 
@@ -147,7 +148,7 @@ class DenseModel(Model):
         -------
 
         """
-        loss = self.model.evaluate(dataset)
+        loss = self.model.evaluate(x, y)
 
         return loss <= self.tolerance
 
@@ -182,6 +183,7 @@ class DenseModel(Model):
         Rebuilds and re-compiles the model.
         """
         if counter % 100 == 0:
+            print("Model re-build triggered.")
             self._build_model()
             self._compile_model()
 
@@ -199,22 +201,22 @@ class DenseModel(Model):
         prediction : tf.Tensor
                 Model prediction on the point.
         """
-        print(point.shape)
         return self.model.predict(point)
 
     def train_model(
-        self,
-        dataset: tf.data.Dataset = None,
-        re_initialize: bool = False,
-        epochs: int = 10,
+            self,
+            x: tf.Tensor,
+            y: tf.Tensor,
+            re_initialize: bool = False,
+            epochs: int = 10,
     ):
         """
         Train the model on data.
 
         Parameters
         ----------
-        dataset : tf.data.Dataset
-                Dataset on which to train the model.
+        y
+        x
         re_initialize : bool
                 If true, the network should be re-built and compiled.
         epochs : int
@@ -238,9 +240,9 @@ class DenseModel(Model):
         counter = 1
         while converged is False:
             self.model.fit(
-                dataset, epochs=epochs, shuffle=True, verbose=0
+                x=x, y=y, epochs=epochs, shuffle=True, verbose=0
             )
-            converged = self._evaluate_model(dataset)
+            converged = self._evaluate_model(x, y)
 
             self._lr_reduction(counter)
             self._model_rebuild(counter)

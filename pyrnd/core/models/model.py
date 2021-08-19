@@ -34,12 +34,12 @@ class Model:
         """
         raise NotImplemented("Implemented in child class.")
 
-    def train_model(
-        self,
-        dataset: tf.data.Dataset = None,
-        re_initialize: bool = False,
-        epochs: int = 10,
-    ):
+    def train_model(self,
+                    x: tf.Tensor,
+                    y: tf.Tensor,
+                    re_initialize: bool = False,
+                    epochs: int = 10,
+                    ):
         """
         Train the model on data.
 
