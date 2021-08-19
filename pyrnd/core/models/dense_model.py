@@ -41,15 +41,15 @@ class DenseModel(Model):
     """
 
     def __init__(
-            self,
-            units: int = 12,
-            layers: int = 4,
-            in_d: int = 2,
-            out_d: int = 1,
-            activation: str = "relu",
-            learning_rate: float = 1e-2,
-            tolerance: float = 1e-5,
-            loss="mean_squared_error",
+        self,
+        units: int = 12,
+        layers: int = 4,
+        in_d: int = 2,
+        out_d: int = 1,
+        activation: str = "relu",
+        learning_rate: float = 1e-2,
+        tolerance: float = 1e-5,
+        loss="mean_squared_error",
     ):
         """
         Constructor for the Feed forward network module.
@@ -130,8 +130,7 @@ class DenseModel(Model):
         TODO: Add options for the loss function. Make some nice classes.
 
         """
-        opt = tf.keras.optimizers.Adam(learning_rate=self.learning_rate,
-                                       decay=0.0)
+        opt = tf.keras.optimizers.Adam(learning_rate=self.learning_rate, decay=0.0)
 
         self.model.compile(optimizer=opt, loss=self.loss)
 
@@ -204,11 +203,11 @@ class DenseModel(Model):
         return self.model.predict(point)
 
     def train_model(
-            self,
-            x: tf.Tensor,
-            y: tf.Tensor,
-            re_initialize: bool = False,
-            epochs: int = 10,
+        self,
+        x: tf.Tensor,
+        y: tf.Tensor,
+        re_initialize: bool = False,
+        epochs: int = 10,
     ):
         """
         Train the model on data.
@@ -239,9 +238,7 @@ class DenseModel(Model):
 
         counter = 1
         while converged is False:
-            self.model.fit(
-                x=x, y=y, epochs=epochs, shuffle=True, verbose=0
-            )
+            self.model.fit(x=x, y=y, epochs=epochs, shuffle=True, verbose=0)
             converged = self._evaluate_model(x, y)
 
             self._lr_reduction(counter)

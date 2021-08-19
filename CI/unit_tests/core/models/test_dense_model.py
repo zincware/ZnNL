@@ -56,5 +56,4 @@ class TestDenseModels(unittest.TestCase):
         inputs = np.array([[1, 2], [4, 5], [3, 6], [9, 7], [3, 4], [8, 8]])
         labels = np.log(np.prod(inputs, axis=1)).reshape(6, 1)
 
-        model.train_model(tf.convert_to_tensor(inputs),
-                          tf.convert_to_tensor(labels))
+        model.train_model(tf.convert_to_tensor(inputs), tf.convert_to_tensor(labels))

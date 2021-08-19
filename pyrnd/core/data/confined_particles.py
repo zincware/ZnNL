@@ -122,8 +122,7 @@ class ConfinedParticles(DataGenerator, ABC):
             if n_points == -1:
                 return self.data_pool
             try:
-                indices = random.sample(range(0, len(self.data_pool) - 1),
-                                        n_points)
+                indices = random.sample(range(0, len(self.data_pool) - 1), n_points)
                 data = self.data_pool[indices]
             except ValueError:
                 data = self._return_new_data(n_points)

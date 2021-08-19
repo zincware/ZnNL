@@ -8,4 +8,10 @@ from pyrnd.core.point_selection.greedy_selection import GreedySelection
 from pyrnd.core.rnd.rnd import RND
 from pyrnd.core.data.confined_particles import ConfinedParticles
 
-__all__ = ["DenseModel", "distance_metrics", "similarity_measures", "GreedySelection", "ConfinedParticles"]
+__all__ = [
+    "DenseModel",
+    "distance_metrics",
+    "similarity_measures",
+    "GreedySelection",
+    "ConfinedParticles",
+]
