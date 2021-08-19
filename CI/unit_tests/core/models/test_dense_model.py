@@ -51,7 +51,7 @@ class TestDenseModels(unittest.TestCase):
         Ensure that the model can train under different epoch numbers and that
         the training exit occurs after the required loss is achieved.
         """
-        model = pyrnd.DenseModel(layers=2, tolerance=2)
+        model = pyrnd.DenseModel(layers=2, units=6, tolerance=0.02)
 
         inputs = np.array([[1, 2], [4, 5], [3, 6], [9, 7], [3, 4], [8, 8]])
         labels = np.log(np.prod(inputs, axis=1)).reshape(6, 1)

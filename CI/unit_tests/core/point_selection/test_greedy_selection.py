@@ -68,4 +68,4 @@ class TestGreedySelection(unittest.TestCase):
         self.selector = pyrnd.GreedySelection(self.agent)
         point = self.selector.select_points()
 
-        np.testing.assert_array_equal(point.numpy(), np.array([0, 1]))
+        np.testing.assert_array_equal(point[0], np.array([0, 1]))
