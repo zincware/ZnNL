@@ -181,7 +181,7 @@ class DenseModel(Model):
         -------
         Rebuilds and re-compiles the model.
         """
-        if counter % 100 == 0:
+        if counter % 10 == 0:
             print("Model re-build triggered.")
             self._build_model()
             self._compile_model()
