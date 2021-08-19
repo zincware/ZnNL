@@ -98,7 +98,7 @@ class DenseModel(Model):
 
         """
         # Add the input layer
-        input_layer = InputLayer(input_shape=(self.in_d, 1))
+        input_layer = InputLayer(input_shape=(self.in_d,))
         self.model.add(input_layer)
 
         # Add the hidden layers
@@ -131,9 +131,10 @@ class DenseModel(Model):
 
         """
         opt = tf.keras.optimizers.Adam(learning_rate=self.learning_rate, decay=0.0)
+
         self.model.compile(optimizer=opt, loss=self.loss)
 
-    def _evaluate_model(self, dataset: tf.data.Dataset):
+    def _evaluate_model(self, x, y):
         """
         Evaluate the model.
 
@@ -146,7 +147,7 @@ class DenseModel(Model):
         -------
 
         """
-        loss = self.model.evaluate(dataset)
+        loss = self.model.evaluate(x, y)
 
         return loss <= self.tolerance
 
@@ -180,7 +181,8 @@ class DenseModel(Model):
         -------
         Rebuilds and re-compiles the model.
         """
-        if counter % 100 == 0:
+        if counter % 10 == 0:
+            print("Model re-build triggered.")
             self._build_model()
             self._compile_model()
 
@@ -191,7 +193,7 @@ class DenseModel(Model):
         Parameters
         ----------
         point : tf.Tensor
-                Point on which to perform a prediction.
+                Point(s) on which to perform a prediction.
 
         Returns
         -------
@@ -202,7 +204,8 @@ class DenseModel(Model):
 
     def train_model(
         self,
-        dataset: tf.data.Dataset = None,
+        x: tf.Tensor,
+        y: tf.Tensor,
         re_initialize: bool = False,
         epochs: int = 10,
     ):
@@ -211,12 +214,13 @@ class DenseModel(Model):
 
         Parameters
         ----------
-        dataset : tf.data.Dataset
-                Dataset on which to train the model.
+        y
+        x
         re_initialize : bool
                 If true, the network should be re-built and compiled.
         epochs : int
                 Number epochs to train with on each batch.
+
         Returns
         -------
         Trains the model.
@@ -234,10 +238,8 @@ class DenseModel(Model):
 
         counter = 1
         while converged is False:
-            self.model.fit(
-                dataset, batch_size=5, epochs=epochs, shuffle=True, verbose=0
-            )
-            converged = self._evaluate_model(dataset)
+            self.model.fit(x=x, y=y, epochs=epochs, shuffle=True, verbose=0)
+            converged = self._evaluate_model(x, y)
 
             self._lr_reduction(counter)
             self._model_rebuild(counter)
