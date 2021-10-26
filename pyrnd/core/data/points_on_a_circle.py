@@ -38,8 +38,8 @@ class PointsOnCircle(DataGenerator, ABC):
         -------
 
         """
-        angles = np.linspace(0, 2*np.pi, num=n_points)
-        self.data_pool = (self.radius*np.array([np.cos(angles), np.sin(angles)])).T
+        angles = np.linspace(0, 2 * np.pi, num=n_points)
+        self.data_pool = (self.radius * np.array([np.cos(angles), np.sin(angles)])).T
 
     def get_points(self, n_points: int) -> np.ndarray:
         """
