@@ -236,7 +236,8 @@ class RND:
         # First iteration handling
         if self.historical_length is None:
             return False
-        # Stationary iteration handling
+        elif self.historical_length == 0:
+            pass
         elif len(self.target_set) == self.historical_length:
             if self.stationary_iterations >= self.tolerance:
                 return True  # loop timeout
@@ -244,8 +245,9 @@ class RND:
                 self.stationary_iterations += 1
                 return False  # update stationary
         elif self.target_size is not None:
-            if len(self.target_set) == self.target_size:
+            if len(self.target_set) >= self.target_size:
                 return True
+        # Stationary iteration handling
         else:
             self.stationary_iterations = 0  # reset stationary
             return False
