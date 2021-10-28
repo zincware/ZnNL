@@ -15,5 +15,5 @@ __all__ = [
     "similarity_measures",
     "GreedySelection",
     "ConfinedParticles",
-    "PointsOnCircle"
+    "PointsOnCircle",
 ]

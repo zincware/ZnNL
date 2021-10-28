@@ -43,9 +43,9 @@ class PointsOnCircle(DataGenerator, ABC):
         Updates the data pool in the class.
         """
         if noise:
-            radial_values = np.random.uniform(self.radius - self.noise,
-                                              self.radius + self.noise,
-                                              n_points)
+            radial_values = np.random.uniform(
+                self.radius - self.noise, self.radius + self.noise, n_points
+            )
         else:
             radial_values = self.radius
 
@@ -69,7 +69,7 @@ class PointsOnCircle(DataGenerator, ABC):
         -------
         Will call a method which updates the class state.
         """
-        method_dict = {'uniform': self.uniform_sampling}
+        method_dict = {"uniform": self.uniform_sampling}
         chosen_method = method_dict[method]
         chosen_method(n_points=n_points, noise=noise)
 
