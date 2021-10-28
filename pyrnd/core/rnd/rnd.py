@@ -189,10 +189,13 @@ class RND:
         -------
 
         """
-        domain = tf.convert_to_tensor(self.target_set)
-        codomain = self.target.predict(domain)
+        if self.historical_length == len(self.target_set):
+            pass
+        else:
+            domain = tf.convert_to_tensor(self.target_set)
+            codomain = self.target.predict(domain)
 
-        self.predictor.train_model(domain, codomain)
+            self.predictor.train_model(domain, codomain)
 
     def _seed_process(self):
         """
