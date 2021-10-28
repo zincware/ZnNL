@@ -10,10 +10,14 @@ Description: An example script to compute the number of unique places in a box.
 """
 import pyrnd
 
+
 if __name__ == "__main__":
     """
     Main method to run the routine.
     """
+    # Noisy circle.
+    # data = pyrnd.PointsOnCircle(noise=0.1)
+    # data.build_pool('uniform', n_points=50, noise=True)
     data_generator = pyrnd.ConfinedParticles()
     data_generator.build_pool(100)
 
