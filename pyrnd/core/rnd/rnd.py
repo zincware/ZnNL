@@ -174,10 +174,10 @@ class RND:
         -------
 
         """
+        self.historical_length = len(self.target_set)
         if points is None:
             return
         else:
-            self.historical_length = len(self.target_set)
             for item in points:
                 self.target_set.append(list(item))
 
