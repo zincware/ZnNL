@@ -87,6 +87,8 @@ class RND:
         # Run the class initialization
         self._set_defaults()
 
+        self.point_selector.agent = self
+
     def _set_defaults(self):
         """
         Set the default parameters if necessary.
