@@ -7,6 +7,7 @@ from pyrnd.core.similarity_measures import similarity_measures
 from pyrnd.core.point_selection.greedy_selection import GreedySelection
 from pyrnd.core.rnd.rnd import RND
 from pyrnd.core.data.confined_particles import ConfinedParticles
+from pyrnd.core.data.points_on_a_circle import PointsOnCircle
 
 __all__ = [
     "DenseModel",
@@ -14,4 +15,5 @@ __all__ = [
     "similarity_measures",
     "GreedySelection",
     "ConfinedParticles",
+    "PointsOnCircle",
 ]
