@@ -209,7 +209,7 @@ class DenseModel(Model):
         x: tf.Tensor,
         y: tf.Tensor,
         re_initialize: bool = False,
-        epochs: int = 10,
+        epochs: int = 30,
     ):
         """
         Train the model on data.
@@ -241,9 +241,8 @@ class DenseModel(Model):
         counter = 1
         while converged is False:
             self.model.fit(
-                x=x, y=y, epochs=epochs, shuffle=True, verbose=0, batch_size=1
+                x=x, y=y, epochs=epochs, shuffle=True, verbose=0, batch_size=32
             )
-            print(x.shape)
             converged = self._evaluate_model(x, y)
 
             self._lr_reduction(counter)
