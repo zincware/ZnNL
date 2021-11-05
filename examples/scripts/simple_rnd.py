@@ -21,8 +21,8 @@ if __name__ == "__main__":
     Main method to run the routine.
     """
     # data_generator = pyrnd.ConfinedParticles()
-    data_generator = pyrnd.PointsOnCircle(radius=1.0, noise=1e-3)
-    data_generator.build_pool(100)
+    data_generator = pyrnd.PointsOnCircle(radius=1.0, noise=1e-2)
+    data_generator.build_pool(n_points=100, method="uniform", noise=False)
 
     target = pyrnd.DenseModel(
         units=12, layers=4, in_d=2, out_d=12, tolerance=1e-2, loss=losses.MSE()
