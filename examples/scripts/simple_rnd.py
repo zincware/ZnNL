@@ -6,7 +6,8 @@ SPDX-License-Identifier: EPL-2.0
 
 Copyright Contributors to the Zincware Project.
 
-Description: An example script to compute the number of unique places in a box.
+Description: an example script to test the RND on functionality
+and investigate the symmetry conservation in representation space
 """
 import pyrnd
 from pyrnd.core.distance_metrics.distance_metrics import euclidean_distance
