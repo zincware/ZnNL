@@ -9,3 +9,5 @@ numpydoc
 sphinx_copybutton
 sphinx_rtd_theme
 nbsphinx
+tensorflow_probability
+
