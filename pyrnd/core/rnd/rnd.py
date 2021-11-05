@@ -12,7 +12,7 @@ import pyrnd
 from pyrnd.core.models.model import Model
 from pyrnd.core.point_selection.point_selection import PointSelection
 from pyrnd.core.data.data_generator import DataGenerator
-from typing import Callable
+from pyrnd.core.similarity_measures import SimilarityMeasures
 import tensorflow as tf
 import numpy as np
 
@@ -36,7 +36,7 @@ class RND:
         data_generator: DataGenerator,
         target_network: Model = None,
         predictor_network: Model = None,
-        distance_metric: Callable = None,
+        distance_metric: SimilarityMeasures = None,
         point_selector: PointSelection = None,
         optimizers: list = None,
         target_size: int = None,
@@ -51,7 +51,7 @@ class RND:
                 Model class for the target network
         predictor_network : Model
                 Model class for the predictor.
-        distance_metric : object
+        distance_metric : SimilarityMeasures
                 Metric to use in the representation comparison
         data_generator : objector
                 Class to generate or select new points from the point cloud
@@ -105,7 +105,7 @@ class RND:
             self.point_selector = pyrnd.GreedySelection(self)
         # Update the metric
         if self.metric is None:
-            self.metric = pyrnd.similarity_measures.cosine_similarity
+            self.metric = pyrnd.similarity_measures.CosineSim()
         # Update the target
         if self.target is None:
             self.target = pyrnd.DenseModel()
@@ -130,7 +130,9 @@ class RND:
         predictor_predictions = self.predictor.predict(points)
         target_predictions = self.target.predict(points)
 
-        self.metric_results = self.metric(target_predictions, predictor_predictions)
+        self.metric_results = self.metric.calculate(
+            target_predictions, predictor_predictions
+        )
         return self.metric_results
         # return self.metric(target_predictions, predictor_predictions)
 

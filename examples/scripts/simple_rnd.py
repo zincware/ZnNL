@@ -13,6 +13,7 @@ from pyrnd.core.distance_metrics.distance_metrics import euclidean_distance
 from pyrnd.core.point_selection.greedy_selection import GreedySelection
 import numpy as np
 import matplotlib.pyplot as plt
+import pyrnd.core.similarity_measures.similarity_measures as losses
 
 
 if __name__ == "__main__":
@@ -24,16 +25,16 @@ if __name__ == "__main__":
     data_generator.build_pool(100)
 
     target = pyrnd.DenseModel(
-        units=12, layers=4, in_d=2, out_d=12, tolerance=1e-5, loss="cosine_similarity"
+        units=12, layers=4, in_d=2, out_d=12, tolerance=1e-2, loss=losses.MSE()
     )
     predictor = pyrnd.DenseModel(
-        units=12, layers=4, in_d=2, out_d=12, tolerance=1e-5, loss="cosine_similarity"
+        units=12, layers=4, in_d=2, out_d=12, tolerance=1e-2, loss=losses.MSE()
     )
     # print(target.summary())
 
     agent = pyrnd.RND(
-        point_selector=GreedySelection(threshold=0.1),
-        # distance_metric=euclidean_distance,
+        point_selector=GreedySelection(threshold=0.02),
+        distance_metric=losses.MSE(),
         data_generator=data_generator,
         target_network=target,
         predictor_network=predictor,

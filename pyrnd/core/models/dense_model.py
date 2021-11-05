@@ -12,6 +12,8 @@ import tensorflow as tf
 from tensorflow.keras.layers import InputLayer
 from tensorflow.keras.layers import Dense
 from pyrnd.core.models.model import Model
+from pyrnd.core.similarity_measures import SimilarityMeasures
+from pyrnd.core.similarity_measures import CosineSim
 
 
 class DenseModel(Model):
@@ -49,7 +51,7 @@ class DenseModel(Model):
         activation: str = "relu",
         learning_rate: float = 1e-2,
         tolerance: float = 1e-5,
-        loss="mean_squared_error",
+        loss: SimilarityMeasures = CosineSim(),
     ):
         """
         Constructor for the Feed forward network module.
@@ -71,7 +73,7 @@ class DenseModel(Model):
         tolerance : float
                 Minimum value of the loss before the model is considered
                 trained.
-        loss : str
+        loss : SimilarityMeasures
                 Loss to use during the training.
         """
         super().__init__()  # update parent.
