@@ -78,9 +78,7 @@ class CosineSim(SimilarityMeasures):
         numerator = tf.cast(tf.einsum("ij, ij -> i", point_1, point_2), tf.float32)
         denominator = tf.sqrt(
             tf.cast(
-
                 # tf.einsum("ij, ij, ij, ij -> i", point_1, point_1, point_2, point_2)
-
                 tf.einsum("ij, ij -> i", point_1, point_1)
                 * tf.einsum("ij, ij -> i", point_2, point_2),
                 tf.float32,
@@ -111,7 +109,7 @@ class AngleSim(SimilarityMeasures):
                 tf.float32,
             )
         )
-        return tf.acos(abs(tf.divide(numerator, denominator)))/np.pi
+        return tf.acos(abs(tf.divide(numerator, denominator))) / np.pi
 
 
 class MSE(SimilarityMeasures):
