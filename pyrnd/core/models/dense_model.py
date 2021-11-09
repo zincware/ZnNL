@@ -99,6 +99,8 @@ class DenseModel(Model):
         -------
 
         """
+        self.model = tf.keras.Sequential()
+
         # Add the input layer
         input_layer = InputLayer(input_shape=(self.in_d,))
         self.model.add(input_layer)
