@@ -9,8 +9,8 @@ Copyright Contributors to the Zincware Project.
 Description: Module for a standard feed forward neural network.
 """
 import tensorflow as tf
-from tensorflow.keras.layers import InputLayer
-from tensorflow.keras.layers import Dense
+from tensorflow import keras
+from tensorflow.keras import layers
 from pyrnd.core.models.model import Model
 from pyrnd.core.similarity_measures import SimilarityMeasures
 from pyrnd.core.similarity_measures import CosineSim
@@ -22,10 +22,8 @@ class DenseModel(Model):
 
     Attributes
     ----------
-    units : int
-                Number of units to have in the NN.
-    layers : int
-            Number of hidden layers to have of size units.
+    units : tuple
+            Number of units to have per layer in the NN.
     in_d : int
             Input dimension of the data.
     out_d : int
@@ -43,25 +41,22 @@ class DenseModel(Model):
     """
 
     def __init__(
-        self,
-        units: int = 12,
-        layers: int = 4,
-        in_d: int = 2,
-        out_d: int = 1,
-        activation: str = "relu",
-        learning_rate: float = 1e-2,
-        tolerance: float = 1e-5,
-        loss: SimilarityMeasures = CosineSim(),
+            self,
+            units: tuple = (12, 12, 12),
+            in_d: int = 2,
+            out_d: int = 1,
+            activation: str = "relu",
+            learning_rate: float = 1e-2,
+            tolerance: float = 1e-5,
+            loss: SimilarityMeasures = CosineSim(),
     ):
         """
         Constructor for the Feed forward network module.
 
         Parameters
         ----------
-        units : int
-                Number of units to have in the NN.
-        layers : int
-                Number of hidden layers to have of size units.
+        units : tuple
+                Number of units to have per layer in the NN.
         in_d : int
                 Input dimension of the data.
         out_d : int
@@ -79,7 +74,6 @@ class DenseModel(Model):
         super().__init__()  # update parent.
         # User arguments
         self.units = units
-        self.layers = layers
         self.in_d = in_d
         self.out_d = out_d
         self.activation = activation
@@ -88,8 +82,7 @@ class DenseModel(Model):
         self.loss = loss
 
         # Model parameters
-        self.model = tf.keras.Sequential()
-        self._build_model()  # build the model immediately.
+        self._build_model()  # build the model immediately
 
     def _build_model(self):
         """
@@ -99,18 +92,19 @@ class DenseModel(Model):
         -------
 
         """
-        self.model = tf.keras.Sequential()
 
         # Add the input layer
-        input_layer = InputLayer(input_shape=(self.in_d,))
-        self.model.add(input_layer)
+        input_layer = keras.Input(shape=(self.in_d,))
+        x = layers.Dense(self.units[0], activation=self.activation)(input_layer)
 
         # Add the hidden layers
-        for i in range(self.layers):
-            self.model.add(Dense(self.units, self.activation))
+        for unit in self.units[1:]:
+            x = layers.Dense(unit, self.activation)(x)
 
         # Add the output layer
-        self.model.add(Dense(self.out_d, self.activation))
+        output_layer = layers.Dense(self.out_d, self.activation)(x)
+
+        self.model = keras.Model(input_layer, output_layer)
 
     def summary(self):
         """
@@ -234,7 +228,6 @@ class DenseModel(Model):
         TODO: Adjust batch size depending on data availability.
         """
         if re_initialize:
-            self.model = tf.keras.Sequential()
             self._build_model()
 
         self._compile_model()  # compile the network.
