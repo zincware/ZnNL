@@ -26,12 +26,19 @@ if __name__ == "__main__":
     data_generator.build_pool(n_points=100, method="uniform", noise=False)
 
     target = pyrnd.DenseModel(
-        units=12, layers=4, in_d=2, out_d=12, tolerance=1e-2, loss=losses.MSE()
+        units=(12, 12, 12),
+        in_d=2,
+        out_d=12,
+        tolerance=1e-3,
+        loss=losses.MSE()
     )
     predictor = pyrnd.DenseModel(
-        units=12, layers=4, in_d=2, out_d=12, tolerance=1e-2, loss=losses.MSE()
+        units=(12, 12, 12),
+        in_d=2,
+        out_d=12,
+        tolerance=1e-3,
+        loss=losses.MSE()
     )
-    # print(target.summary())
 
     agent = pyrnd.RND(
         point_selector=GreedySelection(threshold=0.02),
