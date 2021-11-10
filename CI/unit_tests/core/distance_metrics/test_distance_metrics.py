@@ -35,6 +35,6 @@ class TestDistanceMetrics(unittest.TestCase):
         metric = pyrnd.distance_metrics.euclidean_distance
 
         # Test equal length vectors
-        point_1 = tf.convert_to_tensor([1.0, 0, 0, 3.0])
-        point_2 = tf.convert_to_tensor([1.0, 0, 0, 3.0])
+        point_1 = tf.convert_to_tensor([1.0, 0, 0, 3.0])[None]
+        point_2 = tf.convert_to_tensor([1.0, 0, 0, 3.0])[None]
         self.assertEqual(metric(point_1, point_2), 0)
