@@ -235,6 +235,7 @@ class DenseModel(Model):
 
         counter = 1
         while converged is False:
+            # verbose=0 only shows the final result, not single epochs
             self.model.fit(
                 x=x, y=y, epochs=epochs, shuffle=True, verbose=0, batch_size=32
             )
