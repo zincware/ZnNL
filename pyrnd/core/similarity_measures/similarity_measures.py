@@ -34,4 +34,4 @@ def cosine_similarity(point_1: tf.Tensor, point_2: tf.Tensor):
         )
     )
 
-    return 1 - tf.divide(numerator, denominator)
+    return 1 - abs(tf.divide(numerator, denominator))

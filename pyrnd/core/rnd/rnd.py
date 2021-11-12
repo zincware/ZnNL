@@ -81,9 +81,13 @@ class RND:
         self.historical_length = None
         self.iterations = 0
         self.stationary_iterations = 0
+        self.metric_results = None
+        self.metric_results_storage: list = []
 
         # Run the class initialization
         self._set_defaults()
+
+        self.point_selector.agent = self
 
     def _set_defaults(self):
         """
@@ -126,7 +130,9 @@ class RND:
         predictor_predictions = self.predictor.predict(points)
         target_predictions = self.target.predict(points)
 
-        return self.metric(target_predictions, predictor_predictions)
+        self.metric_results = self.metric(target_predictions, predictor_predictions)
+        return self.metric_results
+        # return self.metric(target_predictions, predictor_predictions)
 
     def generate_points(self, n_points: int):
         """
@@ -168,10 +174,10 @@ class RND:
         -------
 
         """
+        self.historical_length = len(self.target_set)
         if points is None:
             return
         else:
-            self.historical_length = len(self.target_set)
             for item in points:
                 self.target_set.append(list(item))
 
@@ -183,10 +189,13 @@ class RND:
         -------
 
         """
-        domain = tf.convert_to_tensor(self.target_set)
-        codomain = self.target.predict(domain)
+        if self.historical_length == len(self.target_set):
+            pass
+        else:
+            domain = tf.convert_to_tensor(self.target_set)
+            codomain = self.target.predict(domain)
 
-        self.predictor.train_model(domain, codomain)
+            self.predictor.train_model(domain, codomain)
 
     def _seed_process(self):
         """
@@ -200,6 +209,22 @@ class RND:
         self._update_target_set(np.array(seed_point))
         self._retrain_network()
 
+    def _store_metrics(self):
+        """
+        Storage of metric calculations
+
+        Returns
+        -------
+
+        """
+        if len(self.target_set) == self.historical_length:
+            pass
+        else:
+            self.metric_results_storage.append(
+                np.sort(self.metric_results.numpy())[-3:]
+            )
+            # self.metric_results_storage.append(self.metric_results.numpy())
+
     def _evaluate_agent(self):
         """
         Determine whether or not it is time to stop the searching.
@@ -211,7 +236,8 @@ class RND:
         # First iteration handling
         if self.historical_length is None:
             return False
-        # Stationary iteration handling
+        elif self.historical_length == 0:
+            pass
         elif len(self.target_set) == self.historical_length:
             if self.stationary_iterations >= self.tolerance:
                 return True  # loop timeout
@@ -219,8 +245,9 @@ class RND:
                 self.stationary_iterations += 1
                 return False  # update stationary
         elif self.target_size is not None:
-            if len(self.target_set) == self.target_size:
+            if len(self.target_set) >= self.target_size:
                 return True
+        # Stationary iteration handling
         else:
             self.stationary_iterations = 0  # reset stationary
             return False
@@ -237,6 +264,7 @@ class RND:
         criteria = False
         while not criteria:
             self._choose_points()
+            self._store_metrics()
             self._retrain_network()
             print(len(self.target_set))
             criteria = self._evaluate_agent()

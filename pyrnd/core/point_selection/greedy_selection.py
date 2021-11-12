@@ -18,13 +18,15 @@ class GreedySelection(PointSelection):
     Class for the greedy selection routine.
     """
 
-    def __init__(self, agent: RND, selected_points: int = -1, threshold: float = 0.01):
+    def __init__(
+            self, agent: RND = None, selected_points: int = -1, threshold: float = 0.01
+    ):
         """
         Constructor for the GreedySelection class.
 
         Parameters
         ----------
-        agent : RND
+        agent (default = None): RND
                 An agent used to select and operate on points.
         selected_points (default = -1) : int
                 Number of points to be selected by the algorithm.
