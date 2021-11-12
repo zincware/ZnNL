@@ -15,12 +15,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+
 if __name__ == "__main__":
     """
     Main method to run the routine.
     """
     # data_generator = pyrnd.ConfinedParticles()
     data_generator = pyrnd.PointsOnCircle(radius=1.0, noise=1e-3)
+    # Noisy circle.
+    # data = pyrnd.PointsOnCircle(noise=0.1)
+    # data.build_pool('uniform', n_points=50, noise=True)
+    # data_generator = pyrnd.ConfinedParticles()
     data_generator.build_pool(100)
 
     target = pyrnd.DenseModel(

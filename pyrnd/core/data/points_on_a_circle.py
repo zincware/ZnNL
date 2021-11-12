@@ -27,19 +27,51 @@ class PointsOnCircle(DataGenerator, ABC):
         self.noise = noise
         self.data_pool = None
 
-    def build_pool(self, n_points: int):
+    def uniform_sampling(self, n_points: int, noise: bool = False):
         """
-        Build the data pool for points on a circle
+        Generate the point uniformly.
+
         Parameters
         ----------
-        n_points
+        n_points : int
+                Number of points to generate.
+        noise : bool
+                If true, noise will be added to the radial values.
 
         Returns
         -------
-
+        Updates the data pool in the class.
         """
-        angles = np.linspace(0, 2*np.pi, num=n_points)
-        self.data_pool = (self.radius*np.array([np.cos(angles), np.sin(angles)])).T
+        if noise:
+            radial_values = np.random.uniform(
+                self.radius - self.noise, self.radius + self.noise, n_points
+            )
+        else:
+            radial_values = self.radius
+
+        angles = np.linspace(0, 2 * np.pi, num=n_points)
+        self.data_pool = (radial_values * np.array([np.cos(angles), np.sin(angles)])).T
+
+    def build_pool(self, method: str, n_points: int, noise: bool = False):
+        """
+        Build the data pool for points on a circle
+
+        Parameters
+        ----------
+        n_points : int
+                Number of points to add to the circle.
+        method : str
+                Method with which to compute the points.
+        noise : bool
+                If true, noise will be added to the data.
+
+        Returns
+        -------
+        Will call a method which updates the class state.
+        """
+        method_dict = {"uniform": self.uniform_sampling}
+        chosen_method = method_dict[method]
+        chosen_method(n_points=n_points, noise=noise)
 
     def get_points(self, n_points: int) -> np.ndarray:
         """
