@@ -15,7 +15,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-
 if __name__ == "__main__":
     """
     Main method to run the routine.
@@ -66,5 +65,3 @@ if __name__ == "__main__":
     plot2.set_aspect("equal", adjustable="box")
 
     plt.show()
-
-

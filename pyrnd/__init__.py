@@ -8,6 +8,7 @@ from pyrnd.core.point_selection.greedy_selection import GreedySelection
 from pyrnd.core.rnd.rnd import RND
 from pyrnd.core.data.confined_particles import ConfinedParticles
 from pyrnd.core.data.points_on_a_circle import PointsOnCircle
+from pyrnd.core.data.points_on_a_lattice import PointsOnLattice
 
 __all__ = [
     "DenseModel",
@@ -16,4 +17,5 @@ __all__ = [
     "GreedySelection",
     "ConfinedParticles",
     "PointsOnCircle",
+    "PointsOnLattice"
 ]
