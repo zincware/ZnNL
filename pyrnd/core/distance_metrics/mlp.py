@@ -297,12 +297,13 @@ class MLPMetric:
         model = self.build_model(units, activation, normalization)
         opt = tf.keras.optimizers.Adam(learning_rate=0.01, decay=0.0)
         reduce_lr = keras.callbacks.ReduceLROnPlateau(
-            monitor='val_loss', factor=0.2, patience=5, min_lr=0.00001
+            monitor='val_loss', factor=0.1, patience=15, min_lr=0.00001
         )
+        early_stopping = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=50)
         log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir,
                                                               histogram_freq=1)
-        loss_fn = pyrnd.DistanceMetricLoss()
+        loss_fn = pyrnd.DistanceMetricLoss(alpha=1, beta=5, gamma=0.1)
         model.compile(
             optimizer=opt,
             loss=loss_fn,
@@ -318,7 +319,7 @@ class MLPMetric:
             shuffle=True,
             verbose=1,
             batch_size=32,
-            callbacks=[reduce_lr, tensorboard_callback]
+            callbacks=[reduce_lr, early_stopping, tensorboard_callback]
         )
         evaluation = model.evaluate(x=test[0], y=test[1])
         print(evaluation)

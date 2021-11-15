@@ -136,7 +136,7 @@ class DistanceMetricLoss(Loss, ABC):
 
         """
         triangle = y_pred - (z_prime + z_prime_prime)
-        return tf.experimental.numpy.heaviside(triangle, 1)
+        return tf.experimental.numpy.heaviside(triangle, 0)
 
     def call(self, y_true: tf.Tensor, y_pred: tf.Tensor):
         """

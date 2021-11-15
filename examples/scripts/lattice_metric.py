@@ -40,12 +40,12 @@ if __name__ == "__main__":
         name='lattice_metric'
     )
     lattice_metric.train_model(
-        units=(15, 15), activation='relu', normalize=False, epochs=500
+        units=(12, 12), activation='sigmoid', normalize=True, epochs=500
     )
 
     # Define and run the RND agent.
     agent = pyrnd.RND(
-        point_selector=pyrnd.GreedySelection(threshold=1),
+        point_selector=pyrnd.GreedySelection(threshold=2),
         distance_metric=lattice_metric,
         data_generator=data_generator,
         target_network=target,
@@ -54,7 +54,6 @@ if __name__ == "__main__":
         target_size=10,
     )
     agent.run_rnd()
-    print(agent.target_set)
 
     plt.plot(
         data_generator.data_pool[:, 0],
