@@ -28,7 +28,6 @@ Module for the distance metric loss.
 from abc import ABC
 import tensorflow as tf
 from tensorflow.keras.losses import Loss
-import numpy as np
 
 
 class DistanceMetricLoss(Loss, ABC):
@@ -40,8 +39,41 @@ class DistanceMetricLoss(Loss, ABC):
         """
         Constructor for the distance metric loss function.
 
+        This metric function computes a loss for the distance metric learning module.
+        It will enforce the fundamental criteria of a distance metric e.g.,
+
+        symmetry: d(a, b) == d(b, a)
+
+        and the triangle identity:
+            for c = a + b:
+            d(a, b) <= d(a, c) + d(c, b)
+
+        The loss function is composed of three parts:
+
+            L = alpha * loss_simple + beta * loss_symmetry + gamma * loss_triangle
+
+        Simple Loss
+        ^^^^^^^^^^^
+        L_simple = abs(y_predicted - y_true)
+
+        Symmetry Loss
+        ^^^^^^^^^^^^^
+        L_symmetry = abs(d(a, b) - d(b, a))
+
+        Triangle Loss
+        ^^^^^^^^^^^^^
+        L_triangle = H(y_pred - z' + z'')
+        where z' = d(a, c) and z'' = d(c, b)
+
+
         Parameters
         ----------
+        alpha : float
+                Weighting term for the simple loss
+        beta : float
+                Weighting term for the symmetry loss
+        gamma : float
+                Weighting term for the triangle loss.
         """
         super().__init__()
         self.alpha = alpha
