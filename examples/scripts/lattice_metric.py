@@ -23,10 +23,10 @@ if __name__ == "__main__":
 
     # Build the target and predictor models.
     target = pyrnd.DenseModel(
-        units=12, layers=4, in_d=2, out_d=12, tolerance=1e-5, loss="cosine_similarity"
+        units=12, layers=4, in_d=2, out_d=12, tolerance=1, loss="cosine_similarity"
     )
     predictor = pyrnd.DenseModel(
-        units=12, layers=4, in_d=2, out_d=12, tolerance=1e-5, loss="cosine_similarity"
+        units=12, layers=4, in_d=2, out_d=12, tolerance=1, loss="cosine_similarity"
     )
 
     # Create and train the lattice metric for the problem.
@@ -40,12 +40,15 @@ if __name__ == "__main__":
         name='lattice_metric'
     )
     lattice_metric.train_model(
-        units=(12, 12), activation='sigmoid', normalize=True, epochs=500
+        units=(15, 15), activation='sigmoid', normalize=False, epochs=500
     )
+
+    target.loss = lattice_metric
+    predictor.loss = lattice_metric
 
     # Define and run the RND agent.
     agent = pyrnd.RND(
-        point_selector=pyrnd.GreedySelection(threshold=2),
+        point_selector=pyrnd.GreedySelection(threshold=1),
         distance_metric=lattice_metric,
         data_generator=data_generator,
         target_network=target,
@@ -55,6 +58,7 @@ if __name__ == "__main__":
     )
     agent.run_rnd()
 
+    print(len(agent.target_set))
     plt.plot(
         data_generator.data_pool[:, 0],
         data_generator.data_pool[:, 1],

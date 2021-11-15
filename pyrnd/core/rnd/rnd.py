@@ -266,7 +266,6 @@ class RND:
             self._choose_points()
             # self._store_metrics()
             self._retrain_network()
-            print(len(self.target_set))
             criteria = self._evaluate_agent()
             self.iterations += 1
 

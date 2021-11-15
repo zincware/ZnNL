@@ -241,7 +241,6 @@ class DenseModel(Model):
             self.model.fit(
                 x=x, y=y, epochs=epochs, shuffle=True, verbose=0, batch_size=1
             )
-            print(x.shape)
             converged = self._evaluate_model(x, y)
 
             self._lr_reduction(counter)

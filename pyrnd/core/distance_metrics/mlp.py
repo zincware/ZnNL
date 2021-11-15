@@ -158,7 +158,7 @@ class MLPMetric:
         """
         inputs = tf.concat([point_1, point_2], 1)
 
-        return self.model.predict(inputs)
+        return self.model(inputs)
 
     def build_model(
             self, units: tuple, activation: str, normalization: Union[None, tf.Tensor]
