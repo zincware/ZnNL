@@ -9,7 +9,7 @@ Copyright Contributors to the Zincware Project.
 Description: Demonstrating learning a metric for lattice.
 """
 import pyrnd
-import matplotlib.pyplot as plt
+import tensorflow as tf
 
 
 if __name__ == "__main__":
@@ -18,9 +18,14 @@ if __name__ == "__main__":
     """
     data_generator = pyrnd.PointsOnLattice()
     data_generator.build_pool(x_points=10, y_points=10)
-    plt.plot(data_generator.data_pool[:, 0], data_generator.data_pool[:, 1], '.')
-    plt.show()
 
+    points_1 = tf.convert_to_tensor(data_generator.get_points(15), dtype=tf.float64)
+    points_2 = tf.convert_to_tensor(data_generator.get_points(15), dtype=tf.float64)
+
+    print(points_1)
+    print(points_2)
+
+    print(pyrnd.distance_metrics.euclidean_distance(points_1, points_2))
 
     # target = pyrnd.DenseModel(
     #     units=12, layers=4, in_d=2, out_d=12, tolerance=1e-5, loss="cosine_similarity"
