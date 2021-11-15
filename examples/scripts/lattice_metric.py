@@ -38,7 +38,7 @@ if __name__ == "__main__":
         name='lattice_metric'
     )
     lattice_metric.train_model(
-        units=(10, 10), activation='relu', normalize=True, epochs=300
+        units=(10,), activation='relu', normalize=False, epochs=300
     )
 
     # Define and run the RND agent.

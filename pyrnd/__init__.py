@@ -12,6 +12,7 @@ from pyrnd.core.data.points_on_a_circle import PointsOnCircle
 from pyrnd.core.data.points_on_a_lattice import PointsOnLattice
 from pyrnd.core.models.model import Model
 from pyrnd.core.distance_metrics.mlp import MLPMetric
+from pyrnd.core.loss_functions.distance_metric_loss import DistanceMetricLoss
 
 __all__ = [
     "DenseModel",

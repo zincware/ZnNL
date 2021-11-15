@@ -29,11 +29,61 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from typing import Callable
+
+import pyrnd
 from pyrnd import DataGenerator
 from pyrnd import DenseModel
 from typing import Union
 import datetime
 import shutil
+
+
+class MLPMetricModel(keras.Model):
+    """
+    Custom model train method for the MLP metric.
+    """
+    def train_step(self, data):
+        """
+        Custom train step for the MLPMetric.
+
+        Returns
+        -------
+
+        """
+        x, y = data  # split data into tuples.
+        split = int(x.shape[-1]/2)
+
+        point_a, point_b = x[:, :split], x[:, split:]
+        x_permuted = tf.concat([point_b, point_a], 1)
+
+        c = point_a + point_b
+
+        # Compute loss
+        with tf.GradientTape() as tape:
+            # Get various forward passes.
+            y_pred = self(x, training=True)
+            y_pred_permuted = self(x_permuted, training=True)
+            z_prime = self(tf.concat([point_a, c], 1), training=True)
+            z_prime_prime = self(tf.concat([c, point_b], 1), training=True)
+
+            loss_vector = tf.convert_to_tensor(
+                [y_pred, y_pred_permuted, z_prime, z_prime_prime],
+                dtype=tf.float64
+            )
+
+            # Compute the loss value
+            # (the loss function is configured in `compile()`)
+            loss = self.compiled_loss(y, loss_vector, regularization_losses=self.losses)
+
+        # Compute gradients
+        trainable_vars = self.trainable_variables
+        gradients = tape.gradient(loss, trainable_vars)
+        # Update weights
+        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
+        # Update metrics (includes the metric that tracks the loss)
+        self.compiled_metrics.update_state(y, y_pred)
+        # Return a dict mapping metric names to current value
+        return {m.name: m.result() for m in self.metrics}
 
 
 class MLPMetric:
@@ -146,7 +196,7 @@ class MLPMetric:
 
         x = layers.Dense(1, activation)(x)
 
-        return keras.Model(input_layer, x)
+        return MLPMetricModel(input_layer, x)
 
     def prepare_dataset(self, points: int):
         """
@@ -198,10 +248,10 @@ class MLPMetric:
         # Handle previous log files.
         try:
             shutil.rmtree('./logs')
+        except FileNotFoundError:
+            pass
         except OSError:
             raise OSError("Please close the previous Tensorboard url.")
-        except ValueError:
-            pass
 
     def train_model(
             self,
@@ -252,9 +302,10 @@ class MLPMetric:
         log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir,
                                                               histogram_freq=1)
+        loss_fn = pyrnd.DistanceMetricLoss()
         model.compile(
             optimizer=opt,
-            loss="mean_squared_error",
+            loss=loss_fn,
             metrics=['accuracy']
         )
 
@@ -266,7 +317,7 @@ class MLPMetric:
             epochs=epochs,
             shuffle=True,
             verbose=1,
-            batch_size=50,
+            batch_size=32,
             callbacks=[reduce_lr, tensorboard_callback]
         )
         evaluation = model.evaluate(x=test[0], y=test[1])
