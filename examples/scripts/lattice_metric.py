@@ -9,39 +9,46 @@ Copyright Contributors to the Zincware Project.
 Description: Demonstrating learning a metric for lattice.
 """
 import pyrnd
-import tensorflow as tf
 
 
 if __name__ == "__main__":
     """
     Main method to run the routine.
     """
+    # Prepare the data generator.
     data_generator = pyrnd.PointsOnLattice()
     data_generator.build_pool(x_points=10, y_points=10)
 
-    points_1 = tf.convert_to_tensor(data_generator.get_points(15), dtype=tf.float64)
-    points_2 = tf.convert_to_tensor(data_generator.get_points(15), dtype=tf.float64)
+    # Build the target and predictor models.
+    target = pyrnd.DenseModel(
+        units=12, layers=4, in_d=2, out_d=12, tolerance=1e-5, loss="cosine_similarity"
+    )
+    predictor = pyrnd.DenseModel(
+        units=12, layers=4, in_d=2, out_d=12, tolerance=1e-5, loss="cosine_similarity"
+    )
 
-    print(points_1)
-    print(points_2)
+    # Create and train the lattice metric for the problem.
+    lattice_metric = pyrnd.MLPMetric(
+        data_generator=data_generator,
+        distance_metric=pyrnd.distance_metrics.euclidean_distance,
+        embedding_operator=target,
+        training_points=100,
+        validation_points=100,
+        test_points=100,
+        name='lattice_metric'
+    )
+    lattice_metric.train_model(
+        units=(10, 10), activation='relu', normalize=True, epochs=300
+    )
 
-    print(pyrnd.distance_metrics.euclidean_distance(points_1, points_2))
-
-    # target = pyrnd.DenseModel(
-    #     units=12, layers=4, in_d=2, out_d=12, tolerance=1e-5, loss="cosine_similarity"
-    # )
-    # predictor = pyrnd.DenseModel(
-    #     units=12, layers=4, in_d=2, out_d=12, tolerance=1e-5, loss="cosine_similarity"
-    # )
-    # # print(target.summary())
-    #
-    # agent = pyrnd.RND(
-    #     point_selector=GreedySelection(threshold=0.1),
-    #     # distance_metric=euclidean_distance,
-    #     data_generator=data_generator,
-    #     target_network=target,
-    #     predictor_network=predictor,
-    #     tolerance=5,
-    #     target_size=10,
-    # )
-    # agent.run_rnd()
+    # Define and run the RND agent.
+    agent = pyrnd.RND(
+        point_selector=pyrnd.GreedySelection(threshold=0.1),
+        distance_metric=lattice_metric,
+        data_generator=data_generator,
+        target_network=target,
+        predictor_network=predictor,
+        tolerance=5,
+        target_size=10,
+    )
+    agent.run_rnd()

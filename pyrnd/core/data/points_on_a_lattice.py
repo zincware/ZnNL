@@ -38,14 +38,7 @@ class PointsOnLattice(DataGenerator, ABC):
 
     def __init__(self):
         """
-        constructor for points on a circle
-
-        Parameters
-        ----------
-        radius : float
-                euclidian distance from origin
-        noise : float
-                maximum allowed deviation from the radius
+        constructor for points on a lattice.
         """
         self.data_pool = None
 
@@ -88,6 +81,12 @@ class PointsOnLattice(DataGenerator, ABC):
         if n_points == -1:
             return self.data_pool
         else:
-            indices = random.sample(range(0, len(self.data_pool) - 1), n_points)
-            data = self.data_pool[indices]
+            try:
+                indices = random.sample(range(0, len(self.data_pool) - 1), n_points)
+                data = self.data_pool[indices]
+            except ValueError:
+                indices = random.sample(
+                    range(0, len(self.data_pool) - 1), len(self.data_pool)
+                )
+                data = self.data_pool[indices]
             return data

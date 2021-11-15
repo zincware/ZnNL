@@ -22,4 +22,6 @@ def euclidean_distance(point_1: tf.Tensor, point_2: tf.Tensor):
     point_2 : tf.Tensor
             Second point in the comparison.
     """
-    return tf.norm(point_1 - point_2, axis=1)
+    return tf.norm(
+        tf.cast(point_1, dtype=tf.float64) - tf.cast(point_2, dtype=tf.float64), axis=1
+    )
