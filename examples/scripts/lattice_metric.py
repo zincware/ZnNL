@@ -9,6 +9,8 @@ Copyright Contributors to the Zincware Project.
 Description: Demonstrating learning a metric for lattice.
 """
 import pyrnd
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 if __name__ == "__main__":
@@ -38,12 +40,12 @@ if __name__ == "__main__":
         name='lattice_metric'
     )
     lattice_metric.train_model(
-        units=(10,), activation='relu', normalize=False, epochs=300
+        units=(15, 15), activation='relu', normalize=False, epochs=500
     )
 
     # Define and run the RND agent.
     agent = pyrnd.RND(
-        point_selector=pyrnd.GreedySelection(threshold=0.1),
+        point_selector=pyrnd.GreedySelection(threshold=1),
         distance_metric=lattice_metric,
         data_generator=data_generator,
         target_network=target,
@@ -52,3 +54,18 @@ if __name__ == "__main__":
         target_size=10,
     )
     agent.run_rnd()
+    print(agent.target_set)
+
+    plt.plot(
+        data_generator.data_pool[:, 0],
+        data_generator.data_pool[:, 1],
+        '.',
+        label='Data Pool'
+    )
+    plt.plot(
+        np.array(agent.target_set)[:, 0],
+        np.array(agent.target_set)[:, 1],
+        'x',
+        label='Chosen Points'
+    )
+    plt.show()

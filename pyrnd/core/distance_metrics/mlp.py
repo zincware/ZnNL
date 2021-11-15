@@ -295,9 +295,9 @@ class MLPMetric:
 
         # Build and compile the model
         model = self.build_model(units, activation, normalization)
-        opt = tf.keras.optimizers.Adam(learning_rate=0.001, decay=0.0)
+        opt = tf.keras.optimizers.Adam(learning_rate=0.01, decay=0.0)
         reduce_lr = keras.callbacks.ReduceLROnPlateau(
-            monitor='val_loss', factor=0.2, patience=5, min_lr=0.001
+            monitor='val_loss', factor=0.2, patience=5, min_lr=0.00001
         )
         log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir,
