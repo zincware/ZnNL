@@ -28,10 +28,22 @@ if __name__ == "__main__":
     data_generator.build_pool(100)
 
     target = pyrnd.DenseModel(
-        units=12, layers=4, in_d=2, out_d=12, tolerance=1e-5, loss="cosine_similarity"
+        units=12,
+        layers=4,
+        in_d=2,
+        out_d=12,
+        tolerance=1e-5,
+        loss="cosine_similarity",
+        activation="tanh",
     )
     predictor = pyrnd.DenseModel(
-        units=12, layers=4, in_d=2, out_d=12, tolerance=1e-5, loss="cosine_similarity"
+        units=12,
+        layers=4,
+        in_d=2,
+        out_d=12,
+        tolerance=1e-5,
+        loss="cosine_similarity",
+        activation="tanh",
     )
     # print(target.summary())
 
@@ -52,9 +64,9 @@ if __name__ == "__main__":
 
     fig, (plot1, plot2) = plt.subplots(2, figsize=(4, 8))
     results = np.array(agent.metric_results_storage)
-    plot1.plot(results[:, 0], label='0')
-    plot1.plot(results[:, 1], label='1')
-    plot1.plot(results[:, 2], label='2')
+    plot1.plot(results[:, 0], label="0")
+    plot1.plot(results[:, 1], label="1")
+    plot1.plot(results[:, 2], label="2")
 
     # for i, array in enumerate(agent.metric_results_storage):
     #     plot1.plot(array, label=i)
