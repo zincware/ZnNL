@@ -1,10 +1,11 @@
-from .similarity_measures import \
-    SimilarityMeasures, \
-    CosineSim, \
-    MSE, \
-    EuclideanDist, \
-    MahalanobisDist, \
-    AngleSim
+from .similarity_measures import (
+    SimilarityMeasures,
+    CosineSim,
+    MSE,
+    EuclideanDist,
+    MahalanobisDist,
+    AngleSim,
+)
 
 __all__ = [
     "SimilarityMeasures",
@@ -12,5 +13,5 @@ __all__ = [
     "MSE",
     "EuclideanDist",
     "MahalanobisDist",
-    "AngleSim"
-           ]
+    "AngleSim",
+]

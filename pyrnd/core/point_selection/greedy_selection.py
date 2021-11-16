@@ -19,7 +19,7 @@ class GreedySelection(PointSelection):
     """
 
     def __init__(
-            self, agent: RND = None, selected_points: int = -1, threshold: float = 0.01
+        self, agent: RND = None, selected_points: int = -1, threshold: float = 0.01
     ):
         """
         Constructor for the GreedySelection class.
