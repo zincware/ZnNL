@@ -9,7 +9,7 @@ Copyright Contributors to the Zincware Project.
 Description: Test for the distance measures modules.
 """
 import unittest
-import pyrnd
+import znrnd
 import tensorflow as tf
 import numpy as np
 
@@ -32,7 +32,7 @@ class TestDistanceMetrics(unittest.TestCase):
         After running the test it is clear that we just cannot use such a
         metric to compare similarity.
         """
-        metric = pyrnd.distance_metrics.euclidean_distance
+        metric = znrnd.distance_metrics.euclidean_distance
 
         # Test equal length vectors
         point_1 = tf.convert_to_tensor([1.0, 0, 0, 3.0])

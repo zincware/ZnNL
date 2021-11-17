@@ -9,40 +9,38 @@ Copyright Contributors to the Zincware Project.
 Description: an example script to test the RND on functionality
 and investigate the symmetry conservation in representation space
 """
-import pyrnd
-from pyrnd.core.distance_metrics.distance_metrics import euclidean_distance
-from pyrnd.core.point_selection.greedy_selection import GreedySelection
+import znrnd
 import numpy as np
 import matplotlib.pyplot as plt
-import pyrnd.core.similarity_measures.similarity_measures as losses
 
 
 if __name__ == "__main__":
     """
     Main method to run the routine.
     """
-    # data_generator = pyrnd.ConfinedParticles()
-    data_generator = pyrnd.PointsOnCircle(radius=1.0, noise=1e-2)
-    data_generator.build_pool(n_points=100, method="uniform", noise=False)
+    data_generator = znrnd.data.PointsOnLattice()
+    data_generator.build_pool(x_points=10, y_points=10)
 
-    target = pyrnd.DenseModel(
+    target = znrnd.models.DenseModel(
         units=(12, 12, 12),
         in_d=2,
+        activation='sigmoid',
         out_d=12,
         tolerance=1e-3,
-        loss=losses.MSE()
+        loss=znrnd.loss_functions.MeanPowerLoss(order=2)
     )
-    predictor = pyrnd.DenseModel(
+    predictor = znrnd.models.DenseModel(
         units=(12, 12, 12),
         in_d=2,
+        activation='sigmoid',
         out_d=12,
         tolerance=1e-3,
-        loss=losses.MSE()
+        loss=znrnd.loss_functions.MeanPowerLoss(order=2)
     )
 
-    agent = pyrnd.RND(
-        point_selector=GreedySelection(threshold=0.02),
-        distance_metric=losses.MSE(),
+    agent = znrnd.RND(
+        point_selector=znrnd.point_selection.GreedySelection(threshold=0.02),
+        distance_metric=znrnd.distance_metrics.OrderNDifference(order=2),
         data_generator=data_generator,
         target_network=target,
         predictor_network=predictor,

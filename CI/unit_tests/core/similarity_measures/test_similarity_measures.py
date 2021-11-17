@@ -9,7 +9,7 @@ Copyright Contributors to the Zincware Project.
 Description: Test for the similarity measures.
 """
 import unittest
-import pyrnd
+import znrnd
 import tensorflow as tf
 import numpy as np
 
@@ -28,7 +28,7 @@ class TestSimilarityMeasures(unittest.TestCase):
         Assert the correct answer is returned for orthogonal, parallel, and
         somewhere in between.
         """
-        metric = pyrnd.similarity_measures.cosine_similarity
+        metric = znrnd.similarity_measures.cosine_similarity
 
         # Test orthogonal vectors
         point_1 = tf.convert_to_tensor([[1, 0, 0, 0]])

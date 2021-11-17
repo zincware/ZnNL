@@ -11,9 +11,9 @@ Description: Module for a standard feed forward neural network.
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-from pyrnd.core.models.model import Model
-from pyrnd.core.similarity_measures import SimilarityMeasures
-from pyrnd.core.similarity_measures import CosineSim
+from znrnd.core.models.model import Model
+from znrnd.core.similarity_measures import SimilarityMeasures
+from znrnd.core.similarity_measures import CosineSim
 
 
 class DenseModel(Model):

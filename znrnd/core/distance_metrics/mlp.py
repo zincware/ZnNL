@@ -30,9 +30,10 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from typing import Callable
 
-import pyrnd
-from pyrnd import DataGenerator
-from pyrnd import DenseModel
+import znrnd
+from znrnd.core.distance_metrics.distance_metric import DistanceMetric
+from znrnd import DataGenerator
+from znrnd import DenseModel
 from typing import Union
 import datetime
 import shutil
@@ -86,7 +87,7 @@ class MLPMetricModel(keras.Model):
         return {m.name: m.result() for m in self.metrics}
 
 
-class MLPMetric:
+class MLPMetric(DistanceMetric):
     """
     Class for the MLP distance metric.
 
@@ -303,7 +304,7 @@ class MLPMetric:
         log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir,
                                                               histogram_freq=1)
-        loss_fn = pyrnd.DistanceMetricLoss(alpha=1, beta=5, gamma=0.1)
+        loss_fn = znrnd.DistanceMetricLoss(alpha=1, beta=5, gamma=0.1)
         model.compile(
             optimizer=opt,
             loss=loss_fn,

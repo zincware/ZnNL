@@ -8,8 +8,8 @@ Copyright Contributors to the Zincware Project.
 
 Description: Class for the greedy selection routine.
 """
-from pyrnd.core.point_selection.point_selection import PointSelection
-from pyrnd.core.rnd.rnd import RND
+from znrnd.core.point_selection.point_selection import PointSelection
+from znrnd.core.rnd.rnd import RND
 import tensorflow as tf
 
 

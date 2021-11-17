@@ -9,7 +9,7 @@ Copyright Contributors to the Zincware Project.
 Description: greedy selection module test.
 """
 import unittest
-import pyrnd
+import znrnd
 import tensorflow as tf
 import numpy as np
 
@@ -50,7 +50,7 @@ class Agent:
         -------
 
         """
-        return pyrnd.similarity_measures.cosine_similarity(
+        return znrnd.similarity_measures.cosine_similarity(
             points, tf.convert_to_tensor([[1, 0], [1, 0]])
         )
 
@@ -65,7 +65,7 @@ class TestGreedySelection(unittest.TestCase):
         Test the select points methods.
         """
         self.agent = Agent()
-        self.selector = pyrnd.GreedySelection(self.agent)
+        self.selector = znrnd.GreedySelection(self.agent)
         point = self.selector.select_points()
 
         np.testing.assert_array_equal(point[0], np.array([0, 1]))

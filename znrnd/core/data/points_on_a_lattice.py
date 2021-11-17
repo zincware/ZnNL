@@ -26,7 +26,7 @@ Summary
 Module to generate points on a lattice.
 """
 from abc import ABC
-from pyrnd.core.data.data_generator import DataGenerator
+from znrnd.core.data.data_generator import DataGenerator
 import random
 import numpy as np
 

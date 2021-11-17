@@ -26,14 +26,14 @@ with open("README.rst", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="PyRND",
+    name="ZnRND",
     version="0.0.1",
     author="Samuel Tovey",
     author_email="tovey.samuel@gmail.com",
     description="A tool for performing random network distillation.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/zincware/PyRND.git",
+    url="https://github.com/zincware/ZnRND.git",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",

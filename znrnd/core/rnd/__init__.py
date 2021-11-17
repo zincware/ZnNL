@@ -8,3 +8,6 @@ Copyright Contributors to the Zincware Project.
 
 Description:
 """
+from .rnd import RND
+
+__all__ = ['RND']

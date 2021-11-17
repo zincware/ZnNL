@@ -8,7 +8,7 @@ Copyright Contributors to the Zincware Project.
 
 Description: Demonstrating learning a metric for lattice.
 """
-import pyrnd
+import znrnd
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -18,21 +18,28 @@ if __name__ == "__main__":
     Main method to run the routine.
     """
     # Prepare the data generator.
-    data_generator = pyrnd.PointsOnLattice()
+    data_generator = znrnd.data.PointsOnLattice()
     data_generator.build_pool(x_points=10, y_points=10)
 
-    # Build the target and predictor models.
-    target = pyrnd.DenseModel(
-        units=12, layers=4, in_d=2, out_d=12, tolerance=1, loss="cosine_similarity"
+    target = znrnd.models.DenseModel(
+        units=(12, 12, 12),
+        in_d=2,
+        out_d=12,
+        tolerance=1.0,
+        loss=znrnd.loss_functions.MeanPowerLoss(order=2)
     )
-    predictor = pyrnd.DenseModel(
-        units=12, layers=4, in_d=2, out_d=12, tolerance=1, loss="cosine_similarity"
+    predictor = znrnd.models.DenseModel(
+        units=(12, 12, 12),
+        in_d=2,
+        out_d=12,
+        tolerance=1.0,
+        loss=znrnd.loss_functions.MeanPowerLoss(order=2)
     )
 
     # Create and train the lattice metric for the problem.
-    lattice_metric = pyrnd.MLPMetric(
+    lattice_metric = znrnd.distance_metrics.MLPMetric(
         data_generator=data_generator,
-        distance_metric=pyrnd.distance_metrics.euclidean_distance,
+        distance_metric=znrnd.distance_metrics.LPNorm(order=2),
         embedding_operator=target,
         training_points=100,
         validation_points=100,
@@ -47,8 +54,8 @@ if __name__ == "__main__":
     predictor.loss = lattice_metric
 
     # Define and run the RND agent.
-    agent = pyrnd.RND(
-        point_selector=pyrnd.GreedySelection(threshold=1),
+    agent = znrnd.RND(
+        point_selector=znrnd.point_selection.GreedySelection(threshold=1),
         distance_metric=lattice_metric,
         data_generator=data_generator,
         target_network=target,

@@ -8,3 +8,7 @@ Copyright Contributors to the Zincware Project.
 
 Description:
 """
+from .dense_model import DenseModel
+from .model import Model
+
+__all__ = ["DenseModel", "Model"]

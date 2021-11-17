@@ -8,11 +8,11 @@ Copyright Contributors to the Zincware Project.
 
 Description: Module for the implementation of random network distillation.
 """
-import pyrnd
-from pyrnd.core.models.model import Model
-from pyrnd.core.point_selection.point_selection import PointSelection
-from pyrnd.core.data.data_generator import DataGenerator
-from pyrnd.core.similarity_measures import SimilarityMeasures
+import znrnd
+from znrnd.core.models.model import Model
+from znrnd.core.point_selection.point_selection import PointSelection
+from znrnd.core.data.data_generator import DataGenerator
+from znrnd.core.similarity_measures import SimilarityMeasures
 import tensorflow as tf
 import numpy as np
 
@@ -102,16 +102,16 @@ class RND:
         """
         # Update the point selector
         if self.point_selector is None:
-            self.point_selector = pyrnd.GreedySelection(self)
+            self.point_selector = znrnd.GreedySelection(self)
         # Update the metric
         if self.metric is None:
-            self.metric = pyrnd.similarity_measures.CosineSim()
+            self.metric = znrnd.similarity_measures.CosineSim()
         # Update the target
         if self.target is None:
-            self.target = pyrnd.DenseModel()
+            self.target = znrnd.DenseModel()
         # Update the predictor.
         if self.predictor is None:
-            self.predictor = pyrnd.DenseModel()
+            self.predictor = znrnd.DenseModel()
 
     def compute_distance(self, points: tf.Tensor):
         """
