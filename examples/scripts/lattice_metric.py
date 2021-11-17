@@ -71,4 +71,5 @@ if __name__ == "__main__":
         'x',
         label='Chosen Points'
     )
+    plt.legend()
     plt.show()
