@@ -6,13 +6,15 @@ SPDX-License-Identifier: EPL-2.0
 
 Copyright Contributors to the Zincware Project.
 
-Description: An example script to compute the number of unique places in a box.
+Description: an example script to test the RND on functionality
+and investigate the symmetry conservation in representation space
 """
 import pyrnd
 from pyrnd.core.distance_metrics.distance_metrics import euclidean_distance
 from pyrnd.core.point_selection.greedy_selection import GreedySelection
 import numpy as np
 import matplotlib.pyplot as plt
+import pyrnd.core.similarity_measures.similarity_measures as losses
 
 
 if __name__ == "__main__":
@@ -20,24 +22,27 @@ if __name__ == "__main__":
     Main method to run the routine.
     """
     # data_generator = pyrnd.ConfinedParticles()
-    data_generator = pyrnd.PointsOnCircle(radius=1.0, noise=1e-3)
-    # Noisy circle.
-    # data = pyrnd.PointsOnCircle(noise=0.1)
-    # data.build_pool('uniform', n_points=50, noise=True)
-    # data_generator = pyrnd.ConfinedParticles()
-    data_generator.build_pool(100)
+    data_generator = pyrnd.PointsOnCircle(radius=1.0, noise=1e-2)
+    data_generator.build_pool(n_points=100, method="uniform", noise=False)
 
     target = pyrnd.DenseModel(
-        units=12, layers=4, in_d=2, out_d=12, tolerance=1e-5, loss="cosine_similarity"
+        units=(12, 12, 12),
+        in_d=2,
+        out_d=12,
+        tolerance=1e-3,
+        loss=losses.MSE()
     )
     predictor = pyrnd.DenseModel(
-        units=12, layers=4, in_d=2, out_d=12, tolerance=1e-5, loss="cosine_similarity"
+        units=(12, 12, 12),
+        in_d=2,
+        out_d=12,
+        tolerance=1e-3,
+        loss=losses.MSE()
     )
-    # print(target.summary())
 
     agent = pyrnd.RND(
-        point_selector=GreedySelection(threshold=0.1),
-        # distance_metric=euclidean_distance,
+        point_selector=GreedySelection(threshold=0.02),
+        distance_metric=losses.MSE(),
         data_generator=data_generator,
         target_network=target,
         predictor_network=predictor,
@@ -65,3 +70,5 @@ if __name__ == "__main__":
     plot2.set_aspect("equal", adjustable="box")
 
     plt.show()
+
+
