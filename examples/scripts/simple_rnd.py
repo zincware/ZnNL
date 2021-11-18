@@ -23,7 +23,7 @@ if __name__ == "__main__":
     data_generator = pyrnd.PointsOnCircle(radius=1.0, noise=1e-3)
     # Noisy circle.
     # data = pyrnd.PointsOnCircle(noise=0.1)
-    data_generator.build_pool('uniform', n_points=100, noise=True)
+    data_generator.build_pool("uniform", n_points=100, noise=True)
     # data_generator = pyrnd.ConfinedParticles()
 
     target = pyrnd.DenseModel(

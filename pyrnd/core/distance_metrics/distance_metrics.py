@@ -35,11 +35,12 @@ class MahalanobisDist:
     Class to compute the Mahalanobis Distance
     """
 
-    def __init__(self,
-                 data_generator: DataGenerator,
-                 target_network: Model = None,
-                 predictor_network: Model = None,
-                 ):
+    def __init__(
+        self,
+        data_generator: DataGenerator,
+        target_network: Model = None,
+        predictor_network: Model = None,
+    ):
         """
         Constructor for the Mahalanobis Distance
 
