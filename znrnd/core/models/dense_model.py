@@ -12,8 +12,8 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from znrnd.core.models.model import Model
-from znrnd.core.similarity_measures import SimilarityMeasures
-from znrnd.core.similarity_measures import CosineSim
+from znrnd.core.loss_functions.simple_loss import SimpleLoss
+from znrnd.core.loss_functions.cosine_distance import CosineDistance
 
 
 class DenseModel(Model):
@@ -48,7 +48,7 @@ class DenseModel(Model):
             activation: str = "relu",
             learning_rate: float = 1e-2,
             tolerance: float = 1e-5,
-            loss: SimilarityMeasures = CosineSim(),
+            loss: SimpleLoss = CosineDistance(),
     ):
         """
         Constructor for the Feed forward network module.
@@ -122,11 +122,7 @@ class DenseModel(Model):
 
         Returns
         -------
-
-        Notes
-        -----
-        TODO: Add options for the loss function. Make some nice classes.
-
+        Updates the model in the class.
         """
         opt = tf.keras.optimizers.Adam(learning_rate=self.learning_rate, decay=0.0)
 
@@ -138,12 +134,15 @@ class DenseModel(Model):
 
         Parameters
         ----------
-        dataset : tf.data.Dataset
-                Dataset on which to assess the model.
+        x : tf.Tensor
+                Input data on which to evaluate the model.
+        y : tf.Tensor
+                Target values to use in the evaluation.
 
         Returns
         -------
-
+        loss : tf.Tensor shape=(len(x), 1)
+                Loss of each prediction in the input tensors.
         """
         loss = self.model.evaluate(x, y)
 

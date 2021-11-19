@@ -32,8 +32,8 @@ from typing import Callable
 
 import znrnd
 from znrnd.core.distance_metrics.distance_metric import DistanceMetric
-from znrnd import DataGenerator
-from znrnd import DenseModel
+from znrnd.core.data.data_generator import DataGenerator
+from znrnd.core.models.dense_model import DenseModel
 from typing import Union
 import datetime
 import shutil

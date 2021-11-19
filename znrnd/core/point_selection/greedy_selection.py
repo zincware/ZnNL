@@ -50,8 +50,9 @@ class GreedySelection(PointSelection):
         """
         data = self.agent.generate_points(-1)  # get all points in the pool.
         distances = self.agent.compute_distance(tf.convert_to_tensor(data))
+        truth_sum = tf.reduce_sum(tf.where(distances > self.threshold))
 
-        if all(distances < self.threshold):
-            return None
-        else:
+        if truth_sum > 0:
             return [data[tf.math.argmax(distances)]]
+        else:
+            return None

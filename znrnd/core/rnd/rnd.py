@@ -12,9 +12,10 @@ import znrnd
 from znrnd.core.models.model import Model
 from znrnd.core.point_selection.point_selection import PointSelection
 from znrnd.core.data.data_generator import DataGenerator
-from znrnd.core.similarity_measures import SimilarityMeasures
+from znrnd.core.distance_metrics.distance_metric import DistanceMetric
 import tensorflow as tf
 import numpy as np
+from typing import Union
 
 
 class RND:
@@ -36,7 +37,7 @@ class RND:
         data_generator: DataGenerator,
         target_network: Model = None,
         predictor_network: Model = None,
-        distance_metric: SimilarityMeasures = None,
+        distance_metric: DistanceMetric = None,
         point_selector: PointSelection = None,
         optimizers: list = None,
         target_size: int = None,
@@ -102,16 +103,16 @@ class RND:
         """
         # Update the point selector
         if self.point_selector is None:
-            self.point_selector = znrnd.GreedySelection(self)
+            self.point_selector = znrnd.point_selection.GreedySelection(self)
         # Update the metric
         if self.metric is None:
             self.metric = znrnd.similarity_measures.CosineSim()
         # Update the target
         if self.target is None:
-            self.target = znrnd.DenseModel()
+            self.target = znrnd.models.DenseModel()
         # Update the predictor.
         if self.predictor is None:
-            self.predictor = znrnd.DenseModel()
+            self.predictor = znrnd.models.DenseModel()
 
     def compute_distance(self, points: tf.Tensor):
         """
@@ -130,7 +131,7 @@ class RND:
         predictor_predictions = self.predictor.predict(points)
         target_predictions = self.target.predict(points)
 
-        self.metric_results = self.metric.calculate(
+        self.metric_results = self.metric(
             target_predictions, predictor_predictions
         )
         return self.metric_results
@@ -161,9 +162,12 @@ class RND:
 
         """
         points = self.point_selector.select_points()
-        self._update_target_set(points)
+        try:
+            self._update_target_set(points.numpy())
+        except AttributeError:
+            self._update_target_set(None)
 
-    def _update_target_set(self, points: np.ndarray):
+    def _update_target_set(self, points: Union[np.ndarray, None]):
         """
         Add point/s to the target set.
 
@@ -174,7 +178,7 @@ class RND:
 
         Returns
         -------
-
+        If there are new points the class is updated, if not, nothing happens.
         """
         self.historical_length = len(self.target_set)
         if points is None:
