@@ -24,7 +24,7 @@ Module for the L_p norm class.
 
     d = (|r[0]|^p + |r[1]|^p + ... + |r[n]|^p)^(1/p)
 """
-from.distance_metric import DistanceMetric
+from .distance_metric import DistanceMetric
 import tensorflow as tf
 
 
@@ -32,6 +32,7 @@ class LPNorm(DistanceMetric):
     """
     Compute the L_p norm between vectors.
     """
+
     def __init__(self, order: float):
         """
         Constructor for the LPNorm class.

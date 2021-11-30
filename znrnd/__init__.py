@@ -17,5 +17,5 @@ __all__ = [
     "point_selection",
     "similarity_measures",
     "data",
-    "RND"
+    "RND",
 ]

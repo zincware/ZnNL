@@ -41,14 +41,14 @@ class DenseModel(Model):
     """
 
     def __init__(
-            self,
-            units: tuple = (12, 12, 12),
-            in_d: int = 2,
-            out_d: int = 1,
-            activation: str = "relu",
-            learning_rate: float = 1e-2,
-            tolerance: float = 1e-5,
-            loss: SimpleLoss = CosineDistance(),
+        self,
+        units: tuple = (12, 12, 12),
+        in_d: int = 2,
+        out_d: int = 1,
+        activation: str = "relu",
+        learning_rate: float = 1e-2,
+        tolerance: float = 1e-5,
+        loss: SimpleLoss = CosineDistance(),
     ):
         """
         Constructor for the Feed forward network module.

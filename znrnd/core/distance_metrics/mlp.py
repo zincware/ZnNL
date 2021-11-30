@@ -43,6 +43,7 @@ class MLPMetricModel(keras.Model):
     """
     Custom model train method for the MLP metric.
     """
+
     def train_step(self, data):
         """
         Custom train step for the MLPMetric.
@@ -52,7 +53,7 @@ class MLPMetricModel(keras.Model):
 
         """
         x, y = data  # split data into tuples.
-        split = int(x.shape[-1]/2)
+        split = int(x.shape[-1] / 2)
 
         point_a, point_b = x[:, :split], x[:, split:]
         x_permuted = tf.concat([point_b, point_a], 1)
@@ -68,8 +69,7 @@ class MLPMetricModel(keras.Model):
             z_prime_prime = self(tf.concat([c, point_b], 1), training=True)
 
             loss_vector = tf.convert_to_tensor(
-                [y_pred, y_pred_permuted, z_prime, z_prime_prime],
-                dtype=tf.float64
+                [y_pred, y_pred_permuted, z_prime, z_prime_prime], dtype=tf.float64
             )
 
             # Compute the loss value
@@ -98,14 +98,14 @@ class MLPMetric(DistanceMetric):
     """
 
     def __init__(
-            self,
-            data_generator: DataGenerator,
-            distance_metric: Callable,
-            embedding_operator: DenseModel,
-            training_points: int = 100,
-            validation_points: int = 100,
-            test_points: int = 100,
-            name: str = "mlp_metric"
+        self,
+        data_generator: DataGenerator,
+        distance_metric: Callable,
+        embedding_operator: DenseModel,
+        training_points: int = 100,
+        validation_points: int = 100,
+        test_points: int = 100,
+        name: str = "mlp_metric",
     ):
         """
         Constructor for the MLP metric.
@@ -162,7 +162,7 @@ class MLPMetric(DistanceMetric):
         return self.model(inputs)
 
     def build_model(
-            self, units: tuple, activation: str, normalization: Union[None, tf.Tensor]
+        self, units: tuple, activation: str, normalization: Union[None, tf.Tensor]
     ) -> tf.keras.Model:
         """
         Build a neural network model.
@@ -248,18 +248,18 @@ class MLPMetric(DistanceMetric):
         """
         # Handle previous log files.
         try:
-            shutil.rmtree('./logs')
+            shutil.rmtree("./logs")
         except FileNotFoundError:
             pass
         except OSError:
             raise OSError("Please close the previous Tensorboard url.")
 
     def train_model(
-            self,
-            units: tuple = (12, 12, 12),
-            activation: str = "relu",
-            normalize: bool = False,
-            epochs: int = 100
+        self,
+        units: tuple = (12, 12, 12),
+        activation: str = "relu",
+        normalize: bool = False,
+        epochs: int = 100,
     ) -> keras.Model:
         """
         Train the distance metric.
@@ -298,18 +298,15 @@ class MLPMetric(DistanceMetric):
         model = self.build_model(units, activation, normalization)
         opt = tf.keras.optimizers.Adam(learning_rate=0.01, decay=0.0)
         reduce_lr = keras.callbacks.ReduceLROnPlateau(
-            monitor='val_loss', factor=0.1, patience=15, min_lr=0.00001
+            monitor="val_loss", factor=0.1, patience=15, min_lr=0.00001
         )
-        early_stopping = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=50)
+        early_stopping = tf.keras.callbacks.EarlyStopping(monitor="loss", patience=50)
         log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-        tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir,
-                                                              histogram_freq=1)
-        loss_fn = znrnd.loss_functions.DistanceMetricLoss(alpha=1, beta=5, gamma=0.1)
-        model.compile(
-            optimizer=opt,
-            loss=loss_fn,
-            metrics=['accuracy']
+        tensorboard_callback = tf.keras.callbacks.TensorBoard(
+            log_dir=log_dir, histogram_freq=1
         )
+        loss_fn = znrnd.loss_functions.DistanceMetricLoss(alpha=1, beta=5, gamma=0.1)
+        model.compile(optimizer=opt, loss=loss_fn, metrics=["accuracy"])
 
         # Train and evaluate the model.
         model.fit(
@@ -320,7 +317,7 @@ class MLPMetric(DistanceMetric):
             shuffle=True,
             verbose=1,
             batch_size=32,
-            callbacks=[reduce_lr, early_stopping, tensorboard_callback]
+            callbacks=[reduce_lr, early_stopping, tensorboard_callback],
         )
         evaluation = model.evaluate(x=test[0], y=test[1])
         print(evaluation)

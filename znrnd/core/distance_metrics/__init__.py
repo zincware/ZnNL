@@ -35,5 +35,5 @@ __all__ = [
     "AngularDistance",
     "LPNorm",
     "OrderNDifference",
-    "MahalanobisDistance"
+    "MahalanobisDistance",
 ]

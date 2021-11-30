@@ -30,6 +30,7 @@ class AngularDistance(DistanceMetric):
     """
     Class for the angular distance metric.
     """
+
     def __init__(self, points: int = None):
         """
         Constructor for the angular distance metric.
@@ -78,4 +79,3 @@ class AngularDistance(DistanceMetric):
             )
         )
         return tf.acos(abs(tf.divide(numerator, denominator))) / self.normalization
-

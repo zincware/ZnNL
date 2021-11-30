@@ -30,6 +30,7 @@ class MahalanobisDistance(DistanceMetric):
     """
     Compute the mahalanobis distance between points.
     """
+
     def __init__(self):
         """
         Constructor for the Mahalanobis distance.

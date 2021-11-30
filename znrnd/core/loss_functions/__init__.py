@@ -40,5 +40,5 @@ __all__ = [
     "LPNormLoss",
     "MahalanobisLoss",
     "MeanPowerLoss",
-    "SimpleLoss"
+    "SimpleLoss",
 ]

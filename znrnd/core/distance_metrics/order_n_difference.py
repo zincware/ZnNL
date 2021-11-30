@@ -30,6 +30,7 @@ class OrderNDifference(DistanceMetric):
     """
     Compute the order n difference between points.
     """
+
     def __init__(self, order: float = 2):
         """
         Constructor for the order n distance.

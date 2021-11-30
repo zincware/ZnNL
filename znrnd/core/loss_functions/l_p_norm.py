@@ -28,6 +28,7 @@ class LPNormLoss(SimpleLoss):
     """
     Class for the mean power loss
     """
+
     def __init__(self, order: float):
         """
         Constructor for the L_p norm loss class.

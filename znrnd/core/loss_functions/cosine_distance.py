@@ -28,6 +28,7 @@ class CosineDistanceLoss(SimpleLoss):
     """
     Class for the mean power loss
     """
+
     def __init__(self):
         """
         Constructor for the mean power loss class.

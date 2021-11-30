@@ -131,9 +131,7 @@ class RND:
         predictor_predictions = self.predictor.predict(points)
         target_predictions = self.target.predict(points)
 
-        self.metric_results = self.metric(
-            target_predictions, predictor_predictions
-        )
+        self.metric_results = self.metric(target_predictions, predictor_predictions)
         return self.metric_results
         # return self.metric(target_predictions, predictor_predictions)
 
