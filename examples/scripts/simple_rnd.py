@@ -6,43 +6,45 @@ SPDX-License-Identifier: EPL-2.0
 
 Copyright Contributors to the Zincware Project.
 
-Description: An example script to compute the number of unique places in a box.
+Description: an example script to test the RND on functionality
+and investigate the symmetry conservation in representation space
 """
-import pyrnd
-from pyrnd.core.distance_metrics.distance_metrics import euclidean_distance
-from pyrnd.core.point_selection.greedy_selection import GreedySelection
+import znrnd
 import numpy as np
 import matplotlib.pyplot as plt
-
 
 
 if __name__ == "__main__":
     """
     Main method to run the routine.
     """
-    # data_generator = pyrnd.ConfinedParticles()
-    data_generator = pyrnd.PointsOnCircle(radius=1.0, noise=1e-3)
-    # Noisy circle.
-    # data = pyrnd.PointsOnCircle(noise=0.1)
-    # data.build_pool('uniform', n_points=50, noise=True)
-    # data_generator = pyrnd.ConfinedParticles()
-    data_generator.build_pool(100)
+    data_generator = znrnd.data.PointsOnLattice()
+    data_generator.build_pool(x_points=10, y_points=10)
 
-    target = pyrnd.DenseModel(
-        units=12, layers=4, in_d=2, out_d=12, tolerance=1e-5, loss="cosine_similarity"
+    target = znrnd.models.DenseModel(
+        units=(12, 12, 12),
+        in_d=2,
+        activation="sigmoid",
+        out_d=12,
+        tolerance=1e-3,
+        loss=znrnd.loss_functions.MeanPowerLoss(order=2),
     )
-    predictor = pyrnd.DenseModel(
-        units=12, layers=4, in_d=2, out_d=12, tolerance=1e-5, loss="cosine_similarity"
+    predictor = znrnd.models.DenseModel(
+        units=(12, 12, 12),
+        in_d=2,
+        activation="sigmoid",
+        out_d=12,
+        tolerance=1e-3,
+        loss=znrnd.loss_functions.MeanPowerLoss(order=2),
     )
-    # print(target.summary())
 
-    agent = pyrnd.RND(
-        point_selector=GreedySelection(threshold=0.1),
-        # distance_metric=euclidean_distance,
+    agent = znrnd.RND(
+        point_selector=znrnd.point_selection.GreedySelection(threshold=0.2),
+        distance_metric=znrnd.distance_metrics.OrderNDifference(order=2),
         data_generator=data_generator,
         target_network=target,
         predictor_network=predictor,
-        tolerance=5,
+        tolerance=8,
         target_size=10,
     )
     agent.run_rnd()
@@ -53,9 +55,9 @@ if __name__ == "__main__":
 
     fig, (plot1, plot2) = plt.subplots(2, figsize=(4, 8))
     results = np.array(agent.metric_results_storage)
-    plot1.plot(results[:, 0], label='0')
-    plot1.plot(results[:, 1], label='1')
-    plot1.plot(results[:, 2], label='2')
+    plot1.plot(results[:, 0], label="0")
+    plot1.plot(results[:, 1], label="1")
+    plot1.plot(results[:, 2], label="2")
 
     # for i, array in enumerate(agent.metric_results_storage):
     #     plot1.plot(array, label=i)
@@ -66,5 +68,3 @@ if __name__ == "__main__":
     plot2.set_aspect("equal", adjustable="box")
 
     plt.show()
-
-
