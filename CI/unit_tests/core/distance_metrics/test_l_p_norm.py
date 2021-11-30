@@ -43,8 +43,8 @@ class TestLPNorm(unittest.TestCase):
         metric = znrnd.distance_metrics.LPNorm(order=2)
 
         # Test orthogonal vectors
-        point_1 = tf.convert_to_tensor([[1., 7., 0., 0.]], dtype=tf.float32)
-        point_2 = tf.convert_to_tensor([[1., 1., 0., 0.]], dtype=tf.float32)
+        point_1 = tf.convert_to_tensor([[1.0, 7.0, 0.0, 0.0]], dtype=tf.float32)
+        point_2 = tf.convert_to_tensor([[1.0, 1.0, 0.0, 0.0]], dtype=tf.float32)
         self.assertEqual(metric(point_1, point_2), [6.0])
 
     def test_l_3_distance(self):
@@ -59,8 +59,8 @@ class TestLPNorm(unittest.TestCase):
         metric = znrnd.distance_metrics.LPNorm(order=3)
 
         # Test orthogonal vectors
-        point_1 = tf.convert_to_tensor([[1., 7., 0., 0.]], dtype=tf.float32)
-        point_2 = tf.convert_to_tensor([[1., 1., 0., 0.]], dtype=tf.float32)
+        point_1 = tf.convert_to_tensor([[1.0, 7.0, 0.0, 0.0]], dtype=tf.float32)
+        point_2 = tf.convert_to_tensor([[1.0, 1.0, 0.0, 0.0]], dtype=tf.float32)
         np.testing.assert_almost_equal(metric(point_1, point_2), [6.0], decimal=4)
 
     def test_multi_distance(self):
@@ -76,10 +76,10 @@ class TestLPNorm(unittest.TestCase):
 
         # Test orthogonal vectors
         point_1 = tf.convert_to_tensor(
-            [[1., 7., 0., 0.], [4, 7, 2, 1]], dtype=tf.float32
+            [[1.0, 7.0, 0.0, 0.0], [4, 7, 2, 1]], dtype=tf.float32
         )
         point_2 = tf.convert_to_tensor(
-            [[1., 1., 0., 0.], [6, 3, 1, 8]], dtype=tf.float32
+            [[1.0, 1.0, 0.0, 0.0], [6, 3, 1, 8]], dtype=tf.float32
         )
         np.testing.assert_array_almost_equal(
             metric(point_1, point_2), [6.0, 14.0], decimal=4

@@ -24,18 +24,18 @@ if __name__ == "__main__":
     target = znrnd.models.DenseModel(
         units=(12, 12, 12),
         in_d=2,
-        activation='sigmoid',
+        activation="sigmoid",
         out_d=12,
         tolerance=1e-3,
-        loss=znrnd.loss_functions.MeanPowerLoss(order=2)
+        loss=znrnd.loss_functions.MeanPowerLoss(order=2),
     )
     predictor = znrnd.models.DenseModel(
         units=(12, 12, 12),
         in_d=2,
-        activation='sigmoid',
+        activation="sigmoid",
         out_d=12,
         tolerance=1e-3,
-        loss=znrnd.loss_functions.MeanPowerLoss(order=2)
+        loss=znrnd.loss_functions.MeanPowerLoss(order=2),
     )
 
     agent = znrnd.RND(
@@ -55,9 +55,9 @@ if __name__ == "__main__":
 
     fig, (plot1, plot2) = plt.subplots(2, figsize=(4, 8))
     results = np.array(agent.metric_results_storage)
-    plot1.plot(results[:, 0], label='0')
-    plot1.plot(results[:, 1], label='1')
-    plot1.plot(results[:, 2], label='2')
+    plot1.plot(results[:, 0], label="0")
+    plot1.plot(results[:, 1], label="1")
+    plot1.plot(results[:, 2], label="2")
 
     # for i, array in enumerate(agent.metric_results_storage):
     #     plot1.plot(array, label=i)
@@ -68,5 +68,3 @@ if __name__ == "__main__":
     plot2.set_aspect("equal", adjustable="box")
 
     plt.show()
-
-
