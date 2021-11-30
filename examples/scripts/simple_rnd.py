@@ -23,24 +23,24 @@ if __name__ == "__main__":
     # data_generator.build_pool(x_points=10, y_points=10)
 
     target = znrnd.models.DenseModel(
-        units=(8, 8, 8),
+        units=(4, 4, 4),
         in_d=2,
-        activation='sigmoid',
-        out_d=8,
+        activation='tanh',
+        out_d=4,
         tolerance=1e-2,
         loss=znrnd.loss_functions.LPNormLoss(order=2)
     )
     predictor = znrnd.models.DenseModel(
-        units=(8, 8, 8),
+        units=(4, 4, 4),
         in_d=2,
-        activation='sigmoid',
-        out_d=8,
+        activation='tanh',
+        out_d=4,
         tolerance=1e-2,
         loss=znrnd.loss_functions.LPNormLoss(order=2)
     )
 
     agent = znrnd.RND(
-        point_selector=znrnd.point_selection.GreedySelection(threshold=1e-3),
+        point_selector=znrnd.point_selection.GreedySelection(threshold=0.1),
         distance_metric=znrnd.distance_metrics.MahalanobisDistance(
             data_generator=data_generator,
             target_network=target,
