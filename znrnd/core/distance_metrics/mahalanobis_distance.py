@@ -119,10 +119,10 @@ class MahalanobisDistance(DistanceMetric):
         # else:
         #     self.point_1, self.point_2 = point_1, point_2
         self.pool = self.generator.get_points(-1)
-        print(self.pool)
-        self.point_1, self.point_2 = tf.convert_to_tensor(self._compute_representation(self.pool))
+        self.point_1, self.point_2 = tf.convert_to_tensor(
+            self._compute_representation(self.pool)
+        )
         self.cov_point_1 = tfp.stats.covariance(self.point_1)
-        tf.print(self.cov_point_1)
         self.cov_point_2 = tfp.stats.covariance(self.point_2)
 
     def _compute_representation(self, pool):
