@@ -34,9 +34,10 @@ class MahalanobisDistance(DistanceMetric):
     """
 
     def __init__(self,
-                 data_generator: DataGenerator,
+                 data_generator: DataGenerator = None,
                  target_network: Model = None,
-                 predictor_network: Model = None
+                 predictor_network: Model = None,
+                 used_for_fitting: bool = False,
                  ):
         """
         Constructor for the Mahalanobis Distance
@@ -55,6 +56,7 @@ class MahalanobisDistance(DistanceMetric):
         self.generator = data_generator
         self.target = target_network
         self.predictor = predictor_network
+        self.used_for_fitting = used_for_fitting
 
         # Class defined attributes
         self.cov_point_1 = None
@@ -90,8 +92,18 @@ class MahalanobisDistance(DistanceMetric):
         d(point_1, point_2) : tf.tensor : shape=(n_points, 1)
                 Array of distances for each point.
         """
-        self._update_covariance_matrix()
-        self._compute_cholesky_decomposition()
+        if self.used_for_fitting is True and self.cov_point_1 is None:
+            self.pool = self.generator.get_points(-1)
+            self.point_1, self.point_2 = self._compute_representation(self.pool)
+            self._update_covariance_matrix()
+            self._compute_cholesky_decomposition()
+        if self.used_for_fitting is True and self.cov_point_1 is not None:
+            pass
+        if self.used_for_fitting is False:
+            self.point_1, self.point_2 = point_1, point_2
+            self._update_covariance_matrix()
+            self._compute_cholesky_decomposition()
+
         point_1_rescaled = tf.matmul(self.point_1, self.decomposed_point_1)
         point_2_rescaled = tf.matmul(self.point_2, self.decomposed_point_2)
         return self.euclidean(point_1_rescaled, point_2_rescaled)
@@ -104,7 +116,6 @@ class MahalanobisDistance(DistanceMetric):
         When fitting the model, the covariance matrices still have to contain the
         information of the whole data set, not only the target set.
         Based on all data points, the covariance matrices have to be calculated first
-        TODO: not implemented yet - fallunterscheidung wenn man target set einliest
         point_1 : tf.tensor
                 neural network representation
         point_2 : tf.tensor
@@ -113,15 +124,6 @@ class MahalanobisDistance(DistanceMetric):
         -------
         The covariance matrices, based on the current representations
         """
-        # if self.cov_point_1 is None:
-        #     self.pool = self.generator.get_points(-1)
-        #     self.point_1, self.point_2 = self._compute_representation(self.pool)
-        # else:
-        #     self.point_1, self.point_2 = point_1, point_2
-        self.pool = self.generator.get_points(-1)
-        self.point_1, self.point_2 = tf.convert_to_tensor(
-            self._compute_representation(self.pool)
-        )
         self.cov_point_1 = tfp.stats.covariance(self.point_1)
         self.cov_point_2 = tfp.stats.covariance(self.point_2)
 
