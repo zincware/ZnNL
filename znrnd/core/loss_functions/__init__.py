@@ -29,7 +29,7 @@ from .absolute_angle_difference import AngleDistanceLoss
 from .cosine_distance import CosineDistanceLoss
 from .distance_metric_loss import DistanceMetricLoss
 from .l_p_norm import LPNormLoss
-# from .mahalanobis import MahalanobisLoss
+from .mahalanobis import MahalanobisLoss
 from .mean_power_error import MeanPowerLoss
 from .simple_loss import SimpleLoss
 
@@ -38,7 +38,7 @@ __all__ = [
     "CosineDistanceLoss",
     "DistanceMetricLoss",
     "LPNormLoss",
-    # "MahalanobisLoss",
+    "MahalanobisLoss",
     "MeanPowerLoss",
     "SimpleLoss"
 ]
