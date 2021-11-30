@@ -162,10 +162,7 @@ class RND:
 
         """
         points = self.point_selector.select_points()
-        try:
-            self._update_target_set(points.numpy())
-        except AttributeError:
-            self._update_target_set(None)
+        self._update_target_set(points)
 
     def _update_target_set(self, points: Union[np.ndarray, None]):
         """

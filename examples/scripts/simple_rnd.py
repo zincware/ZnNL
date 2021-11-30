@@ -39,12 +39,12 @@ if __name__ == "__main__":
     )
 
     agent = znrnd.RND(
-        point_selector=znrnd.point_selection.GreedySelection(threshold=0.02),
+        point_selector=znrnd.point_selection.GreedySelection(threshold=5e-7),
         distance_metric=znrnd.distance_metrics.OrderNDifference(order=2),
         data_generator=data_generator,
         target_network=target,
         predictor_network=predictor,
-        tolerance=5,
+        tolerance=8,
         target_size=10,
     )
     agent.run_rnd()

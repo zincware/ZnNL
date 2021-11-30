@@ -66,4 +66,4 @@ class OrderNDifference(DistanceMetric):
         """
         diff = point_1 - point_2
         # return tf.cast(tf.einsum("ij, ij -> i", diff, diff), tf.float32)
-        return tf.cast(tf.pow(diff, self.order), tf.float32)
+        return tf.cast(tf.reduce_sum(tf.pow(diff, self.order), axis=1), tf.float32)
