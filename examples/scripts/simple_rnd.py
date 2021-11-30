@@ -18,33 +18,38 @@ if __name__ == "__main__":
     """
     Main method to run the routine.
     """
-    data_generator = znrnd.data.PointsOnLattice()
-    data_generator.build_pool(x_points=10, y_points=10)
+    data_generator = znrnd.data.PointsOnCircle(radius=1.0, noise=1e-3)
+    data_generator.build_pool("uniform", n_points=100, noise=False)
+    # data_generator.build_pool(x_points=10, y_points=10)
 
     target = znrnd.models.DenseModel(
-        units=(12, 12, 12),
+        units=(8, 8, 8),
         in_d=2,
         activation='sigmoid',
-        out_d=12,
+        out_d=8,
         tolerance=1e-3,
-        loss=znrnd.loss_functions.MeanPowerLoss(order=2)
+        loss=znrnd.loss_functions.LPNormLoss(order=2)
     )
     predictor = znrnd.models.DenseModel(
-        units=(12, 12, 12),
+        units=(8, 8, 8),
         in_d=2,
         activation='sigmoid',
-        out_d=12,
+        out_d=8,
         tolerance=1e-3,
-        loss=znrnd.loss_functions.MeanPowerLoss(order=2)
+        loss=znrnd.loss_functions.LPNormLoss(order=2)
     )
 
     agent = znrnd.RND(
-        point_selector=znrnd.point_selection.GreedySelection(threshold=5e-7),
-        distance_metric=znrnd.distance_metrics.OrderNDifference(order=2),
+        point_selector=znrnd.point_selection.GreedySelection(threshold=1e-3),
+        distance_metric=znrnd.distance_metrics.MahalanobisDistance(
+            data_generator=data_generator,
+            target_network=target,
+            predictor_network=predictor
+        ),
         data_generator=data_generator,
         target_network=target,
         predictor_network=predictor,
-        tolerance=8,
+        tolerance=5,
         target_size=10,
     )
     agent.run_rnd()
