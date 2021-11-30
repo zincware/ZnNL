@@ -304,7 +304,7 @@ class MLPMetric(DistanceMetric):
         log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir,
                                                               histogram_freq=1)
-        loss_fn = znrnd.DistanceMetricLoss(alpha=1, beta=5, gamma=0.1)
+        loss_fn = znrnd.loss_functions.DistanceMetricLoss(alpha=1, beta=5, gamma=0.1)
         model.compile(
             optimizer=opt,
             loss=loss_fn,

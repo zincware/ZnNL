@@ -83,10 +83,10 @@ class PointsOnLattice(DataGenerator, ABC):
         else:
             try:
                 indices = random.sample(range(0, len(self.data_pool) - 1), n_points)
-                data = self.data_pool[indices]
+                data = self.data_pool[indices].astype(np.float)
             except ValueError:
                 indices = random.sample(
                     range(0, len(self.data_pool) - 1), len(self.data_pool)
                 )
-                data = self.data_pool[indices]
+                data = self.data_pool[indices].astype(np.float)
             return data
