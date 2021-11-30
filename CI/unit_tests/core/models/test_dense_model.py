@@ -1,12 +1,23 @@
 """
+ZnRND: A Zincwarecode package.
+License
+-------
 This program and the accompanying materials are made available under the terms
 of the Eclipse Public License v2.0 which accompanies this distribution, and is
 available at https://www.eclipse.org/legal/epl-v20.html
 SPDX-License-Identifier: EPL-2.0
-
-Copyright Contributors to the Zincware Project.
-
-Description: Test for the dense model module.
+Copyright Contributors to the Zincwarecode Project.
+Contact Information
+-------------------
+email: zincwarecode@gmail.com
+github: https://github.com/zincware
+web: https://zincwarecode.com/
+Citation
+--------
+If you use this module please cite us with:
+Summary
+-------
+Test the dense model module.
 """
 import unittest
 import znrnd
@@ -41,19 +52,3 @@ class TestDenseModels(unittest.TestCase):
         # Test custom more
         model = znrnd.DenseModel(layers=9)
         self.assertEqual(len(model.model.layers), 10)
-
-    def test_train_model(self):
-        """
-        Test the model training.
-
-        Returns
-        -------
-        Ensure that the model can train under different epoch numbers and that
-        the training exit occurs after the required loss is achieved.
-        """
-        model = znrnd.DenseModel(layers=2, units=6, tolerance=2)
-
-        inputs = np.array([[1, 2], [4, 5], [3, 6], [9, 7], [3, 4], [8, 8]])
-        labels = np.log(np.prod(inputs, axis=1)).reshape(6, 1)
-
-        model.train_model(tf.convert_to_tensor(inputs), tf.convert_to_tensor(labels))
