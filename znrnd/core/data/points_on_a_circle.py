@@ -49,7 +49,7 @@ class PointsOnCircle(DataGenerator, ABC):
         else:
             radial_values = self.radius
 
-        angles = np.linspace(0, 2 * np.pi, num=n_points)
+        angles = np.linspace(0, 2 * np.pi, num=n_points, endpoint=False)
         self.data_pool = (radial_values * np.array([np.cos(angles), np.sin(angles)])).T
 
     def build_pool(self, method: str, n_points: int, noise: bool = False):
