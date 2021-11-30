@@ -19,7 +19,7 @@ if __name__ == "__main__":
     Main method to run the routine.
     """
     data_generator = znrnd.data.PointsOnCircle(radius=1.0, noise=1e-3)
-    data_generator.build_pool("uniform", n_points=100, noise=False)
+    data_generator.build_pool("uniform", n_points=10, noise=False)
     # data_generator.build_pool(x_points=10, y_points=10)
 
     target = znrnd.models.DenseModel(
@@ -27,7 +27,7 @@ if __name__ == "__main__":
         in_d=2,
         activation='sigmoid',
         out_d=8,
-        tolerance=1e-3,
+        tolerance=1e-2,
         loss=znrnd.loss_functions.LPNormLoss(order=2)
     )
     predictor = znrnd.models.DenseModel(
@@ -35,7 +35,7 @@ if __name__ == "__main__":
         in_d=2,
         activation='sigmoid',
         out_d=8,
-        tolerance=1e-3,
+        tolerance=1e-2,
         loss=znrnd.loss_functions.LPNormLoss(order=2)
     )
 
