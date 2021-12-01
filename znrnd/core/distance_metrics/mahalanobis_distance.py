@@ -50,6 +50,8 @@ class MahalanobisDistance(DistanceMetric):
                 Model class for the target network
         predictor_network : Model
                 Model class for the predictor.
+        used_for_fitting : bool
+                Indicates if the mahalanobis distance is used for fitting
         """
 
         # User defined attributes
@@ -59,9 +61,9 @@ class MahalanobisDistance(DistanceMetric):
         self.used_for_fitting = used_for_fitting
 
         # Class defined attributes
-        self.cov_point_1 = None
+        self.cov = None
         self.cov_point_2 = None
-        self.decomposed_point_1 = None
+        self.decomposed = None
         self.decomposed_point_2 = None
         self.pool = None
         self.point_1 = None
@@ -87,45 +89,42 @@ class MahalanobisDistance(DistanceMetric):
         kwargs
                 Miscellaneous keyword arguments for the specific metric.
 
+        When only the seed point exists, it creates the whole pool to calculate
+        the covariance matrices.
+        When fitting the model, the covariance matrices still have to contain the
+        information of the whole data set, not only the target set.
+
         Returns
         -------
         d(point_1, point_2) : tf.tensor : shape=(n_points, 1)
                 Array of distances for each point.
         """
-        if self.used_for_fitting is True and self.cov_point_1 is None:
+        if self.used_for_fitting is True and self.cov is None:
             self.pool = self.generator.get_points(-1)
             self.point_1, self.point_2 = self._compute_representation(self.pool)
             self._update_covariance_matrix()
             self._compute_cholesky_decomposition()
-        if self.used_for_fitting is True and self.cov_point_1 is not None:
+        if self.used_for_fitting is True and self.cov is not None:
             pass
         if self.used_for_fitting is False:
             self.point_1, self.point_2 = point_1, point_2
             self._update_covariance_matrix()
             self._compute_cholesky_decomposition()
 
-        point_1_rescaled = tf.matmul(self.point_1, self.decomposed_point_1)
-        point_2_rescaled = tf.matmul(self.point_2, self.decomposed_point_2)
+        point_1_rescaled = tf.matmul(self.point_1, self.decomposed)
+        point_2_rescaled = tf.matmul(self.point_2, self.decomposed)
         return self.euclidean(point_1_rescaled, point_2_rescaled)
 
     def _update_covariance_matrix(self):
         """
-        Updates the covariance matrix of both representations point_1 and point_2.
-        When only the seed point exists, it creates the whole pool to calculate
-        the covariance matrices.
-        When fitting the model, the covariance matrices still have to contain the
-        information of the whole data set, not only the target set.
-        Based on all data points, the covariance matrices have to be calculated first
+        Updates / computes the covariance matrix of the representation point_1
         point_1 : tf.tensor
-                neural network representation
-        point_2 : tf.tensor
                 neural network representation
         Returns
         -------
         The covariance matrices, based on the current representations
         """
-        self.cov_point_1 = tfp.stats.covariance(self.point_1)
-        self.cov_point_2 = tfp.stats.covariance(self.point_2)
+        self.cov = tf.linalg.inv(tfp.stats.covariance(self.point_1))
 
     def _compute_representation(self, pool):
         """
@@ -151,45 +150,4 @@ class MahalanobisDistance(DistanceMetric):
         -------
         The Cholesky decomposition of the the covariance matrices of both points
         """
-        self.decomposed_point_1 = tf.linalg.cholesky(self.cov_point_1)
-        self.decomposed_point_2 = tf.linalg.cholesky(self.cov_point_2)
-
-    # def compute_mahalanobis_distance(self, point_1: tf.Tensor, point_2: tf.Tensor):
-    #     """
-    #     Computes the Mahalanobis Distance, based on the Cholesky decomposition of
-    #     both representations.
-    #     Returns the Euclidean Distance of the rescaled representations.
-    #     Returns
-    #     -------
-    #     Returns the Mahalanobis distance between the representations of point_1 and
-    #     point_2
-    #     """
-    #     self._update_covariance_matrix(point_1=point_1, point_2=point_2)
-    #     self._compute_cholesky_decomposition()
-    #     point_1_rescaled = tf.matmul(self.point_1, self.decomposed_point_1)
-    #     point_2_rescaled = tf.matmul(self.point_2, self.decomposed_point_2)
-    #     return self.euclidean(point_1_rescaled, point_2_rescaled)
-
-
-    # @staticmethod
-    # def _compute_covariance(distribution: tf.Tensor) -> tf.Tensor:
-    #     """
-    #     Compute the covariance on the distribution.
-    #
-    #     Parameters
-    #     ----------
-    #     distribution : tf.Tensor
-    #             Distribution on which to compute the covariance.
-    #
-    #     Returns
-    #     -------
-    #     covariance: tf.Tensor shape=(n_points, n_points, n_dim)
-    #             Covariance matrix.
-    #     """
-    #     covariance = tfp.stats.covariance(distribution)
-    #     covariance_half = tf.linalg.cholesky(covariance)
-    #
-    #     return covariance_half
-
-
-
+        self.decomposed = tf.linalg.cholesky(self.cov)
