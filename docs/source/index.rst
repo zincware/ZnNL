@@ -6,12 +6,27 @@
 Welcome to ZnRND's documentation!
 =================================
 
+Here you can find helpful installation instructions, walkthroughs of some common
+RND applications, and of course, a rich theoretical background into the method and
+its implementation.
+
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 1
+   :caption: Getting started:
+
+   getting_started/getting_started
+
+.. toctree::
+   :maxdepth: 1
+   :caption: User Documentation:
+
+   examples/walkthrough
+
+.. toctree::
+   :maxdepth: 1
+   :caption: API Documentation:
 
    _modules/modules
-   examples/walkthrough
 
 
 
