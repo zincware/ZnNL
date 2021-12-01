@@ -13,6 +13,7 @@ Installation
 
 Documentation
 -------------
+For tutorials and more theoretical information please see the included documentation.
 
 .. code-block:: bash
 
