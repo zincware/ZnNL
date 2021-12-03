@@ -33,4 +33,4 @@ class MahalanobisLoss(SimpleLoss):
         Constructor for the Mahalanobis loss class.
         """
         super(MahalanobisLoss, self).__init__()
-        self.metric = mahalanobis.MahalanobisDistance(used_for_fitting=True)
+        self.metric = mahalanobis.MahalanobisDistance()
