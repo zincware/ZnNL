@@ -41,13 +41,9 @@ if __name__ == "__main__":
     )
 
     agent = znrnd.RND(
-        point_selector=znrnd.point_selection.GreedySelection(threshold=1),
-        # distance_metric=znrnd.distance_metrics.MahalanobisDistance(
-        #     data_generator=data_generator,
-        #     target_network=target,
-        #     predictor_network=predictor
-        # ),
-        distance_metric=znrnd.distance_metrics.LPNorm(order=2),
+        point_selector=znrnd.point_selection.GreedySelection(threshold=10),
+        distance_metric=znrnd.distance_metrics.MahalanobisDistance(),
+        # distance_metric=znrnd.distance_metrics.LPNorm(order=2),
         data_generator=data_generator,
         target_network=target,
         predictor_network=predictor,

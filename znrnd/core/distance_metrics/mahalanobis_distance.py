@@ -24,8 +24,6 @@ from .distance_metric import DistanceMetric
 import tensorflow as tf
 import tensorflow_probability as tfp
 from .l_p_norm import LPNorm
-from znrnd.core.data.data_generator import DataGenerator
-from znrnd.core.models.model import Model
 
 
 class MahalanobisDistance(DistanceMetric):
@@ -33,29 +31,12 @@ class MahalanobisDistance(DistanceMetric):
     Compute the mahalanobis distance between points.
     """
 
-    def __init__(self,
-                 data_generator: DataGenerator = None,
-                 target_network: Model = None,
-                 predictor_network: Model = None,
-                 ):
+    def __init__(self):
         """
         Constructor for the Mahalanobis Distance
         Parameters
         ----------
-        data_generator : objector
-                Class to generate or select new points from the point cloud
-                being studied.
-        target_network : Model
-                Model class for the target network
-        predictor_network : Model
-                Model class for the predictor.
         """
-
-        # User defined attributes
-        self.generator = data_generator
-        self.target = target_network
-        self.predictor = predictor_network
-
         # Class defined attributes
         self.cov = None
         self.decomposed = None
@@ -104,24 +85,6 @@ class MahalanobisDistance(DistanceMetric):
         -------
         """
         self.cov = tf.linalg.inv(tfp.stats.covariance(self.point_1))
-
-    def _compute_representation(self, pool):
-        """
-        Computes the representation of all points in the pool
-        Parameters
-        ----------
-        pool : np.nd_array
-                A numpy array of data points.
-        Returns
-        -------
-        point_1 : tf.tensor
-                Representation of the target network
-        point_2 : tf.tensor
-                Representation of the target network
-        """
-        point_1 = self.target.predict(pool)
-        point_2 = self.predictor.predict(pool)
-        return point_1, point_2
 
     def _compute_cholesky_decomposition(self):
         """
