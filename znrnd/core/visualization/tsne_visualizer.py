@@ -35,6 +35,7 @@ class TSNEVisualizer:
     """
     Perform visualization on network representations with TSNE.
     """
+
     def __init__(self, components: int = 2):
         """
         Constructor for the TSNE visualizer.
@@ -45,7 +46,7 @@ class TSNEVisualizer:
                 Number of components to use in the representation. Either 2 or 3.
 
         """
-        self.model = TSNE(n_components=components, learning_rate='auto', init='random')
+        self.model = TSNE(n_components=components, learning_rate="auto", init="random")
 
         self.reference = []
         self.dynamic = []
@@ -94,8 +95,8 @@ class TSNEVisualizer:
         fig, (ax1, ax2) = plt.subplots(1, 2)
 
         # initialize two line objects (one in each axes)
-        line1, = ax1.plot(self.reference[0][:, 0], self.reference[0][:, 1], '.')
-        line2, = ax2.plot(self.dynamic[-1][:, 0], self.dynamic[-1][:, 1], '.')
+        (line1,) = ax1.plot(self.reference[0][:, 0], self.reference[0][:, 1], ".")
+        (line2,) = ax2.plot(self.dynamic[-1][:, 0], self.dynamic[-1][:, 1], ".")
         line = [line1, line2]
 
         def run(data):

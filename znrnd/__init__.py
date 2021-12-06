@@ -19,5 +19,5 @@ __all__ = [
     "similarity_measures",
     "data",
     "RND",
-    "TSNEVisualizer"
+    "TSNEVisualizer",
 ]

@@ -260,9 +260,7 @@ class RND:
             self.stationary_iterations = 0  # reset stationary
             return False
 
-    def update_visualization(
-            self, data: np.ndarray = None, reference: bool = False
-    ):
+    def update_visualization(self, data: np.ndarray = None, reference: bool = False):
         """
         Update the visualization state.
 
@@ -285,9 +283,7 @@ class RND:
             model = self.predictor
 
         model_representations = model.predict(data)
-        self.visualizer.build_representation(
-            model_representations, reference=reference
-        )
+        self.visualizer.build_representation(model_representations, reference=reference)
 
     def run_rnd(self):
         """
