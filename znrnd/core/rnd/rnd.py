@@ -42,6 +42,7 @@ class RND:
         optimizers: list = None,
         target_size: int = None,
         tolerance: int = 100,
+        seed_point: list = None,
     ):
         """
         Constructor for the RND class.
@@ -66,6 +67,8 @@ class RND:
         tolerance : int
                 Number of stationary iterations to go through before ending the
                 run.
+        seed_point : list
+                Choose to start with an initial point as seed point
         """
         # User defined attributes.
         self.target = target_network
@@ -76,6 +79,7 @@ class RND:
         self.optimizers = optimizers
         self.tolerance = tolerance
         self.target_size = target_size
+        self.seed_point = seed_point
 
         # Class defined attributes
         self.target_set: list = []
@@ -208,7 +212,10 @@ class RND:
         -------
         Initializes an RND process.
         """
-        seed_point = self.generate_points(1)
+        if self.seed_point:
+            seed_point = self.seed_point
+        else:
+            seed_point = self.generate_points(1)
         self._update_target_set(np.array(seed_point))
         self._retrain_network()
 

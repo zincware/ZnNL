@@ -47,6 +47,7 @@ if __name__ == "__main__":
         data_generator=data_generator,
         target_network=target,
         predictor_network=predictor,
+        seed_point=[[-5., -5.], [5., 5.], [-5., 5.]],
         tolerance=5,
         # target_size=10,
     )
