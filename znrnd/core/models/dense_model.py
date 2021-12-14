@@ -161,7 +161,7 @@ class DenseModel(Model):
         -------
         Changes the learning rate and re-compiles the model.
         """
-        if counter % 10 == 0:
+        if counter % 20 == 0:
             self.learning_rate = 0.8 * self.learning_rate
             self._compile_model()
 
@@ -178,7 +178,7 @@ class DenseModel(Model):
         -------
         Rebuilds and re-compiles the model.
         """
-        if counter % 10 == 0:
+        if counter % 20 == 0:
             print("Model re-build triggered.")
             self._build_model()
             self._compile_model()
@@ -204,7 +204,7 @@ class DenseModel(Model):
         x: tf.Tensor,
         y: tf.Tensor,
         re_initialize: bool = False,
-        epochs: int = 30,
+        epochs: int = 100,
     ):
         """
         Train the model on data.
