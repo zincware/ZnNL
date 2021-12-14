@@ -28,16 +28,16 @@ if __name__ == "__main__":
         in_d=2,
         activation='tanh',
         out_d=4,
-        tolerance=1e-2,
-        loss=znrnd.loss_functions.LPNormLoss(order=2)
+        tolerance=1e-5,
+        loss=znrnd.loss_functions.MeanPowerLoss(order=2)
     )
     predictor = znrnd.models.DenseModel(
         units=(4, 4, 4),
         in_d=2,
         activation='tanh',
         out_d=4,
-        tolerance=1e-2,
-        loss=znrnd.loss_functions.LPNormLoss(order=2)
+        tolerance=1e-5,
+        loss=znrnd.loss_functions.MeanPowerLoss(order=2)
     )
 
     agent = znrnd.RND(
@@ -68,7 +68,8 @@ if __name__ == "__main__":
     plot2.plot(target_set[:, 0], target_set[:, 1], "x", ms=8, mew=3)
     plot2.set_aspect("equal", adjustable="box")
 
-    ind = np.argpartition(1 / agent.metric_results, -10)[-10:]
+    add_points = len(target_set) + 20
+    ind = np.argpartition(1 / agent.metric_results, -add_points)[-add_points:]
     plot2.plot(data_generator.data_pool[:, 0][ind], data_generator.data_pool[:, 1][ind],
                "_", ms=8, mew=2)
 
