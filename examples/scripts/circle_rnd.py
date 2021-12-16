@@ -18,7 +18,9 @@ if __name__ == "__main__":
     """
     Main method to run the routine.
     """
-    data_generator = znrnd.data.PointsOnCircle(radius=np.arange(2., 0., -0.2), noise=1e-3)
+    data_generator = znrnd.data.PointsOnCircle(
+        radius=np.arange(2.0, 0.0, -0.2), noise=1e-3
+    )
     data_generator.build_pool("uniform", n_points=72, noise=False)
 
     # Define both networks
@@ -29,18 +31,18 @@ if __name__ == "__main__":
     target = znrnd.models.DenseModel(
         units=networks[1:-1],
         in_d=networks[0],
-        activation='tanh',
+        activation="tanh",
         out_d=networks[-1],
         tolerance=tolerance,
-        loss=loss
+        loss=loss,
     )
     predictor = znrnd.models.DenseModel(
         units=networks[1:-1],
         in_d=networks[0],
-        activation='tanh',
+        activation="tanh",
         out_d=networks[-1],
         tolerance=tolerance,
-        loss=loss
+        loss=loss,
     )
 
     agent = znrnd.RND(
@@ -53,7 +55,7 @@ if __name__ == "__main__":
             data_generator.data_pool[72 * 0 + 0],
             data_generator.data_pool[72 * 0 + 18],
             data_generator.data_pool[72 * 0 + 36],
-         ],
+        ],
         tolerance=5,
         # target_size=10,
     )
@@ -67,8 +69,13 @@ if __name__ == "__main__":
     inv_distance = 1 / agent.metric_results.numpy()
     log_inv_dist = np.log(inv_distance)
 
-    ax[0].scatter(data_generator.data_pool[:, 0], data_generator.data_pool[:, 1],
-                  s=80, c=log_inv_dist, cmap="inferno")
+    ax[0].scatter(
+        data_generator.data_pool[:, 0],
+        data_generator.data_pool[:, 1],
+        s=80,
+        c=log_inv_dist,
+        cmap="inferno",
+    )
     ax[0].set_aspect("equal", adjustable="box")
 
     # ax[1].plot(data_generator.data_pool[:, 0], data_generator.data_pool[:, 1], ".")
@@ -89,5 +96,3 @@ if __name__ == "__main__":
     ax[1].plot(ind, inv_distance[ind], "_", ms=8, mew=2)
     ax[1].set_yscale("log")
     plt.show()
-
-

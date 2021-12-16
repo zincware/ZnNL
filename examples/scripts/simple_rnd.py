@@ -30,18 +30,18 @@ if __name__ == "__main__":
     target = znrnd.models.DenseModel(
         units=networks[1:-1],
         in_d=networks[0],
-        activation='tanh',
+        activation="tanh",
         out_d=networks[-1],
         tolerance=tolerance,
-        loss=loss
+        loss=loss,
     )
     predictor = znrnd.models.DenseModel(
         units=networks[1:-1],
         in_d=networks[0],
-        activation='tanh',
+        activation="tanh",
         out_d=networks[-1],
         tolerance=tolerance,
-        loss=loss
+        loss=loss,
     )
 
     agent = znrnd.RND(
@@ -53,7 +53,7 @@ if __name__ == "__main__":
         data_generator=data_generator,
         target_network=target,
         predictor_network=predictor,
-        seed_point=[[-5., -5.], [-5., 5.]],
+        seed_point=[[-5.0, -5.0], [-5.0, 5.0]],
         tolerance=5,
         # target_size=10,
     )
@@ -81,10 +81,15 @@ if __name__ == "__main__":
 
     add_points = len(target_set) + 30
     ind = np.argpartition(1 / agent.metric_results, -add_points)[-add_points:]
-    ax[1].plot(data_generator.data_pool[:, 0][ind], data_generator.data_pool[:, 1][ind],
-               "_", ms=8, mew=2)
+    ax[1].plot(
+        data_generator.data_pool[:, 0][ind],
+        data_generator.data_pool[:, 1][ind],
+        "_",
+        ms=8,
+        mew=2,
+    )
 
-    ax[2].plot(1/agent.metric_results, ".")
+    ax[2].plot(1 / agent.metric_results, ".")
     index = []
     # Detect maximum
     for element in target_set:
@@ -93,5 +98,3 @@ if __name__ == "__main__":
     ax[2].plot(ind, inv_distance[ind], "_", ms=8, mew=2)
     ax[2].set_yscale("log")
     plt.show()
-
-
