@@ -20,7 +20,7 @@ def main():
     """
 
     # Define both networks
-    networks = (2, 4, 4, 4, 4)
+    networks = (2, 12, 12, 12, 12)
     tolerance = 1e-4
     loss = znrnd.loss_functions.MeanPowerLoss(order=2)
 
@@ -48,17 +48,15 @@ def main():
         target_network=target,
         predictor_network=predictor,
         seed_point=[
-            # data_generator.data_pool[72 * 0 + 0],
-            # data_generator.data_pool[72 * 3 + 0],
-            # data_generator.data_pool[72 * 7 + 0],
-            # data_generator.data_pool[72 * 0 + 9],
-            # data_generator.data_pool[72 * 3 + 9],
-            # data_generator.data_pool[72 * 7 + 9],
-            # data_generator.data_pool[72 * 0 + 27],
-            # data_generator.data_pool[72 * 3 + 27],
-            # data_generator.data_pool[72 * 7 + 27],
-            data_generator.data_pool[0],
-            data_generator.data_pool[100],
+            data_generator.data_pool[72 * 0 + 0],
+            data_generator.data_pool[72 * 3 + 0],
+            data_generator.data_pool[72 * 7 + 0],
+            data_generator.data_pool[72 * 0 + 9],
+            data_generator.data_pool[72 * 3 + 9],
+            data_generator.data_pool[72 * 7 + 9],
+            data_generator.data_pool[72 * 0 + 27],
+            data_generator.data_pool[72 * 3 + 27],
+            data_generator.data_pool[72 * 7 + 27],
         ],
         tolerance=5,
         # target_size=10,
@@ -81,12 +79,10 @@ if __name__ == "__main__":
     target_set = []
     norm_scaled_membership = []
 
-    # data_generator = znrnd.data.PointsOnCircle(
-    #     radius=np.arange(2.0, 0.0, -0.2), noise=1e-3
-    # )
-    # data_generator.build_pool("uniform", n_points=72, noise=False)
-    data_generator = znrnd.data.PointsOnLattice()
-    data_generator.build_pool(x_points=100, y_points=100)
+    data_generator = znrnd.data.PointsOnCircle(
+        radius=np.arange(2.0, 0.0, -0.2), noise=1e-3
+    )
+    data_generator.build_pool("uniform", n_points=72, noise=False)
 
     runs = 0
     for runs in range(5):
