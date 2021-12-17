@@ -27,7 +27,7 @@ def main():
     target = znrnd.models.DenseModel(
         units=networks[1:-1],
         in_d=networks[0],
-        activation="softsign",
+        activation="tanh",
         out_d=networks[-1],
         tolerance=tolerance,
         loss=loss,
@@ -35,7 +35,7 @@ def main():
     predictor = znrnd.models.DenseModel(
         units=networks[1:-1],
         in_d=networks[0],
-        activation="softsign",
+        activation="tanh",
         out_d=networks[-1],
         tolerance=tolerance,
         loss=loss,
