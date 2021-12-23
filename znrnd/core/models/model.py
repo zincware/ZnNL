@@ -39,7 +39,6 @@ class Model:
         x: tf.Tensor,
         y: tf.Tensor,
         re_initialize: bool = False,
-        epochs: int = 10,
     ):
         """
         Train the model on data.

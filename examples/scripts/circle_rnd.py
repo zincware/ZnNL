@@ -31,6 +31,8 @@ def main():
         out_d=networks[-1],
         tolerance=tolerance,
         loss=loss,
+        iterations=20,
+        epochs=100,
     )
     predictor = znrnd.models.DenseModel(
         units=networks[1:-1],
@@ -39,6 +41,8 @@ def main():
         out_d=networks[-1],
         tolerance=tolerance,
         loss=loss,
+        iterations=20,
+        epochs=100,
     )
 
     agent = znrnd.RND(
