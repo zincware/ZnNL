@@ -24,7 +24,7 @@ Module for the L_p norm class.
 
     d = (|r[0]|^p + |r[1]|^p + ... + |r[n]|^p)^(1/p)
 """
-from.distance_metric import DistanceMetric
+from .distance_metric import DistanceMetric
 import tensorflow as tf
 from .l_p_norm import LPNorm
 from .cosine_distance import CosineDistance
@@ -34,6 +34,7 @@ class HyperSphere(DistanceMetric):
     """
     Compute the L_p norm between vectors.
     """
+
     def __init__(self, order: float):
         """
         Constructor for the LPNorm class.
@@ -68,4 +69,6 @@ class HyperSphere(DistanceMetric):
         d(point_1, point_2) : tf.tensor : shape=(n_points, 1)
                 Array of distances for each point.
         """
-        return LPNorm(order=self.order)(point_1, point_2) * CosineDistance()(point_1, point_2)
+        return LPNorm(order=self.order)(point_1, point_2) * CosineDistance()(
+            point_1, point_2
+        )
