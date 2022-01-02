@@ -18,11 +18,7 @@ If you use this module please cite us with:
 
 Summary
 -------
-Module for the L_p norm class.
-
-    r = p1 - p2
-
-    d = (|r[0]|^p + |r[1]|^p + ... + |r[n]|^p)^(1/p)
+Module for a distance that combines the properties of cosine and lp-norm distance.
 """
 from .distance_metric import DistanceMetric
 import tensorflow as tf
