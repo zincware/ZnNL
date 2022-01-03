@@ -6,14 +6,16 @@ import sys
 import sphinx_rtd_theme
 
 sys.path.insert(0, os.path.abspath("."))
+sys.path.insert(0, os.path.abspath("../"))
 sys.path.insert(0, os.path.abspath("../../"))
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+html_static_path = []
 
 # -- Experiment information ---------------------------------------------------
 
-project = "PYRND"
-copyright = "2021, Zincware"
-author = "Zincware"
+project = "ZnRND"
+copyright = "2021, Zincwarecode"
+author = "Zincwarecode"
 
 # The full version, including alpha/beta/rc tags
 release = "2021"
@@ -27,7 +29,6 @@ master_doc = "index"
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
-    "sphinx.ext.napoleon",
     "sphinx.ext.autosummary",
     "sphinx.ext.githubpages",
     "sphinx.ext.intersphinx",

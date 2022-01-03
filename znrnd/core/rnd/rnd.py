@@ -13,6 +13,7 @@ from znrnd.core.models.model import Model
 from znrnd.core.point_selection.point_selection import PointSelection
 from znrnd.core.data.data_generator import DataGenerator
 from znrnd.core.distance_metrics.distance_metric import DistanceMetric
+from znrnd.core.visualization.tsne_visualizer import TSNEVisualizer
 import tensorflow as tf
 import numpy as np
 from typing import Union
@@ -39,6 +40,7 @@ class RND:
         predictor_network: Model = None,
         distance_metric: DistanceMetric = None,
         point_selector: PointSelection = None,
+        visualizer: TSNEVisualizer = None,
         optimizers: list = None,
         target_size: int = None,
         tolerance: int = 100,
@@ -60,6 +62,8 @@ class RND:
                 being studied.
         point_selector : PointSelection
                 Class to select points from the data pool.
+        visualizer : TSNEVisualizer
+                Class for the representation visualization.
         optimizers : list
                 A list of optimizers to use during the training.
         target_size : int
@@ -80,6 +84,7 @@ class RND:
         self.tolerance = tolerance
         self.target_size = target_size
         self.seed_point = seed_point
+        self.visualizer = visualizer
 
         # Class defined attributes
         self.target_set: list = []
@@ -117,6 +122,8 @@ class RND:
         # Update the predictor.
         if self.predictor is None:
             self.predictor = znrnd.models.DenseModel()
+        if self.visualizer is None:
+            self.visualizer = TSNEVisualizer()
 
     def compute_distance(self, points: tf.Tensor):
         """
@@ -135,9 +142,7 @@ class RND:
         predictor_predictions = self.predictor.predict(points)
         target_predictions = self.target.predict(points)
 
-        self.metric_results = self.metric(
-            target_predictions, predictor_predictions
-        )
+        self.metric_results = self.metric(target_predictions, predictor_predictions)
         return self.metric_results
         # return self.metric(target_predictions, predictor_predictions)
 
@@ -262,6 +267,31 @@ class RND:
             self.stationary_iterations = 0  # reset stationary
             return False
 
+    def update_visualization(self, data: np.ndarray = None, reference: bool = False):
+        """
+        Update the visualization state.
+
+        Parameters
+        ----------
+        data : np.ndarray
+                Data on which to produce the representation.
+        reference : bool
+
+
+        Returns
+        -------
+        Updates the visualizer.
+        """
+        if data is None:
+            data = self.generate_points(-1)
+        if reference:
+            model = self.target
+        else:
+            model = self.predictor
+
+        model_representations = model.predict(data)
+        self.visualizer.build_representation(model_representations, reference=reference)
+
     def run_rnd(self):
         """
         Run the random network distillation methods and build the target set.
@@ -272,11 +302,15 @@ class RND:
         """
         self._seed_process()
         criteria = False
+        self.update_visualization(reference=True)
         while not criteria:
             self._choose_points()
             self._store_metrics()
             self._retrain_network()
             criteria = self._evaluate_agent()
+            self.update_visualization(reference=False)
             self.iterations += 1
+
+        self.visualizer.run_visualization()
 
         print("FINISHED")

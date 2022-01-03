@@ -28,6 +28,7 @@ class MahalanobisLoss(SimpleLoss):
     """
     Class for the mean power loss
     """
+
     def __init__(self):
         """
         Constructor for the Mahalanobis loss class.

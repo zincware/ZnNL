@@ -36,6 +36,7 @@ class SimpleLoss(Loss, ABC):
     ----------
     metric : DistanceMetric
     """
+
     def __init__(self):
         """
         Constructor for the simple loss parent class.

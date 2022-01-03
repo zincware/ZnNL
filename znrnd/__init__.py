@@ -8,6 +8,7 @@ from znrnd.core import point_selection
 from znrnd.core import similarity_measures
 from znrnd.core import data
 from znrnd.core.rnd.rnd import RND
+from znrnd.core.visualization import TSNEVisualizer
 
 
 __all__ = [
@@ -17,5 +18,6 @@ __all__ = [
     "point_selection",
     "similarity_measures",
     "data",
-    "RND"
+    "RND",
+    "TSNEVisualizer",
 ]

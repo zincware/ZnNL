@@ -30,7 +30,7 @@ class TestDenseModels(unittest.TestCase):
     Class to test the dense model module.
     """
 
-    def test_build_model(self):
+    def test_build_default_model(self):
         """
         Test that the model has been built correctly.
 
@@ -44,11 +44,37 @@ class TestDenseModels(unittest.TestCase):
         The number of layers is n_hidden + 1.
         """
         # test default parameters
-        model = znrnd.DenseModel()
+        model = znrnd.models.DenseModel()
         self.assertEqual(len(model.model.layers), 5)
-        # Test custom less
-        model = znrnd.DenseModel(layers=2)
+
+    def test_build_reduced_model(self):
+        """
+        Test that the model has been built correctly.
+
+        Returns
+        -------
+        Assess that all parameters are correctly initialized. At the moment
+        this is just the number of layers.
+
+        Notes
+        -----
+        The number of layers is n_hidden + 1.
+        """
+        model = znrnd.models.DenseModel((12,))
         self.assertEqual(len(model.model.layers), 3)
-        # Test custom more
-        model = znrnd.DenseModel(layers=9)
+
+    def test_build_expanded_model(self):
+        """
+        Test that the model has been built correctly.
+
+        Returns
+        -------
+        Assess that all parameters are correctly initialized. At the moment
+        this is just the number of layers.
+
+        Notes
+        -----
+        The number of layers is n_hidden + 1.
+        """
+        model = znrnd.models.DenseModel((12, 15, 17, 13, 11, 8, 6, 3))
         self.assertEqual(len(model.model.layers), 10)

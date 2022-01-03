@@ -10,4 +10,4 @@ Description:
 """
 from .rnd import RND
 
-__all__ = ['RND']
+__all__ = ["RND"]

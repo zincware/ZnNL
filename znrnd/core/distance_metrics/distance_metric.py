@@ -27,6 +27,7 @@ class DistanceMetric:
     """
     Parent class for a ZnRND distance metric.
     """
+
     def __call__(self, point_1: tf.Tensor, point_2: tf.Tensor, **kwargs):
         """
         Call the distance metric.
