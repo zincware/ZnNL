@@ -36,6 +36,5 @@ __all__ = [
     "AngularDistance",
     "LPNorm",
     "OrderNDifference",
-    "MahalanobisDistance"
-    "HyperSphere"
+    "MahalanobisDistance" "HyperSphere",
 ]

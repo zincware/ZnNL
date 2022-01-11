@@ -110,8 +110,9 @@ if __name__ == "__main__":
         c=mean_norm_scaled_membership,
         cmap="gnuplot2",
     )
-    ax[0].plot(mean_target_set[:, 0], mean_target_set[:, 1], "o", ms=8, mew=1,
-               fillstyle="none")
+    ax[0].plot(
+        mean_target_set[:, 0], mean_target_set[:, 1], "o", ms=8, mew=1, fillstyle="none"
+    )
 
     # ax[1].plot(data_generator.data_pool[:, 0], data_generator.data_pool[:, 1], ".")
     # ax[1].plot(target_set[:, 0], target_set[:, 1], "x", ms=8, mew=3)
