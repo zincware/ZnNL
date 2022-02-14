@@ -9,6 +9,8 @@ Copyright Contributors to the Zincware Project.
 Description: Parent class for the models.
 """
 import abc
+
+import numpy as np
 import tensorflow as tf
 
 
@@ -18,7 +20,7 @@ class Model:
     """
 
     @abc.abstractmethod
-    def predict(self, point: tf.Tensor):
+    def predict(self, point: tf.Tensor) -> np.ndarray:
         """
         Make a prediction on a point.
 
@@ -29,7 +31,7 @@ class Model:
 
         Returns
         -------
-        prediction : tf.Tensor
+        prediction : np.ndarray
                 Model prediction on the point.
         """
         raise NotImplemented("Implemented in child class.")

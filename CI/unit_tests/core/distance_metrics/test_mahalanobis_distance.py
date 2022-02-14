@@ -21,11 +21,12 @@ Test the angular distance module.
 """
 import unittest
 
+import numpy as np
 import numpy.random
 import scipy.spatial.distance
-import znrnd
 import tensorflow as tf
-import numpy as np
+
+import znrnd
 
 
 class TestMahalanobisDistance(unittest.TestCase):

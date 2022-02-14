@@ -19,8 +19,9 @@ Summary
 -------
 Module for the ZnTrack cosine distance.
 """
-from znrnd.core.distance_metrics.distance_metric import DistanceMetric
 import tensorflow as tf
+
+from znrnd.core.distance_metrics.distance_metric import DistanceMetric
 
 
 class CosineDistance(DistanceMetric):

@@ -21,9 +21,10 @@ Summary
 Compute the angular distance between two points normalized by the point density in the
 circle.
 """
-from .distance_metric import DistanceMetric
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
+
+from .distance_metric import DistanceMetric
 
 
 class AngularDistance(DistanceMetric):

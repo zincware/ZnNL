@@ -9,9 +9,11 @@ Copyright Contributors to the Zincware Project.
 Description: Test for the similarity measures.
 """
 import unittest
-import znrnd
-import tensorflow as tf
+
 import numpy as np
+import tensorflow as tf
+
+import znrnd
 
 
 class TestCosineSimilarity(unittest.TestCase):

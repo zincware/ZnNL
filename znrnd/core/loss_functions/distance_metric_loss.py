@@ -26,6 +26,7 @@ Summary
 Module for the distance metric loss.
 """
 from abc import ABC
+
 import tensorflow as tf
 from tensorflow.keras.losses import Loss
 

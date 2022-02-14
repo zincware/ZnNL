@@ -9,7 +9,7 @@ Copyright Contributors to the Zincware Project.
 Description: Parent class for the point selection algorithms.
 """
 import abc
-import tensorflow as tf
+from typing import List, Union
 
 
 class PointSelection:
@@ -32,13 +32,13 @@ class PointSelection:
         self.selected_points = None
 
     @abc.abstractmethod
-    def select_points(self):
+    def select_points(self) -> Union[List, None]:
         """
         Select points from the pool
 
         Returns
         -------
-        points : tf.Tensor
+        points : list
                 A set of points to be used by the RND class.
         """
         raise NotImplemented("Implemented in child class.")

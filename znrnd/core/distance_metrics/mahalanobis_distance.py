@@ -20,9 +20,10 @@ Summary
 -------
 Module for the Mahalanobis distance.
 """
-from .distance_metric import DistanceMetric
 import tensorflow as tf
 import tensorflow_probability as tfp
+
+from .distance_metric import DistanceMetric
 from .l_p_norm import LPNorm
 
 

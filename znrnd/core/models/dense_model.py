@@ -8,12 +8,14 @@ Copyright Contributors to the Zincware Project.
 
 Description: Module for a standard feed forward neural network.
 """
+import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-from znrnd.core.models.model import Model
-from znrnd.core.loss_functions.simple_loss import SimpleLoss
+
 from znrnd.core.loss_functions.cosine_distance import CosineDistance
+from znrnd.core.loss_functions.simple_loss import SimpleLoss
+from znrnd.core.models.model import Model
 
 
 class DenseModel(Model):
@@ -197,7 +199,7 @@ class DenseModel(Model):
             self._build_model()
             self._compile_model()
 
-    def predict(self, point: tf.Tensor):
+    def predict(self, point: tf.Tensor) -> np.ndarray:
         """
         Make a prediction on a point.
 
@@ -208,7 +210,7 @@ class DenseModel(Model):
 
         Returns
         -------
-        prediction : tf.Tensor
+        prediction : np.ndarray
                 Model prediction on the point.
         """
         return self.model.predict(point)

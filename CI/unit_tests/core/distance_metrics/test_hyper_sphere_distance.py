@@ -20,9 +20,11 @@ Summary
 Test the hyper sphere distance module.
 """
 import unittest
-import znrnd
-import tensorflow as tf
+
 import numpy as np
+import tensorflow as tf
+
+import znrnd
 
 
 class TestCosineDistance(unittest.TestCase):

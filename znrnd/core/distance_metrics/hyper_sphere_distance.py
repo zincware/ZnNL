@@ -20,10 +20,11 @@ Summary
 -------
 Module for a distance that combines the properties of cosine and lp-norm distance.
 """
-from .distance_metric import DistanceMetric
 import tensorflow as tf
-from .l_p_norm import LPNorm
+
 from .cosine_distance import CosineDistance
+from .distance_metric import DistanceMetric
+from .l_p_norm import LPNorm
 
 
 class HyperSphere(DistanceMetric):

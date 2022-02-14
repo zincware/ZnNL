@@ -9,9 +9,10 @@ Copyright Contributors to the Zincware Project.
 Description: an example script to test the RND on functionality
 and investigate the symmetry conservation in representation space
 """
-import znrnd
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+
+import znrnd
 
 
 def main():

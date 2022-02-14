@@ -25,18 +25,18 @@ Summary
 -------
 Module to train an MLP to act as a distance metric.
 """
+import datetime
+import shutil
+from typing import Callable, Union
+
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-from typing import Callable
 
 import znrnd
-from znrnd.core.distance_metrics.distance_metric import DistanceMetric
 from znrnd.core.data.data_generator import DataGenerator
+from znrnd.core.distance_metrics.distance_metric import DistanceMetric
 from znrnd.core.models.dense_model import DenseModel
-from typing import Union
-import datetime
-import shutil
 
 
 class MLPMetricModel(keras.Model):

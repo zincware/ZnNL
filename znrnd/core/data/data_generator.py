@@ -10,11 +10,15 @@ Description: Module for the parent class of the data generator.
 """
 import abc
 
+import numpy as np
+
 
 class DataGenerator(metaclass=abc.ABCMeta):
     """
     Parent class for the data generator.
     """
+
+    data_pool: np.array
 
     @abc.abstractmethod
     def get_points(self, n_points: int):
@@ -31,3 +35,14 @@ class DataGenerator(metaclass=abc.ABCMeta):
 
         """
         raise NotImplemented("Implemented in the child class.")
+
+    def __len__(self):
+        """
+        Return the size of the data pool.
+
+        Returns
+        -------
+        data_pool_length : int
+                Number of points in the data pool.
+        """
+        return len(self.data_pool)

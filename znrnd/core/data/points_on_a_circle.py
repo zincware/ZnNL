@@ -1,10 +1,12 @@
 """
 module for generating points on a circle
 """
-from abc import ABC
-from znrnd.core.data.data_generator import DataGenerator
 import random
+from abc import ABC
+
 import numpy as np
+
+from znrnd.core.data.data_generator import DataGenerator
 
 
 class PointsOnCircle(DataGenerator, ABC):
@@ -24,7 +26,7 @@ class PointsOnCircle(DataGenerator, ABC):
                 maximum allowed deviation from the radius
         """
         if radius is None:
-            radius = np.array[1.0]
+            radius = np.array([1.0])
         self.radius = radius
         self.noise = noise
         self.data_pool = None

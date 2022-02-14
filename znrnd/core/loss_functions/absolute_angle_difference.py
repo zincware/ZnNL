@@ -20,8 +20,9 @@ Summary
 -------
 ZnRND absolute angle difference TF loss function.
 """
-from .simple_loss import SimpleLoss
 from znrnd.core.distance_metrics.angular_distance import AngularDistance
+
+from .simple_loss import SimpleLoss
 
 
 class AngleDistanceLoss(SimpleLoss):

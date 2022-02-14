@@ -20,8 +20,9 @@ Summary
 -------
 ZnRND Mahalanobis distance TF loss function.
 """
-from .simple_loss import SimpleLoss
 import znrnd.core.distance_metrics.mahalanobis_distance as mahalanobis
+
+from .simple_loss import SimpleLoss
 
 
 class MahalanobisLoss(SimpleLoss):

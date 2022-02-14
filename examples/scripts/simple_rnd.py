@@ -9,10 +9,10 @@ Copyright Contributors to the Zincware Project.
 Description: an example script to test the RND on functionality
 and investigate the symmetry conservation in representation space
 """
-import znrnd
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
+import znrnd
 
 if __name__ == "__main__":
     """
@@ -46,30 +46,18 @@ if __name__ == "__main__":
 
     agent = znrnd.RND(
         point_selector=znrnd.point_selection.GreedySelection(threshold=1e3),
-        # distance_metric=znrnd.distance_metrics.MahalanobisDistance(),
         distance_metric=znrnd.distance_metrics.LPNorm(order=2),
-        # distance_metric=znrnd.distance_metrics.HyperSphere(order=2),
-        # distance_metric=znrnd.distance_metrics.CosineDistance(),
         data_generator=data_generator,
         target_network=target,
         predictor_network=predictor,
         seed_point=[[-5.0, -5.0], [-5.0, 5.0]],
         tolerance=5,
-        # target_size=10,
     )
     agent.run_rnd()
     target_set = np.array(agent.target_set)
-    print(target_set)
-    print(data_generator.data_pool)
 
     fig, ax = plt.subplots(3, figsize=(4, 12))
     results = np.array(agent.metric_results_storage)
-
-    # Show how biggest loss decreases
-    # plot1.plot(results[:, 0], label='0')
-    # plot1.plot(results[:, 1], label='1')
-    # plot1.plot(results[:, -1], label='2')
-    # plot1.legend()
 
     inv_distance = 1 / agent.metric_results.numpy()
     map_plot = np.log10(np.flip(inv_distance.reshape(11, 11), axis=0))
