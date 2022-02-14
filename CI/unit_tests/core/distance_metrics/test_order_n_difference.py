@@ -21,9 +21,11 @@ Summary
 Test the order n norm metric.
 """
 import unittest
-import znrnd
-import tensorflow as tf
+
 import numpy as np
+import tensorflow as tf
+
+import znrnd
 
 
 class TestOrderNDifference(unittest.TestCase):

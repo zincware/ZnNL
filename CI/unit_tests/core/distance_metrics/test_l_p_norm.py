@@ -21,9 +21,11 @@ Summary
 Test the l_p norm metric.
 """
 import unittest
-import znrnd
-import tensorflow as tf
+
 import numpy as np
+import tensorflow as tf
+
+import znrnd
 
 
 class TestLPNorm(unittest.TestCase):

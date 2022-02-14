@@ -15,23 +15,33 @@ web: https://zincwarecode.com/
 Citation
 --------
 If you use this module please cite us with:
+
 Summary
 -------
-Module for the ZnTrack cosine distance.
+Module for a distance that combines the properties of cosine and lp-norm distance.
 """
 import tensorflow as tf
 
-from znrnd.core.distance_metrics.distance_metric import DistanceMetric
+from .cosine_distance import CosineDistance
+from .distance_metric import DistanceMetric
+from .l_p_norm import LPNorm
 
 
-class CosineDistance(DistanceMetric):
+class HyperSphere(DistanceMetric):
     """
-    Class for the cosine distance metric.
-
-    Notes
-    -----
-    This is not a real distance metric.
+    Compute the L_p norm between vectors.
     """
+
+    def __init__(self, order: float):
+        """
+        Constructor for the LPNorm class.
+
+        Parameters
+        ----------
+        order : float
+                order of the space
+        """
+        self.order = order
 
     def __call__(self, point_1: tf.Tensor, point_2: tf.Tensor, **kwargs):
         """
@@ -56,13 +66,6 @@ class CosineDistance(DistanceMetric):
         d(point_1, point_2) : tf.tensor : shape=(n_points, 1)
                 Array of distances for each point.
         """
-        numerator = tf.cast(tf.einsum("ij, ij -> i", point_1, point_2), tf.float32)
-        denominator = tf.sqrt(
-            tf.cast(
-                # tf.einsum("ij, ij, ij, ij -> i", point_1, point_1, point_2, point_2)
-                tf.einsum("ij, ij -> i", point_1, point_1)
-                * tf.einsum("ij, ij -> i", point_2, point_2),
-                tf.float32,
-            )
+        return LPNorm(order=self.order)(point_1, point_2) * CosineDistance()(
+            point_1, point_2
         )
-        return 1 - abs(tf.divide(numerator, denominator))

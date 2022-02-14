@@ -8,9 +8,12 @@ Copyright Contributors to the Zincware Project.
 
 Description: Class for the greedy selection routine.
 """
+from typing import List, Union
+
+import tensorflow as tf
+
 from znrnd.core.point_selection.point_selection import PointSelection
 from znrnd.core.rnd.rnd import RND
-import tensorflow as tf
 
 
 class GreedySelection(PointSelection):
@@ -39,13 +42,13 @@ class GreedySelection(PointSelection):
         self.agent = agent
         self.threshold = threshold
 
-    def select_points(self):
+    def select_points(self) -> Union[List, None]:
         """
         Select points from the pool using the greedy algorithm.
 
         Returns
         -------
-        points : tf.Tensor
+        points : list
                 A set of points to be used by the RND class.
         """
         data = self.agent.generate_points(-1)  # get all points in the pool.

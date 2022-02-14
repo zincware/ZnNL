@@ -8,15 +8,18 @@ Copyright Contributors to the Zincware Project.
 
 Description: Module for the implementation of random network distillation.
 """
+import time
+from typing import Union
+
+import numpy as np
+import tensorflow as tf
+
 import znrnd
-from znrnd.core.models.model import Model
-from znrnd.core.point_selection.point_selection import PointSelection
 from znrnd.core.data.data_generator import DataGenerator
 from znrnd.core.distance_metrics.distance_metric import DistanceMetric
+from znrnd.core.models.model import Model
+from znrnd.core.point_selection.point_selection import PointSelection
 from znrnd.core.visualization.tsne_visualizer import TSNEVisualizer
-import tensorflow as tf
-import numpy as np
-from typing import Union
 
 
 class RND:
@@ -44,6 +47,7 @@ class RND:
         optimizers: list = None,
         target_size: int = None,
         tolerance: int = 100,
+        seed_point: list = None,
     ):
         """
         Constructor for the RND class.
@@ -70,6 +74,8 @@ class RND:
         tolerance : int
                 Number of stationary iterations to go through before ending the
                 run.
+        seed_point : list
+                Choose to start with an initial point as seed point
         """
         # User defined attributes.
         self.target = target_network
@@ -80,6 +86,7 @@ class RND:
         self.optimizers = optimizers
         self.tolerance = tolerance
         self.target_size = target_size
+        self.seed_point = seed_point
         self.visualizer = visualizer
 
         # Class defined attributes
@@ -121,7 +128,7 @@ class RND:
         if self.visualizer is None:
             self.visualizer = TSNEVisualizer()
 
-    def compute_distance(self, points: tf.Tensor):
+    def compute_distance(self, points: tf.Tensor) -> tf.Tensor:
         """
         Compute the distance between neural network representations.
 
@@ -140,9 +147,8 @@ class RND:
 
         self.metric_results = self.metric(target_predictions, predictor_predictions)
         return self.metric_results
-        # return self.metric(target_predictions, predictor_predictions)
 
-    def generate_points(self, n_points: int):
+    def generate_points(self, n_points: int) -> tf.Tensor:
         """
         Call the data generator and get new data.
 
@@ -153,7 +159,8 @@ class RND:
 
         Returns
         -------
-
+        points : tf.Tensor
+                A tensor of data points.
         """
         return self.generator.get_points(n_points)
 
@@ -161,10 +168,6 @@ class RND:
         """
         Call compute distances on all generated points and decide what to
         do with them.
-
-        Returns
-        -------
-
         """
         points = self.point_selector.select_points()
         self._update_target_set(points)
@@ -192,10 +195,6 @@ class RND:
     def _retrain_network(self):
         """
         Re-train the predictor network.
-
-        Returns
-        -------
-
         """
         if self.historical_length == len(self.target_set):
             pass
@@ -213,7 +212,10 @@ class RND:
         -------
         Initializes an RND process.
         """
-        seed_point = self.generate_points(1)
+        if self.seed_point:
+            seed_point = self.seed_point
+        else:
+            seed_point = self.generate_points(1)
         self._update_target_set(np.array(seed_point))
         self._retrain_network()
 
@@ -223,7 +225,7 @@ class RND:
 
         Returns
         -------
-
+        updates the metric storage.
         """
         if len(self.target_set) == self.historical_length:
             pass
@@ -231,15 +233,15 @@ class RND:
             self.metric_results_storage.append(
                 np.sort(self.metric_results.numpy())[-3:]
             )
-            # self.metric_results_storage.append(self.metric_results.numpy())
 
-    def _evaluate_agent(self):
+    def _evaluate_agent(self) -> bool:
         """
         Determine whether or not it is time to stop the searching.
 
         Returns
         -------
-        Will end the search loop if criteria is met.
+        condition_met : bool
+            Will end the search loop if criteria is met.
         """
         # First iteration handling
         if self.historical_length is None:
@@ -285,25 +287,49 @@ class RND:
         model_representations = model.predict(data)
         self.visualizer.build_representation(model_representations, reference=reference)
 
-    def run_rnd(self):
+    def _report_performance(self, time_elapsed: float):
+        """
+        Provide a brief report on the RND agent performance.
+
+        Parameters
+        ----------
+        time_elapsed : float
+                Amount of time taken to perform the RND.
+        """
+        print("\nRND agent report")
+        print("----------------")
+        print(f"Run time: {time_elapsed / 60: 0.2f} m")
+        print(f"Size of point cloud: {len(self.generator)}")
+        print(f"Number of points chosen: {len(self.target_set)}")
+        print(f"Seed points: {self.seed_point}\n")
+
+    def run_rnd(self, visualize: bool = False, report: bool = True):
         """
         Run the random network distillation methods and build the target set.
 
-        Returns
-        -------
-
+        Parameters
+        ----------
+        visualize : bool (default=False)
+                If true, a t-SNE visualization will be performed on the final models.
+        report : bool (default=True)
+                If true, print a report about the RND performance.
         """
+        start = time.time()
         self._seed_process()
         criteria = False
         self.update_visualization(reference=True)
+
         while not criteria:
             self._choose_points()
-            # self._store_metrics()
+            self._store_metrics()
             self._retrain_network()
             criteria = self._evaluate_agent()
             self.update_visualization(reference=False)
             self.iterations += 1
 
-        self.visualizer.run_visualization()
+        stop = time.time()
+        if visualize:
+            self.visualizer.run_visualization()
 
-        print("FINISHED")
+        if report:
+            self._report_performance(stop - start)

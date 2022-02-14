@@ -8,9 +8,9 @@ Copyright Contributors to the Zincware Project.
 
 Description: Setup.py for the PyRND project
 """
-import setuptools
 from os import path
 
+import setuptools
 
 here = path.abspath(path.dirname(__file__))
 with open(path.join(here, "requirements.txt")) as requirements_file:
@@ -28,7 +28,7 @@ with open("README.rst", "r") as fh:
 setuptools.setup(
     name="ZnRND",
     version="0.0.1",
-    author="Samuel Tovey",
+    author="zincware",
     author_email="tovey.samuel@gmail.com",
     description="A tool for performing random network distillation.",
     long_description=long_description,

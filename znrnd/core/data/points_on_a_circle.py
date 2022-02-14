@@ -1,35 +1,39 @@
 """
 module for generating points on a circle
 """
-from abc import ABC
-from znrnd.core.data.data_generator import DataGenerator
 import random
+from abc import ABC
+
 import numpy as np
+
+from znrnd.core.data.data_generator import DataGenerator
 
 
 class PointsOnCircle(DataGenerator, ABC):
     """
-    class to generate points on a circle
+    class to generate points on circles
     """
 
-    def __init__(self, radius: float = 1.0, noise: float = 1e-3):
+    def __init__(self, radius=None, noise: float = 1e-3):
         """
-        constructor for points on a circle
+        constructor for points on circles
 
         Parameters
         ----------
-        radius : float
+        radius : np.ndarray
                 euclidian distance from origin
         noise : float
                 maximum allowed deviation from the radius
         """
+        if radius is None:
+            radius = np.array([1.0])
         self.radius = radius
         self.noise = noise
         self.data_pool = None
 
     def uniform_sampling(self, n_points: int, noise: bool = False):
         """
-        Generate the point uniformly.
+        Generate the points uniformly.
 
         Parameters
         ----------
@@ -42,15 +46,20 @@ class PointsOnCircle(DataGenerator, ABC):
         -------
         Updates the data pool in the class.
         """
+        pool = []
+        angles = np.linspace(0, 2 * np.pi, num=n_points, endpoint=False)
         if noise:
-            radial_values = np.random.uniform(
-                self.radius - self.noise, self.radius + self.noise, n_points
-            )
+            for radius in self.radius:
+                radial_values = np.random.uniform(
+                    radius - self.noise, radius + self.noise, n_points
+                )
+                pool.append(
+                    (radial_values * np.array([np.cos(angles), np.sin(angles)])).T
+                )
         else:
-            radial_values = self.radius
-
-        angles = np.linspace(0, 2 * np.pi, num=n_points)
-        self.data_pool = (radial_values * np.array([np.cos(angles), np.sin(angles)])).T
+            for radius in self.radius:
+                pool.append((radius * np.array([np.cos(angles), np.sin(angles)])).T)
+        self.data_pool = np.array(pool).reshape([n_points * len(self.radius), 2])
 
     def build_pool(self, method: str, n_points: int, noise: bool = False):
         """

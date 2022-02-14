@@ -20,9 +20,10 @@ Summary
 -------
 Module for the Mahalanobis distance.
 """
-from .distance_metric import DistanceMetric
 import tensorflow as tf
 import tensorflow_probability as tfp
+
+from .distance_metric import DistanceMetric
 from .l_p_norm import LPNorm
 
 
@@ -33,36 +34,25 @@ class MahalanobisDistance(DistanceMetric):
 
     def __init__(self):
         """
-        Constructor for the Mahalanobis distance.
-        """
-        self.euclidean = LPNorm(order=2)
-
-    @staticmethod
-    def _compute_covariance(distribution: tf.Tensor) -> tf.Tensor:
-        """
-        Compute the covariance on the distribution.
-
+        Constructor for the Mahalanobis Distance
         Parameters
         ----------
-        distribution : tf.Tensor
-                Distribution on which to compute the covariance.
-
-        Returns
-        -------
-        covariance: tf.Tensor shape=(n_points, n_points, n_dim)
-                Covariance matrix.
         """
-        covariance = tfp.stats.covariance(distribution)
-        covariance_half = tf.linalg.cholesky(covariance)
+        # Class defined attributes
+        self.cov = None
+        self.decomposed = None
+        self.pool = None
+        self.point_1 = None
+        self.point_2 = None
 
-        return covariance_half
+        self.euclidean = LPNorm(order=2)
 
     def __call__(self, point_1: tf.Tensor, point_2: tf.Tensor, **kwargs) -> tf.Tensor:
         """
         Call the distance metric.
 
-        Distance between points in the point_1 tensor will be computed between those in
-        the point_2 tensor element-wise. Therefore, we will have:
+        Mahalanobis Distance between points in the point_1 tensor will be computed
+        between those in the point_2 tensor element-wise. Therefore, we will have:
 
                 point_1[i] - point_2[i] for all i.
 
@@ -74,13 +64,33 @@ class MahalanobisDistance(DistanceMetric):
             Second set of points in the comparison.
         kwargs
                 Miscellaneous keyword arguments for the specific metric.
-
         Returns
         -------
         d(point_1, point_2) : tf.tensor : shape=(n_points, 1)
                 Array of distances for each point.
         """
-        covariance = self._compute_covariance(point_1)
-        point_1_maha = tf.matmul(point_1, covariance)
-        point_2_maha = tf.matmul(point_2, covariance)
-        return self.euclidean(point_1_maha, point_2_maha)
+        self.point_1, self.point_2 = point_1, point_2
+        self._update_covariance_matrix()
+        self._compute_cholesky_decomposition()
+
+        point_1_rescaled = tf.matmul(self.point_1, self.decomposed)
+        point_2_rescaled = tf.matmul(self.point_2, self.decomposed)
+        return self.euclidean(point_1_rescaled, point_2_rescaled)
+
+    def _update_covariance_matrix(self):
+        """
+        Updates / computes the inverse covariance matrix of the representation point_1
+        point_1 : tf.tensor
+                neural network representation
+        Returns
+        -------
+        """
+        self.cov = tf.linalg.inv(tfp.stats.covariance(self.point_1))
+
+    def _compute_cholesky_decomposition(self):
+        """
+        Returns
+        -------
+        The Cholesky decomposition of the the covariance matrices of both points
+        """
+        self.decomposed = tf.linalg.cholesky(self.cov)

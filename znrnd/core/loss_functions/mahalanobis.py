@@ -20,8 +20,9 @@ Summary
 -------
 ZnRND Mahalanobis distance TF loss function.
 """
+import znrnd.core.distance_metrics.mahalanobis_distance as mahalanobis
+
 from .simple_loss import SimpleLoss
-from znrnd.core.distance_metrics.mahalanobis_distance import MahalanobisDistance
 
 
 class MahalanobisLoss(SimpleLoss):
@@ -31,7 +32,7 @@ class MahalanobisLoss(SimpleLoss):
 
     def __init__(self):
         """
-        Constructor for the mean power loss class.
+        Constructor for the Mahalanobis loss class.
         """
         super(MahalanobisLoss, self).__init__()
-        self.metric = MahalanobisDistance()
+        self.metric = mahalanobis.MahalanobisDistance()

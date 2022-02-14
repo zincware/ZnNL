@@ -17,7 +17,7 @@ Citation
 If you use this module please cite us with:
 Summary
 -------
-Test the cosine distance module.
+Test the hyper sphere distance module.
 """
 import unittest
 
@@ -32,46 +32,52 @@ class TestCosineDistance(unittest.TestCase):
     Class to test the cosine distance measure module.
     """
 
-    def test_cosine_distance(self):
+    def test_hyper_sphere_distance(self):
         """
-        Test the cosine similarity measure.
+        Test the hyper sphere distance.
 
         Returns
         -------
         Assert the correct answer is returned for orthogonal, parallel, and
         somewhere in between.
         """
-        metric = znrnd.distance_metrics.CosineDistance()
+        metric = znrnd.distance_metrics.HyperSphere(order=2)
 
         # Test orthogonal vectors
-        point_1 = tf.convert_to_tensor([[1, 0, 0, 0]])
-        point_2 = tf.convert_to_tensor([[0, 1, 0, 0]])
-        self.assertEqual(metric(point_1, point_2), [1])
+        point_1 = tf.convert_to_tensor([[1, 0, 0, 0]], dtype=tf.float32)
+        point_2 = tf.convert_to_tensor([[0, 1, 0, 0]], dtype=tf.float32)
+        self.assertEqual(metric(point_1, point_2), [1.41421356])
 
         # Test parallel vectors
-        point_1 = tf.convert_to_tensor([[1, 0, 0, 0]])
-        point_2 = tf.convert_to_tensor([[1, 0, 0, 0]])
+        point_1 = tf.convert_to_tensor([[1, 0, 0, 0]], dtype=tf.float32)
+        point_2 = tf.convert_to_tensor([[1, 0, 0, 0]], dtype=tf.float32)
         self.assertEqual(metric(point_1, point_2), [0])
 
         # Somewhere in between
-        point_1 = tf.convert_to_tensor([[1.0, 0, 0, 0]])
-        point_2 = tf.convert_to_tensor([[0.5, 1.0, 0, 3.0]])
-        self.assertEqual(metric(point_1, point_2), [0.84382623])
+        point_1 = tf.convert_to_tensor([[1.0, 0, 0, 0]], dtype=tf.float32)
+        point_2 = tf.convert_to_tensor([[0.5, 1.0, 0, 3.0]], dtype=tf.float32)
+        self.assertEqual(metric(point_1, point_2), [0.84382623 * np.sqrt(10.25)])
 
     def test_multiple_distances(self):
         """
-        Test the cosine similarity measure.
+        Test the hyper sphere distance.
 
         Returns
         -------
         Assert the correct answer is returned for orthogonal, parallel, and
         somewhere in between.
         """
-        metric = znrnd.distance_metrics.CosineDistance()
+        metric = znrnd.distance_metrics.HyperSphere(order=2)
 
         # Test orthogonal vectors
-        point_1 = tf.convert_to_tensor([[1, 0, 0, 0], [1, 0, 0, 0], [1.0, 0, 0, 0]])
-        point_2 = tf.convert_to_tensor([[0, 1, 0, 0], [1, 0, 0, 0], [0.5, 1.0, 0, 3.0]])
+        point_1 = tf.convert_to_tensor(
+            [[1, 0, 0, 0], [1, 0, 0, 0], [1.0, 0, 0, 0]], dtype=tf.float32
+        )
+        point_2 = tf.convert_to_tensor(
+            [[0, 1, 0, 0], [1, 0, 0, 0], [0.5, 1.0, 0, 3.0]], dtype=tf.float32
+        )
         np.testing.assert_array_almost_equal(
-            metric(point_1, point_2), [1, 0, 0.843826], decimal=6
+            metric(point_1, point_2),
+            [np.sqrt(2), 0, 0.84382623 * np.sqrt(10.25)],
+            decimal=6,
         )

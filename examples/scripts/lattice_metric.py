@@ -8,10 +8,10 @@ Copyright Contributors to the Zincware Project.
 
 Description: Demonstrating learning a metric for lattice.
 """
-import znrnd
 import matplotlib.pyplot as plt
 import numpy as np
 
+import znrnd
 
 if __name__ == "__main__":
     """
@@ -65,7 +65,6 @@ if __name__ == "__main__":
     )
     agent.run_rnd()
 
-    print(len(agent.target_set))
     plt.plot(
         data_generator.data_pool[:, 0],
         data_generator.data_pool[:, 1],

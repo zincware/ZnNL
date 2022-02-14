@@ -8,12 +8,14 @@ Copyright Contributors to the Zincware Project.
 
 Description: Module for a standard feed forward neural network.
 """
+import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-from znrnd.core.models.model import Model
-from znrnd.core.loss_functions.simple_loss import SimpleLoss
+
 from znrnd.core.loss_functions.cosine_distance import CosineDistance
+from znrnd.core.loss_functions.simple_loss import SimpleLoss
+from znrnd.core.models.model import Model
 
 
 class DenseModel(Model):
@@ -38,6 +40,11 @@ class DenseModel(Model):
             Loss to use during the training.
     model : tf.Model
             Machine learning model to be trained.
+    iterations : int
+            Number of fit iterations until the learning rate is reduced and the
+            model is rebuilt.
+    epochs : int
+            number of epochs to train the model
     """
 
     def __init__(
@@ -49,6 +56,8 @@ class DenseModel(Model):
         learning_rate: float = 1e-2,
         tolerance: float = 1e-5,
         loss: SimpleLoss = CosineDistance(),
+        iterations: int = 20,
+        epochs: int = 50,
     ):
         """
         Constructor for the Feed forward network module.
@@ -70,6 +79,11 @@ class DenseModel(Model):
                 trained.
         loss : SimilarityMeasures
                 Loss to use during the training.
+        iterations : int
+                Number of fit iterations until the learning rate is reduced and the
+                model is rebuilt.
+        epochs : int
+                number of epochs to train the model
         """
         super().__init__()  # update parent.
         # User arguments
@@ -80,6 +94,8 @@ class DenseModel(Model):
         self.learning_rate = learning_rate
         self.tolerance = tolerance
         self.loss = loss
+        self.iterations = iterations
+        self.epochs = epochs
 
         # Model parameters
         self._build_model()  # build the model immediately
@@ -161,7 +177,7 @@ class DenseModel(Model):
         -------
         Changes the learning rate and re-compiles the model.
         """
-        if counter % 10 == 0:
+        if counter % self.iterations == 0:
             self.learning_rate = 0.8 * self.learning_rate
             self._compile_model()
 
@@ -178,12 +194,12 @@ class DenseModel(Model):
         -------
         Rebuilds and re-compiles the model.
         """
-        if counter % 10 == 0:
+        if counter % self.iterations == 0:
             print("Model re-build triggered.")
             self._build_model()
             self._compile_model()
 
-    def predict(self, point: tf.Tensor):
+    def predict(self, point: tf.Tensor) -> np.ndarray:
         """
         Make a prediction on a point.
 
@@ -194,7 +210,7 @@ class DenseModel(Model):
 
         Returns
         -------
-        prediction : tf.Tensor
+        prediction : np.ndarray
                 Model prediction on the point.
         """
         return self.model.predict(point)
@@ -204,7 +220,6 @@ class DenseModel(Model):
         x: tf.Tensor,
         y: tf.Tensor,
         re_initialize: bool = False,
-        epochs: int = 30,
     ):
         """
         Train the model on data.
@@ -215,8 +230,6 @@ class DenseModel(Model):
         x
         re_initialize : bool
                 If true, the network should be re-built and compiled.
-        epochs : int
-                Number epochs to train with on each batch.
 
         Returns
         -------
@@ -236,7 +249,7 @@ class DenseModel(Model):
         while converged is False:
             # verbose=0 only shows the final result, not single epochs
             self.model.fit(
-                x=x, y=y, epochs=epochs, shuffle=True, verbose=0, batch_size=32
+                x=x, y=y, epochs=self.epochs, shuffle=True, verbose=0, batch_size=32
             )
             converged = self._evaluate_model(x, y)
 

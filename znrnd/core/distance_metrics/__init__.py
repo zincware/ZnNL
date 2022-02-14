@@ -27,6 +27,7 @@ from .l_p_norm import LPNorm
 from .order_n_difference import OrderNDifference
 from .mahalanobis_distance import MahalanobisDistance
 from .mlp import MLPMetric
+from .hyper_sphere_distance import HyperSphere
 
 __all__ = [
     "DistanceMetric",
@@ -35,5 +36,5 @@ __all__ = [
     "AngularDistance",
     "LPNorm",
     "OrderNDifference",
-    "MahalanobisDistance",
+    "MahalanobisDistance" "HyperSphere",
 ]

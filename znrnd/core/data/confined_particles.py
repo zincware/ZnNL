@@ -8,11 +8,13 @@ Copyright Contributors to the Zincware Project.
 
 Description: Module for the particles in a box generator class.
 """
-from abc import ABC
-from znrnd.core.data.data_generator import DataGenerator
-import tensorflow as tf
-import numpy as np
 import random
+from abc import ABC
+
+import numpy as np
+import tensorflow as tf
+
+from znrnd.core.data.data_generator import DataGenerator
 
 
 class ConfinedParticles(DataGenerator, ABC):

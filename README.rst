@@ -1,13 +1,13 @@
-PyRND
+ZnRND
 =====
-A Python library for the implementation of an RND data filtering process.
+A Python library for the implementation of the RND data filtering process.
 
 Installation
 ------------
 
 .. code-block:: bash
 
-   git clone https://github.com/zincware/PyRND.git
+   git clone https://github.com/zincware/ZnRND.git
    cd PyRND
    pip install .
 

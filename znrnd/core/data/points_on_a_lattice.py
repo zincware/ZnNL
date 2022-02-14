@@ -25,10 +25,12 @@ Summary
 -------
 Module to generate points on a lattice.
 """
-from abc import ABC
-from znrnd.core.data.data_generator import DataGenerator
 import random
+from abc import ABC
+
 import numpy as np
+
+from znrnd.core.data.data_generator import DataGenerator
 
 
 class PointsOnLattice(DataGenerator, ABC):

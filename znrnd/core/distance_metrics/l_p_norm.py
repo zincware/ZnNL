@@ -24,8 +24,9 @@ Module for the L_p norm class.
 
     d = (|r[0]|^p + |r[1]|^p + ... + |r[n]|^p)^(1/p)
 """
-from .distance_metric import DistanceMetric
 import tensorflow as tf
+
+from .distance_metric import DistanceMetric
 
 
 class LPNorm(DistanceMetric):

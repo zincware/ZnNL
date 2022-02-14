@@ -22,8 +22,9 @@ Raise a difference to a power of order n.
 
 e.g. (a - b)^n
 """
-from .distance_metric import DistanceMetric
 import tensorflow as tf
+
+from .distance_metric import DistanceMetric
 
 
 class OrderNDifference(DistanceMetric):
