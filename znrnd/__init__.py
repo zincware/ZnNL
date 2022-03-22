@@ -1,23 +1,30 @@
 """
 main init file for the project.
 """
-from znrnd.core import distance_metrics
-from znrnd.core import loss_functions
-from znrnd.core import models
-from znrnd.core import point_selection
-from znrnd.core import similarity_measures
-from znrnd.core import data
-from znrnd.core.rnd.rnd import RND
-from znrnd.core.visualization import TSNEVisualizer
+import logging
+
+import znrnd
+from znrnd.jax_core import (
+    data,
+    distance_metrics,
+    loss_functions,
+    models,
+    point_selection,
+    similarity_measures,
+)
+from znrnd.jax_core.rnd.rnd import RND
+from znrnd.jax_core.visualization import TSNEVisualizer
+
+logging.getLogger(znrnd.__name__).addHandler(logging.NullHandler())
 
 
 __all__ = [
-    "distance_metrics",
-    "loss_functions",
-    "models",
-    "point_selection",
-    "similarity_measures",
-    "data",
-    "RND",
-    "TSNEVisualizer",
+    distance_metrics.__name__,
+    loss_functions.__name__,
+    models.__name__,
+    point_selection.__name__,
+    similarity_measures.__name__,
+    data.__name__,
+    RND.__name__,
+    TSNEVisualizer.__name__,
 ]
