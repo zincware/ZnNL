@@ -11,6 +11,8 @@ Description: Parent class for the point selection algorithms.
 import abc
 from typing import List, Union
 
+import jax.numpy as np
+
 
 class PointSelection:
     """
@@ -32,7 +34,7 @@ class PointSelection:
         self.selected_points = None
 
     @abc.abstractmethod
-    def select_points(self) -> Union[List, None]:
+    def select_points(self, distances: np.ndarray) -> Union[List, None]:
         """
         Select points from the pool
 

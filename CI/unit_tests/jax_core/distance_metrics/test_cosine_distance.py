@@ -25,6 +25,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 import jax.numpy as np
 from numpy.testing import assert_array_almost_equal
+
 from znrnd.jax_core.distance_metrics.cosine_distance import CosineDistance
 
 
@@ -73,6 +74,4 @@ class TestCosineDistance:
         # Test orthogonal vectors
         point_1 = np.array([[1, 0, 0, 0], [1, 0, 0, 0], [1.0, 0, 0, 0]])
         point_2 = np.array([[0, 1, 0, 0], [1, 0, 0, 0], [0.5, 1.0, 0, 3.0]])
-        assert_array_almost_equal(
-            metric(point_1, point_2), [1, 0, 0.843826], decimal=6
-        )
+        assert_array_almost_equal(metric(point_1, point_2), [1, 0, 0.843826], decimal=6)

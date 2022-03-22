@@ -20,11 +20,11 @@ Summary
 -------
 Module for a distance that combines the properties of cosine and lp-norm distance.
 """
+import jax.numpy as np
+
 from znrnd.jax_core.distance_metrics.cosine_distance import CosineDistance
 from znrnd.jax_core.distance_metrics.distance_metric import DistanceMetric
 from znrnd.jax_core.distance_metrics.l_p_norm import LPNorm
-
-import jax.numpy as np
 
 
 class HyperSphere(DistanceMetric):

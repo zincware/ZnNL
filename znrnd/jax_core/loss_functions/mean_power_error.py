@@ -21,7 +21,6 @@ Summary
 ZnRND mean square error TF loss function.
 """
 from znrnd.jax_core.distance_metrics.order_n_difference import OrderNDifference
-
 from znrnd.jax_core.loss_functions.simple_loss import SimpleLoss
 
 

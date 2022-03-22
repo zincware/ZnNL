@@ -42,19 +42,17 @@ class GreedySelection(PointSelection):
         self.agent = agent
         self.threshold = threshold
 
-    def select_points(self) -> Union[List, None]:
+    def select_points(self, distances: np.ndarray) -> Union[List, None]:
         """
         Select points from the pool using the greedy algorithm.
 
         Returns
         -------
         points : list
-                A set of points to be used by the RND class.
+                A set of indices of points to be used by the RND class.
         """
-        data = self.agent.generate_points(-1)  # get all points in the pool.
-        distances = self.agent.compute_distance(np.array(data))
         truth_sum = len(np.where(distances > self.threshold))
         if truth_sum > 0:
-            return [data[np.argmax(distances)]]
+            return np.argmax(distances)
         else:
             return None

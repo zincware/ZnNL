@@ -27,20 +27,21 @@ import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-import jax.numpy as np
 import jax
-import scipy.spatial.distance
+import jax.numpy as np
 import numpy as onp
-
+import scipy.spatial.distance
 from numpy.testing import assert_almost_equal
 
-from znrnd.jax_core.distance_metrics.mahalanobis_distance import MahalanobisDistance
+from znrnd.jax_core.distance_metrics.mahalanobis_distance import \
+    MahalanobisDistance
 
 
 class TestMahalanobisDistance:
     """
     Class to test the cosine distance measure module.
     """
+
     @classmethod
     def setup_class(cls):
         """
@@ -87,12 +88,8 @@ class TestMahalanobisDistance:
 
         # Add point of interest
         point_of_interest = np.array([[7.0, 3.0]])
-        point_1 = np.concatenate(
-            [np.array(point_1), point_of_interest], axis=0
-        )
-        point_2 = np.concatenate(
-            [np.array(point_2), point_of_interest], axis=0
-        )
+        point_1 = np.concatenate([np.array(point_1), point_of_interest], axis=0)
+        point_2 = np.concatenate([np.array(point_2), point_of_interest], axis=0)
 
         # Assert identity
         metric = MahalanobisDistance()
@@ -112,12 +109,8 @@ class TestMahalanobisDistance:
         point_1, point_2 = self.create_sample_set()
 
         # Add point of interest
-        point_1_of_interest = np.array(
-            [[-2.0, 5.0], [7.0, 3.0]]
-        )
-        point_2_of_interest = np.array(
-            [[7.0, 3.0], [-2.0, 5.0]]
-        )
+        point_1_of_interest = np.array([[-2.0, 5.0], [7.0, 3.0]])
+        point_2_of_interest = np.array([[7.0, 3.0], [-2.0, 5.0]])
         point_1 = np.concatenate(
             [np.array(point_1), point_1_of_interest],
             axis=0,

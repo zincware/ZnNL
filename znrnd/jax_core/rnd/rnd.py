@@ -35,6 +35,13 @@ class RND:
             Target set to be built iteratively.
     """
 
+    historical_length: int = 0
+    target_set: list = []
+    iterations: int = 0
+    stationary_iterations: int = 0
+    metric_results = None
+    metric_results_storage: list = []
+
     def __init__(
         self,
         data_generator: DataGenerator,
@@ -84,18 +91,8 @@ class RND:
         self.seed_point = seed_point
         self.visualizer = visualizer
 
-        # Class defined attributes
-        self.target_set: list = []
-        self.historical_length = None
-        self.iterations = 0
-        self.stationary_iterations = 0
-        self.metric_results = None
-        self.metric_results_storage: list = []
-
         # Run the class initialization
         self._set_defaults()
-
-        self.point_selector.agent = self
 
     def _set_defaults(self):
         """
@@ -108,18 +105,10 @@ class RND:
            * self.metric (default = cosine similarity)
            * Models (default = dense model.)
         """
-        # Update the point selector
         if self.point_selector is None:
             self.point_selector = znrnd.point_selection.GreedySelection(self)
-        # Update the metric
         if self.metric is None:
             self.metric = znrnd.similarity_measures.CosineSim()
-        # Update the target
-        if self.target is None:
-            self.target = znrnd.models.DenseModel()
-        # Update the predictor.
-        if self.predictor is None:
-            self.predictor = znrnd.models.DenseModel()
         if self.visualizer is None:
             self.visualizer = TSNEVisualizer()
 
@@ -137,13 +126,14 @@ class RND:
         distances : np.ndarray
                 A tensor of distances computed using the attached metric.
         """
+        # TODO: Make models do this with a call method.
         predictor_predictions = self.predictor.predict(points)
         target_predictions = self.target.predict(points)
 
         self.metric_results = self.metric(target_predictions, predictor_predictions)
         return self.metric_results
 
-    def generate_points(self, n_points: int) -> np.ndarray:
+    def fetch_data(self, n_points: int) -> np.ndarray:
         """
         Call the data generator and get new data.
 
@@ -164,7 +154,10 @@ class RND:
         Call compute distances on all generated points and decide what to
         do with them.
         """
-        points = self.point_selector.select_points()
+        data = self.fetch_data(-1)  # get all points in the pool.
+        distances = self.compute_distance(np.array(data))
+        points = self.point_selector.select_points(distances)
+        selected_points = data[points]
         self._update_target_set(points)
 
     def _update_target_set(self, points: Union[np.ndarray, None]):
@@ -210,7 +203,7 @@ class RND:
         if self.seed_point:
             seed_point = self.seed_point
         else:
-            seed_point = self.generate_points(1)
+            seed_point = self.fetch_data(1)
         self._update_target_set(np.array(seed_point))
         self._retrain_network()
 
@@ -238,10 +231,7 @@ class RND:
         condition_met : bool
             Will end the search loop if criteria is met.
         """
-        # First iteration handling
-        if self.historical_length is None:
-            return False
-        elif self.historical_length == 0:
+        if self.historical_length == 0:
             pass
         elif len(self.target_set) == self.historical_length:
             if self.stationary_iterations >= self.tolerance:
@@ -254,7 +244,7 @@ class RND:
                 return True
         # Stationary iteration handling
         else:
-            self.stationary_iterations = 0  # reset stationary
+            self.stationary_iterations = 0  # reset stationary iterations
             return False
 
     def update_visualization(self, data: np.ndarray = None, reference: bool = False):
@@ -273,7 +263,7 @@ class RND:
         Updates the visualizer.
         """
         if data is None:
-            data = self.generate_points(-1)
+            data = self.fetch_data(-1)
         if reference:
             model = self.target
         else:

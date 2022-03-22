@@ -33,8 +33,8 @@ class CosineSim:
         """
         numerator = np.einsum("ij, ij -> i", point_1, point_2)
         denominator = np.sqrt(
-                np.einsum("ij, ij -> i", point_1, point_1)
-                * np.einsum("ij, ij -> i", point_2, point_2),
-            )
+            np.einsum("ij, ij -> i", point_1, point_1)
+            * np.einsum("ij, ij -> i", point_2, point_2),
+        )
 
         return np.divide(numerator, denominator)

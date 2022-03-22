@@ -58,8 +58,8 @@ class CosineDistance(DistanceMetric):
         """
         numerator = np.einsum("ij, ij -> i", point_1, point_2)
         denominator = np.sqrt(
-                np.einsum("ij, ij -> i", point_1, point_1)
-                * np.einsum("ij, ij -> i", point_2, point_2)
+            np.einsum("ij, ij -> i", point_1, point_1)
+            * np.einsum("ij, ij -> i", point_2, point_2)
         )
 
         return 1 - abs(np.divide(numerator, denominator))

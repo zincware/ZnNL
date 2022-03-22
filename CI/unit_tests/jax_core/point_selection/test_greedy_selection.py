@@ -23,12 +23,11 @@ import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-import numpy as np
-
-from znrnd.jax_core.point_selection.greedy_selection import GreedySelection
-from znrnd.jax_core.distance_metrics.cosine_distance import CosineDistance
-
+import jax.numpy as np
 from numpy.testing import assert_array_equal
+
+from znrnd.jax_core.distance_metrics.cosine_distance import CosineDistance
+from znrnd.jax_core.point_selection.greedy_selection import GreedySelection
 
 
 class Agent:
@@ -80,8 +79,10 @@ class TestGreedySelection:
         """
         Test the select points methods.
         """
-        self.agent = Agent()
-        self.selector = GreedySelection(self.agent)
-        point = self.selector.select_points()
+        agent = Agent()
+        data = agent.generate_points(-1)
+        distances = agent.compute_distance(data)
 
-        assert_array_equal(point[0], np.array([0, 1]))
+        self.selector = GreedySelection()
+        point = self.selector.select_points(distances)
+        assert_array_equal(data[point], np.array([0, 1]))

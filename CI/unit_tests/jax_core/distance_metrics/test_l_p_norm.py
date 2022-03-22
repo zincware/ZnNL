@@ -25,10 +25,9 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 import jax.numpy as np
+from numpy.testing import assert_almost_equal, assert_array_almost_equal
 
 from znrnd.jax_core.distance_metrics.l_p_norm import LPNorm
-
-from numpy.testing import assert_almost_equal, assert_array_almost_equal
 
 
 class TestLPNorm:
@@ -81,12 +80,6 @@ class TestLPNorm:
         metric = LPNorm(order=1)
 
         # Test orthogonal vectors
-        point_1 = np.array(
-            [[1.0, 7.0, 0.0, 0.0], [4, 7, 2, 1]]
-        )
-        point_2 = np.array(
-            [[1.0, 1.0, 0.0, 0.0], [6, 3, 1, 8]]
-        )
-        assert_array_almost_equal(
-            metric(point_1, point_2), [6.0, 14.0], decimal=4
-        )
+        point_1 = np.array([[1.0, 7.0, 0.0, 0.0], [4, 7, 2, 1]])
+        point_2 = np.array([[1.0, 1.0, 0.0, 0.0], [6, 3, 1, 8]])
+        assert_array_almost_equal(metric(point_1, point_2), [6.0, 14.0], decimal=4)

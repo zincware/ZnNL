@@ -17,5 +17,5 @@ __all__ = [
     ConfinedParticles.__name__,
     DataGenerator.__name__,
     PointsOnLattice.__name__,
-    PointsOnCircle.__name__
+    PointsOnCircle.__name__,
 ]
