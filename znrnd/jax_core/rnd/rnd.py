@@ -158,7 +158,7 @@ class RND:
         distances = self.compute_distance(np.array(data))
         points = self.point_selector.select_points(distances)
         selected_points = data[points]
-        self._update_target_set(points)
+        self._update_target_set(selected_points)
 
     def _update_target_set(self, points: Union[np.ndarray, None]):
         """

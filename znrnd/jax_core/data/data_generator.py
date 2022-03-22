@@ -67,9 +67,9 @@ class DataGenerator(metaclass=abc.ABCMeta):
             logger.info("Too many points requested, returning full point cloud.")
             return self.data_pool
 
-        if method is "uniform":
+        if method == "uniform":
             indices = np.linspace(0, len(self.data_pool) - 1, n_points, dtype=int)
-        elif method is "random":
+        elif method == "random":
             key = jax.random.PRNGKey(3)
             indices = jax.random.randint(
                 key=key,
@@ -78,7 +78,7 @@ class DataGenerator(metaclass=abc.ABCMeta):
                 maxval=len(self.data_pool) - 1,
                 dtype=int,
             )
-        elif method is "first":
+        elif method == "first":
             indices = [i for i in range(n_points)]
         dataset = []
 
