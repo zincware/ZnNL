@@ -8,7 +8,7 @@ Installation
 .. code-block:: bash
 
    git clone https://github.com/zincware/ZnRND.git
-   cd PyRND
+   cd ZnRND
    pip install .
 
 Documentation
@@ -20,9 +20,3 @@ For tutorials and more theoretical information please see the included documenta
    cd docs
    make html
    firefox/safari/chrome/open build/html/index.html
-
-
-
-
-
-
