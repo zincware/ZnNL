@@ -189,7 +189,7 @@ class RND:
             domain = np.array(self.target_set)
             codomain = self.target(domain)
             dataset = {"inputs": domain, "targets": codomain}
-            self.predictor.train_model(train_ds=dataset, test_ds=dataset)
+            self.predictor.train_model_recursively(train_ds=dataset, test_ds=dataset)
 
     def _seed_process(self):
         """

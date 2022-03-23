@@ -34,6 +34,10 @@ from tqdm import trange
 
 from znrnd.jax_core.models.model import Model
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class FundamentalModel(nn.Module):
     """
@@ -302,7 +306,6 @@ class FlaxModel(Model):
         self,
         train_ds: dict,
         test_ds: dict,
-        re_initialize: bool = False,
         epochs: int = 50,
         batch_size: int = 1,
     ):
@@ -311,18 +314,12 @@ class FlaxModel(Model):
 
         See the parent class for a full doc-string.
         """
-        # Get the initial model state.
-        if re_initialize:
+        if self.model_state is None:
             init_rng = jax.random.PRNGKey(onp.random.randint(0, 500))
             state = self._create_train_state(init_rng)
             self.model_state = state
         else:
-            if self.model_state is None:
-                init_rng = jax.random.PRNGKey(onp.random.randint(0, 500))
-                state = self._create_train_state(init_rng)
-                self.model_state = state
-            else:
-                state = self.model_state
+            state = self.model_state
 
         loading_bar = trange(1, epochs + 1, ncols=100, unit="batch")
         for i in loading_bar:
@@ -337,6 +334,53 @@ class FlaxModel(Model):
 
         # Update the final model state.
         self.model_state = state
+
+    def train_model_recursively(
+            self,
+            train_ds: dict,
+            test_ds: dict,
+            epochs: int = 100,
+            batch_size: int = 1
+    ):
+        """
+        Check parent class for full doc string.
+        """
+        if self.model_state is None:
+            init_rng = jax.random.PRNGKey(onp.random.randint(0, 500))
+            state = self._create_train_state(init_rng)
+            self.model_state = state
+        else:
+            state = self.model_state
+
+        condition = False
+        counter = 0
+        while not condition:
+            loading_bar = trange(1, epochs + 1, ncols=100, unit="batch")
+            for i in loading_bar:
+                loading_bar.set_description(f"Epoch: {i}")
+
+                state, train_metrics = self._train_epoch(
+                    state, train_ds, batch_size=batch_size
+                )
+                test_loss = self._evaluate_model(state.params, test_ds)
+
+                loading_bar.set_postfix(test_loss=test_loss)
+
+            # Update the final model state.
+            self.model_state = state
+
+            # Perform checks and update parameters
+            counter += 1
+            epochs = int(1.1 * epochs)
+            if test_loss <= self.training_threshold:
+                condition = True
+
+            # Re-initialize the network if it is simply not converging.
+            if counter % 10 == 0:
+                logger.info("Model training stagnating, re-initializing model.")
+                init_rng = jax.random.PRNGKey(onp.random.randint(0, 500))
+                state = self._create_train_state(init_rng)
+                self.model_state = state
 
     def __call__(self, feature_vector: np.ndarray):
         """

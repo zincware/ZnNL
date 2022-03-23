@@ -28,12 +28,11 @@ class Model:
     model: Callable
 
     def train_model(
-        self,
-        train_ds: dict,
-        test_ds: dict,
-        re_initialize: bool = False,
-        epochs: int = 10,
-        batch_size: int = 1,
+            self,
+            train_ds: dict,
+            test_ds: dict,
+            epochs: int = 10,
+            batch_size: int = 1,
     ):
         """
         Train the model on data.
@@ -44,16 +43,34 @@ class Model:
                 Train dataset with inputs and targets.
         test_ds : dict
                 Test dataset with inputs and targets.
-        re_initialize : bool
-                If true, model is re-initialized before training.
         epochs : int
                 Number of epochs to train over.
         batch_size : int
                 Size of the batch to use in training.
+        """
+        raise NotImplemented("Implemented in child class.")
 
-        Returns
-        -------
+    def train_model_recursively(
+            self,
+            train_ds: dict,
+            test_ds: dict,
+            epochs: int = 10,
+            batch_size: int = 1
+    ):
+        """
+        Train a model recursively until a threshold is reached or the models fails
+        to converge.
 
+        Parameters
+        ----------
+        train_ds : dict
+                Train dataset with inputs and targets.
+        test_ds : dict
+                Test dataset with inputs and targets.
+        epochs : int
+                Number of epochs to train over.
+        batch_size : int
+                Size of the batch to use in training.
         """
         raise NotImplemented("Implemented in child class.")
 
