@@ -12,5 +12,6 @@ nbsphinx
 tensorflow_probability
 scipy
 sklearn
+jaxlib
 jax
 plotly
