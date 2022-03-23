@@ -76,13 +76,14 @@ class FlaxModel(Model):
         loss_fn: Callable,
         optimizer: Callable,
         input_shape: tuple,
+        training_threshold: float
     ):
         """
         Constructor for a Flax model.
 
         Parameters
         ----------
-        model : List[nn.Module]
+        layer_stack : List[nn.Module]
                 A list of flax modules to be used in the call method.
         loss_fn : Callable
                 A function to use in the loss computation.
@@ -91,11 +92,14 @@ class FlaxModel(Model):
                 cross-compatibility is not assured.
         input_shape : tuple
                 Shape of the NN input.
+        training_threshold : float
+                The loss value at which point you consider the model trained.
         """
         self.model = FundamentalModel(layer_stack)
         self.loss_fn = loss_fn
         self.optimizer = optimizer
         self.input_shape = input_shape
+        self.training_threshold = training_threshold
 
         # initialize the model state
         init_rng = jax.random.PRNGKey(onp.random.randint(0, 500))

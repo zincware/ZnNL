@@ -28,6 +28,7 @@ Module to generate points on a lattice.
 from abc import ABC
 
 import numpy as onp
+
 from znrnd.jax_core.data.data_generator import DataGenerator
 
 

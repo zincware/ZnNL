@@ -8,9 +8,9 @@ Copyright Contributors to the Zincware Project.
 
 Description: Parent class for the models.
 """
-import jax.numpy as np
-
 from typing import Callable
+
+import jax.numpy as np
 
 
 class Model:
@@ -24,6 +24,7 @@ class Model:
             vector and returns something from it. Typically this is a
             neural network layer stack.
     """
+
     model: Callable
 
     def train_model(
@@ -32,7 +33,7 @@ class Model:
         test_ds: dict,
         re_initialize: bool = False,
         epochs: int = 10,
-        batch_size: int = 1
+        batch_size: int = 1,
     ):
         """
         Train the model on data.

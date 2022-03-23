@@ -217,9 +217,7 @@ class RND:
         if len(self.target_set) == self.historical_length:
             pass
         else:
-            self.metric_results_storage.append(
-                np.sort(self.metric_results)[-3:]
-            )
+            self.metric_results_storage.append(np.sort(self.metric_results)[-3:])
 
     def _evaluate_agent(self) -> bool:
         """
