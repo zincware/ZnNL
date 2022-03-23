@@ -8,45 +8,65 @@ Copyright Contributors to the Zincware Project.
 
 Description: Parent class for the models.
 """
-import abc
+import jax.numpy as np
 
-import numpy as np
-import tensorflow as tf
+from typing import Callable
 
 
 class Model:
     """
-    Parent class for PyRND Models.
+    Parent class for ZnRND Models.
+
+    Attributes
+    ----------
+    model : Callable
+            A callable class or function that takes a feature
+            vector and returns something from it. Typically this is a
+            neural network layer stack.
     """
-
-    @abc.abstractmethod
-    def predict(self, point: tf.Tensor) -> np.ndarray:
-        """
-        Make a prediction on a point.
-
-        Parameters
-        ----------
-        point : tf.Tensor
-                Point on which to perform a prediction.
-
-        Returns
-        -------
-        prediction : np.ndarray
-                Model prediction on the point.
-        """
-        raise NotImplemented("Implemented in child class.")
+    model: Callable
 
     def train_model(
         self,
-        x: tf.Tensor,
-        y: tf.Tensor,
+        train_ds: dict,
+        test_ds: dict,
         re_initialize: bool = False,
+        epochs: int = 10,
+        batch_size: int = 1
     ):
         """
         Train the model on data.
 
+        Parameters
+        ----------
+        train_ds : dict
+                Train dataset with inputs and targets.
+        test_ds : dict
+                Test dataset with inputs and targets.
+        re_initialize : bool
+                If true, model is re-initialized before training.
+        epochs : int
+                Number of epochs to train over.
+        batch_size : int
+                Size of the batch to use in training.
+
         Returns
         -------
 
         """
         raise NotImplemented("Implemented in child class.")
+
+    def __call__(self, feature_vector: np.ndarray):
+        """
+        Call the network.
+
+        Parameters
+        ----------
+        feature_vector : np.ndarray
+                Feature vector on which to apply operation.
+
+        Returns
+        -------
+        output of the model.
+        """
+        self.model(feature_vector)

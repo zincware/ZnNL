@@ -9,5 +9,6 @@ Copyright Contributors to the Zincware Project.
 Description:
 """
 from znrnd.jax_core.models.model import Model
+from znrnd.jax_core.models.flax_model import FlaxModel
 
-__all__ = [Model.__name__]
+__all__ = [Model.__name__, FlaxModel.__name__]

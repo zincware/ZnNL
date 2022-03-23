@@ -48,6 +48,8 @@ class TestPointsOnLattice:
         """
         self.data_generator.build_pool()
 
-        [0.0, 0.0] in self.data_generator.data_pool
-        [-5, -5] in self.data_generator.data_pool
-        [5, -4] in self.data_generator.data_pool
+        assert True in [all([0, 0] == item) for item in self.data_generator.data_pool]
+        assert True in [all([-5, -5] == item) for item in self.data_generator.data_pool]
+        assert True in [all([5, -4] == item) for item in self.data_generator.data_pool]
+        assert True in [all([-1, -1] == item) for item in self.data_generator.data_pool]
+        assert True in [all([0, -1] == item) for item in self.data_generator.data_pool]

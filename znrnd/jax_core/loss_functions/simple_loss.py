@@ -46,7 +46,7 @@ class SimpleLoss(ABC):
         super().__init__()
         self.metric = None
 
-    def call(self, point_1: np.array, point_2: np.array) -> float:
+    def __call__(self, point_1: np.array, point_2: np.array) -> float:
         """
         Summation over the tensor of the respective similarity measurement
         Parameters

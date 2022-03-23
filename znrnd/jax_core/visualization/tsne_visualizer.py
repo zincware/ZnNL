@@ -23,12 +23,11 @@ If you use this module please cite us with:
 
 Summary
 -------
-TSNE visualizer.
+TSNE visualizer for the RND.
 """
-import matplotlib.animation as animation
-import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.manifold import TSNE
+import plotly.graph_objects as go
 
 
 class TSNEVisualizer:
@@ -45,7 +44,7 @@ class TSNEVisualizer:
         components : int
                 Number of components to use in the representation. Either 2 or 3.
         """
-        self.model = TSNE(n_components=components, init="random")
+        self.model = TSNE(n_components=components, init="random", learning_rate=200)
 
         self.reference = []
         self.dynamic = []
@@ -85,11 +84,89 @@ class TSNEVisualizer:
         """
         Run the visualization.
         """
-        # create a figure with two subplots
-        fig, (ax1, ax2) = plt.subplots(1, 2)
+        fig_dict = {
+            "data": [],
+            "layout": {},
+            "frames": []
+        }
+        # fill in most of layout
+        fig_dict["layout"]["xaxis"] = {"range": [-15, 15], "title": "x"}
+        fig_dict["layout"]["yaxis"] = {"title": "y", "range": [-15, 15]}
+        fig_dict["layout"]["hovermode"] = "closest"
+        fig_dict["layout"]["updatemenus"] = [
+            {
+                "buttons": [
+                    {
+                        "args": [None, {"frame": {"duration": 500, "redraw": False},
+                                        "fromcurrent": True,
+                                        "transition": {"duration": 300,
+                                                       "easing": "quadratic-in-out"}}],
+                        "label": "Play",
+                        "method": "animate"
+                    },
+                    {
+                        "args": [[None], {"frame": {"duration": 0, "redraw": False},
+                                          "mode": "immediate",
+                                          "transition": {"duration": 0}}],
+                        "label": "Pause",
+                        "method": "animate"
+                    }
+                ],
+                "direction": "left",
+                "pad": {"r": 10, "t": 87},
+                "showactive": False,
+                "type": "buttons",
+                "x": 0.1,
+                "xanchor": "right",
+                "y": 0,
+                "yanchor": "top"
+            }
+        ]
 
-        # initialize two line objects (one in each axes)
-        ax1.plot(self.reference[0][:, 0], self.reference[0][:, 1], ".")
-        ax2.plot(self.dynamic[-1][:, 0], self.dynamic[-1][:, 1], ".")
+        sliders_dict = {
+            "active": 0,
+            "yanchor": "top",
+            "xanchor": "left",
+            "currentvalue": {
+                "font": {"size": 20},
+                "prefix": "Step:",
+                "visible": True,
+                "xanchor": "right"
+            },
+            "transition": {"duration": 300, "easing": "cubic-in-out"},
+            "pad": {"b": 10, "t": 50},
+            "len": 0.9,
+            "x": 0.1,
+            "y": 0,
+            "steps": []
+        }
 
-        plt.show()
+        # Add initial data
+        fig_dict["data"].append(
+            {"x": self.dynamic[0][:, 0], "y": self.dynamic[0][:, 1], "mode": "markers"}
+        )
+
+        # Make the figure frames.
+        for i, item in enumerate(self.dynamic):
+            frame = {"data": {"x": item[:, 0], "y": item[:, 1], "mode": "markers"}}
+
+            fig_dict["frames"].append(frame)
+
+            slider_step = {
+                "args": [
+                    [i],
+                    {
+                        "frame": {"duration": 300, "redraw": False},
+                        "mode": "immediate",
+                        "transition": {"duration": 300}
+                    }
+                ],
+                "label": i,
+                "method": "animate"
+            }
+            sliders_dict["steps"].append(slider_step)
+
+        fig_dict["layout"]["sliders"] = [sliders_dict]
+
+        figure = go.Figure(fig_dict)
+        figure.show()

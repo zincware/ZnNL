@@ -27,8 +27,7 @@ Module to generate points on a lattice.
 """
 from abc import ABC
 
-import jax.numpy as np
-
+import numpy as onp
 from znrnd.jax_core.data.data_generator import DataGenerator
 
 
@@ -58,12 +57,12 @@ class PointsOnLattice(DataGenerator, ABC):
         -------
         Will call a method which updates the class state.
         """
-        x = np.linspace(-x_points / 2, x_points / 2, x_points + 1, dtype=int).astype(
+        x = onp.linspace(-x_points / 2, x_points / 2, x_points + 1, dtype=int).astype(
             float
         )
-        y = np.linspace(-y_points / 2, y_points / 2, y_points + 1, dtype=int).astype(
+        y = onp.linspace(-y_points / 2, y_points / 2, y_points + 1, dtype=int).astype(
             float
         )
 
-        grid = np.stack(np.meshgrid(x, y), axis=2)
+        grid = onp.stack(onp.meshgrid(x, y), axis=2)
         self.data_pool = grid.reshape(-1, grid.shape[-1])

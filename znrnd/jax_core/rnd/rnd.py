@@ -126,9 +126,8 @@ class RND:
         distances : np.ndarray
                 A tensor of distances computed using the attached metric.
         """
-        # TODO: Make models do this with a call method.
-        predictor_predictions = self.predictor.predict(points)
-        target_predictions = self.target.predict(points)
+        predictor_predictions = self.predictor(points)
+        target_predictions = self.target(points)
 
         self.metric_results = self.metric(target_predictions, predictor_predictions)
         return self.metric_results
@@ -158,7 +157,7 @@ class RND:
         distances = self.compute_distance(np.array(data))
         points = self.point_selector.select_points(distances)
         selected_points = data[points]
-        self._update_target_set(selected_points)
+        self._update_target_set([selected_points])
 
     def _update_target_set(self, points: Union[np.ndarray, None]):
         """
@@ -188,9 +187,9 @@ class RND:
             pass
         else:
             domain = np.array(self.target_set)
-            codomain = self.target.predict(domain)
-
-            self.predictor.train_model(domain, codomain)
+            codomain = self.target(domain)
+            dataset = {"inputs": domain, "targets": codomain}
+            self.predictor.train_model(train_ds=dataset, test_ds=dataset)
 
     def _seed_process(self):
         """
@@ -219,7 +218,7 @@ class RND:
             pass
         else:
             self.metric_results_storage.append(
-                np.sort(self.metric_results.numpy())[-3:]
+                np.sort(self.metric_results)[-3:]
             )
 
     def _evaluate_agent(self) -> bool:
@@ -269,7 +268,7 @@ class RND:
         else:
             model = self.predictor
 
-        model_representations = model.predict(data)
+        model_representations = model(data)
         self.visualizer.build_representation(model_representations, reference=reference)
 
     def _report_performance(self, time_elapsed: float):
