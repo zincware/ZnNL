@@ -162,7 +162,7 @@ class TSNEVisualizer:
                 "x": self.dynamic[0][:, 0],
                 "y": self.dynamic[0][:, 1],
                 "mode": "markers",
-                "name": "Predictor"
+                "name": "Predictor",
             }
         )
         fig_dict["data"].append(
@@ -172,7 +172,7 @@ class TSNEVisualizer:
                 "mode": "markers",
                 "xaxis": "x2",
                 "yaxis": "y2",
-                "name": "Target"
+                "name": "Target",
             }
         )
 
@@ -184,7 +184,7 @@ class TSNEVisualizer:
                         "x": item[:, 0],
                         "y": item[:, 1],
                         "mode": "markers",
-                        "name": "Predictor"
+                        "name": "Predictor",
                     },
                     {
                         "x": self.reference[0][:, 0],
@@ -192,8 +192,8 @@ class TSNEVisualizer:
                         "mode": "markers",
                         "xaxis": "x2",
                         "yaxis": "y2",
-                        "name": "Target"
-                    }
+                        "name": "Target",
+                    },
                 ]
             }
 

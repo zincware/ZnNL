@@ -23,6 +23,7 @@ Summary
 -------
 Module for the use of a Flax model with ZnRND.
 """
+import logging
 from typing import Callable, List
 
 import jax
@@ -33,8 +34,6 @@ from flax.training import train_state
 from tqdm import trange
 
 from znrnd.jax_core.models.model import Model
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +79,7 @@ class FlaxModel(Model):
         loss_fn: Callable,
         optimizer: Callable,
         input_shape: tuple,
-        training_threshold: float
+        training_threshold: float,
     ):
         """
         Constructor for a Flax model.
@@ -336,11 +335,7 @@ class FlaxModel(Model):
         self.model_state = state
 
     def train_model_recursively(
-            self,
-            train_ds: dict,
-            test_ds: dict,
-            epochs: int = 100,
-            batch_size: int = 1
+        self, train_ds: dict, test_ds: dict, epochs: int = 100, batch_size: int = 1
     ):
         """
         Check parent class for full doc string.

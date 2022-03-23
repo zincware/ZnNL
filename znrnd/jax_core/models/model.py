@@ -28,11 +28,11 @@ class Model:
     model: Callable
 
     def train_model(
-            self,
-            train_ds: dict,
-            test_ds: dict,
-            epochs: int = 10,
-            batch_size: int = 1,
+        self,
+        train_ds: dict,
+        test_ds: dict,
+        epochs: int = 10,
+        batch_size: int = 1,
     ):
         """
         Train the model on data.
@@ -51,11 +51,7 @@ class Model:
         raise NotImplemented("Implemented in child class.")
 
     def train_model_recursively(
-            self,
-            train_ds: dict,
-            test_ds: dict,
-            epochs: int = 10,
-            batch_size: int = 1
+        self, train_ds: dict, test_ds: dict, epochs: int = 10, batch_size: int = 1
     ):
         """
         Train a model recursively until a threshold is reached or the models fails
