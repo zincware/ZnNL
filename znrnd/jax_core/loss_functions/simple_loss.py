@@ -61,4 +61,4 @@ class SimpleLoss(ABC):
         loss : float
                 total loss of all points based on the similarity measurement
         """
-        return np.mean(self.metric(point_1, point_2))
+        return np.mean(self.metric(point_1, point_2), axis=0)

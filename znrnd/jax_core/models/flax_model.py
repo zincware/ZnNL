@@ -23,20 +23,23 @@ Summary
 -------
 Module for the use of a Flax model with ZnRND.
 """
-from znrnd.jax_core.models.model import Model
 from typing import Callable, List
-from flax import linen as nn
-import jax.numpy as np
+
 import jax
+import jax.numpy as np
 import numpy as onp
+from flax import linen as nn
 from flax.training import train_state
 from tqdm import trange
+
+from znrnd.jax_core.models.model import Model
 
 
 class FundamentalModel(nn.Module):
     """
     Model to be called in the ZnRND FlaxModel
     """
+
     layer_stack: List[nn.Module]
 
     @nn.compact
@@ -63,15 +66,17 @@ class FlaxModel(Model):
     """
     Class for the Flax model in ZnRND.
     """
+
     model_state: dict = None
     rng = jax.random.PRNGKey(onp.random.randint(0, 500))
 
     def __init__(
-            self,
-            layer_stack: List[nn.Module],
-            loss_fn: Callable,
-            optimizer: Callable,
-            input_shape: tuple):
+        self,
+        layer_stack: List[nn.Module],
+        loss_fn: Callable,
+        optimizer: Callable,
+        input_shape: tuple,
+    ):
         """
         Constructor for a Flax model.
 
@@ -152,7 +157,7 @@ class FlaxModel(Model):
         TODO: Make the TrainState class passable by the user as it can track custom
               model properties.
         """
-        params = self.model.init(init_rng, np.ones(list(self.input_shape)))['params']
+        params = self.model.init(init_rng, np.ones(list(self.input_shape)))["params"]
 
         return train_state.TrainState.create(
             apply_fn=self.model.apply, params=params, tx=self.optimizer
@@ -176,11 +181,12 @@ class FlaxModel(Model):
         metrics : dict
                 Metrics for the current model.
         """
+
         def loss_fn(params):
             """
             helper loss computation
             """
-            predictions = self.model.apply({"params": params}, batch['inputs'])
+            predictions = self.model.apply({"params": params}, batch["inputs"])
             loss = self.loss_fn(predictions, batch["targets"])
 
             return loss, predictions
@@ -243,12 +249,12 @@ class FlaxModel(Model):
                 Dict of metrics for current state.
         """
         # Some housekeeping variables.
-        train_ds_size = len(train_ds['inputs'])
+        train_ds_size = len(train_ds["inputs"])
         steps_per_epoch = train_ds_size // batch_size
 
         # Prepare the shuffle.
         permutations = jax.random.permutation(self.rng, train_ds_size)
-        permutations = permutations[:steps_per_epoch * batch_size]
+        permutations = permutations[: steps_per_epoch * batch_size]
         permutations = permutations.reshape((steps_per_epoch, batch_size))
 
         # Step over items in batch.
@@ -293,8 +299,8 @@ class FlaxModel(Model):
         train_ds: dict,
         test_ds: dict,
         re_initialize: bool = False,
-        epochs: int = 1000,
-        batch_size: int = 1
+        epochs: int = 50,
+        batch_size: int = 1,
     ):
         """
         Train the model.
@@ -314,7 +320,7 @@ class FlaxModel(Model):
             else:
                 state = self.model_state
 
-        loading_bar = trange(1, epochs + 1, ncols=70, unit="batch")
+        loading_bar = trange(1, epochs + 1, ncols=100, unit="batch")
         for i in loading_bar:
             loading_bar.set_description(f"Epoch: {i}")
 
@@ -323,9 +329,7 @@ class FlaxModel(Model):
             )
             test_loss = self._evaluate_model(state.params, test_ds)
 
-            loading_bar.set_postfix(
-                train_loss=train_metrics["loss"], test_loss=test_loss
-            )
+            loading_bar.set_postfix(test_loss=test_loss)
 
         # Update the final model state.
         self.model_state = state

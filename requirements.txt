@@ -13,3 +13,4 @@ tensorflow_probability
 scipy
 sklearn
 jax
+plotly

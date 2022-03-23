@@ -26,8 +26,9 @@ Summary
 TSNE visualizer for the RND.
 """
 import numpy as np
-from sklearn.manifold import TSNE
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+from sklearn.manifold import TSNE
 
 
 class TSNEVisualizer:
@@ -84,33 +85,50 @@ class TSNEVisualizer:
         """
         Run the visualization.
         """
-        fig_dict = {
-            "data": [],
-            "layout": {},
-            "frames": []
-        }
+        static_figure = go.Scatter(
+            x=self.reference[0][:, 0], y=self.reference[0][:, 1], xaxis="x2", yaxis="y2"
+        )
+        fig_dict = {"data": [], "layout": {}, "frames": []}
         # fill in most of layout
-        fig_dict["layout"]["xaxis"] = {"range": [-15, 15], "title": "x"}
+        fig_dict["layout"]["xaxis"] = {
+            "range": [-15, 15],
+            "title": "x",
+            "domain": [0.0, 0.7],
+        }
         fig_dict["layout"]["yaxis"] = {"title": "y", "range": [-15, 15]}
+        fig_dict["layout"]["xaxis2"] = {"domain": [0.8, 1.0]}
+        fig_dict["layout"]["yaxis2"] = {"anchor": "x2"}
         fig_dict["layout"]["hovermode"] = "closest"
         fig_dict["layout"]["updatemenus"] = [
             {
                 "buttons": [
                     {
-                        "args": [None, {"frame": {"duration": 500, "redraw": False},
-                                        "fromcurrent": True,
-                                        "transition": {"duration": 300,
-                                                       "easing": "quadratic-in-out"}}],
+                        "args": [
+                            None,
+                            {
+                                "frame": {"duration": 500, "redraw": False},
+                                "fromcurrent": True,
+                                "transition": {
+                                    "duration": 300,
+                                    "easing": "quadratic-in-out",
+                                },
+                            },
+                        ],
                         "label": "Play",
-                        "method": "animate"
+                        "method": "animate",
                     },
                     {
-                        "args": [[None], {"frame": {"duration": 0, "redraw": False},
-                                          "mode": "immediate",
-                                          "transition": {"duration": 0}}],
+                        "args": [
+                            [None],
+                            {
+                                "frame": {"duration": 0, "redraw": False},
+                                "mode": "immediate",
+                                "transition": {"duration": 0},
+                            },
+                        ],
                         "label": "Pause",
-                        "method": "animate"
-                    }
+                        "method": "animate",
+                    },
                 ],
                 "direction": "left",
                 "pad": {"r": 10, "t": 87},
@@ -119,7 +137,7 @@ class TSNEVisualizer:
                 "x": 0.1,
                 "xanchor": "right",
                 "y": 0,
-                "yanchor": "top"
+                "yanchor": "top",
             }
         ]
 
@@ -131,20 +149,21 @@ class TSNEVisualizer:
                 "font": {"size": 20},
                 "prefix": "Step:",
                 "visible": True,
-                "xanchor": "right"
+                "xanchor": "right",
             },
             "transition": {"duration": 300, "easing": "cubic-in-out"},
             "pad": {"b": 10, "t": 50},
             "len": 0.9,
             "x": 0.1,
             "y": 0,
-            "steps": []
+            "steps": [],
         }
 
         # Add initial data
         fig_dict["data"].append(
             {"x": self.dynamic[0][:, 0], "y": self.dynamic[0][:, 1], "mode": "markers"}
         )
+        fig_dict["data"].append(static_figure)
 
         # Make the figure frames.
         for i, item in enumerate(self.dynamic):
@@ -158,11 +177,11 @@ class TSNEVisualizer:
                     {
                         "frame": {"duration": 300, "redraw": False},
                         "mode": "immediate",
-                        "transition": {"duration": 300}
-                    }
+                        "transition": {"duration": 300},
+                    },
                 ],
                 "label": i,
-                "method": "animate"
+                "method": "animate",
             }
             sliders_dict["steps"].append(slider_step)
 
