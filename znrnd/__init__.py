@@ -4,8 +4,14 @@ main init file for the project.
 import logging
 
 import znrnd
-from znrnd.jax_core import (data, distance_metrics, loss_functions, models,
-                            point_selection, similarity_measures)
+from znrnd.jax_core import (
+    data,
+    distance_metrics,
+    loss_functions,
+    models,
+    point_selection,
+    similarity_measures,
+)
 from znrnd.jax_core.rnd.rnd import RND
 from znrnd.jax_core.visualization import TSNEVisualizer
 

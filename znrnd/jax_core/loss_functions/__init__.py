@@ -25,8 +25,7 @@ Summary
 -------
 Package containing custom loss functions.
 """
-from znrnd.jax_core.loss_functions.absolute_angle_difference import \
-    AngleDistanceLoss
+from znrnd.jax_core.loss_functions.absolute_angle_difference import AngleDistanceLoss
 from znrnd.jax_core.loss_functions.cosine_distance import CosineDistanceLoss
 from znrnd.jax_core.loss_functions.l_p_norm import LPNormLoss
 from znrnd.jax_core.loss_functions.mahalanobis import MahalanobisLoss
