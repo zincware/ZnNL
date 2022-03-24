@@ -69,22 +69,12 @@ class TSNEVisualizer:
         else:
             self.dynamic.append(self.model.fit_transform(data))
 
-    def data_gen(self):
-        """
-        Generate next data point for the animation.
-
-        Returns
-        -------
-
-        """
-        for count in self.dynamic:
-            yield count[:, 0], count[:, 1]
-
     def run_visualization(self):
         """
         Run the visualization.
         """
         fig_dict = {"data": [], "layout": {}, "frames": []}
+
         # fill in most of layout
         fig_dict["layout"]["xaxis"] = {
             "range": [-15, 15],

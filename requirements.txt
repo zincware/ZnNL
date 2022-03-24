@@ -16,3 +16,4 @@ jaxlib
 jax
 plotly
 flax
+tqdm
