@@ -75,11 +75,12 @@ class FlaxModel(Model):
 
     def __init__(
         self,
-        layer_stack: List[nn.Module],
         loss_fn: Callable,
         optimizer: Callable,
         input_shape: tuple,
         training_threshold: float,
+        layer_stack: List[nn.Module] = None,
+        flax_module: nn.Module = None
     ):
         """
         Constructor for a Flax model.
@@ -98,7 +99,13 @@ class FlaxModel(Model):
         training_threshold : float
                 The loss value at which point you consider the model trained.
         """
-        self.model = FundamentalModel(layer_stack)
+        if layer_stack is not None:
+            self.model = FundamentalModel(layer_stack)
+        if flax_module is not None:
+            self.model = flax_module
+        if layer_stack is None and flax_module is None:
+            raise TypeError("Provide either a Flax nn.Module or a layer stack.")
+
         self.loss_fn = loss_fn
         self.optimizer = optimizer
         self.input_shape = input_shape
@@ -122,7 +129,12 @@ class FlaxModel(Model):
         -------
         NTK : np.ndarray
                 The NTK matrix.
+
+        Raises
+        ------
+        NotImplementedError : It isn't done yet.
         """
+        raise NotImplementedError("Turns out this is not super trivial.")
 
     def _compute_metrics(self, predictions: np.ndarray, targets: np.ndarray):
         """
@@ -168,6 +180,7 @@ class FlaxModel(Model):
 
         return train_state.TrainState.create(
             apply_fn=self.model.apply, params=params, tx=self.optimizer
+
         )
 
     def _train_step(self, state: dict, batch: dict):

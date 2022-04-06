@@ -205,6 +205,7 @@ class RND:
             seed_point = self.fetch_data(1)
         self._update_target_set(np.array(seed_point))
         self._retrain_network()
+        self.update_visualization(reference=False)
 
     def _store_metrics(self):
         """
@@ -300,6 +301,7 @@ class RND:
         self._seed_process()
         criteria = False
         self.update_visualization(reference=True)
+        self.update_visualization(reference=False)
 
         while not criteria:
             self._choose_points()

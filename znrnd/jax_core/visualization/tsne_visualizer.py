@@ -34,6 +34,10 @@ class TSNEVisualizer:
     """
     Perform visualization on network representations with TSNE.
     """
+    x_max: int = 0
+    x_min: int = 0
+    y_max: int = 0
+    y_min: int = 0
 
     def __init__(self, components: int = 2):
         """
@@ -44,7 +48,9 @@ class TSNEVisualizer:
         components : int
                 Number of components to use in the representation. Either 2 or 3.
         """
-        self.model = TSNE(n_components=components, init="random", learning_rate=200)
+        self.model = TSNE(
+            n_components=components, init="pca", learning_rate=200, n_jobs=-1
+        )
 
         self.reference = []
         self.dynamic = []
@@ -64,10 +70,22 @@ class TSNEVisualizer:
         -------
         stores a plot
         """
+        representation = self.model.fit_transform(data)
+
+        x_max = max(representation[:, 0])
+        x_min = min(representation[:, 0])
+        y_max = max(representation[:, 1])
+        y_min = min(representation[:, 1])
+
+        self.x_max = np.ceil(max(self.x_max, x_max))
+        self.x_min = np.floor(min(self.x_min, x_min))
+        self.y_max = np.ceil(max(self.y_max, y_max))
+        self.y_min = np.floor(min(self.y_min, y_min))
+
         if reference:
-            self.reference.append(self.model.fit_transform(data))
+            self.reference.append(representation)
         else:
-            self.dynamic.append(self.model.fit_transform(data))
+            self.dynamic.append(representation)
 
     def run_visualization(self):
         """
@@ -77,11 +95,11 @@ class TSNEVisualizer:
 
         # fill in most of layout
         fig_dict["layout"]["xaxis"] = {
-            "range": [-15, 15],
+            "range": [self.x_min, self.x_max],
             "title": "x",
             "domain": [0.0, 0.7],
         }
-        fig_dict["layout"]["yaxis"] = {"title": "y", "range": [-15, 15]}
+        fig_dict["layout"]["yaxis"] = {"title": "y", "range": [self.y_min, self.y_max]}
         fig_dict["layout"]["xaxis2"] = {"domain": [0.8, 1.0]}
         fig_dict["layout"]["yaxis2"] = {"anchor": "x2"}
         fig_dict["layout"]["hovermode"] = "closest"
