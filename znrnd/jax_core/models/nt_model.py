@@ -33,19 +33,23 @@ import jax.numpy as np
 import numpy as onp
 from tqdm import trange
 from neural_tangents.stax import serial
-
+from flax.training import train_state
 from znrnd.jax_core.models.model import Model
 
 logger = logging.getLogger(__name__)
 
 
-class TrainState:
+class NTKTrainState:
     """
-    Implementation of the Flax TrainState class for the neural tangent models.
+    Train State class for NTK models
     """
-    params: list
-    optimizer: callable
-
+    def __init__(self, apply_fn, params, tx):
+        """
+        Constructor for the train state.
+        """
+        self.apply_fn = apply_fn
+        self.params = params
+        self.optimizer = tx
 
 
 class NTModel(Model):
@@ -87,7 +91,78 @@ class NTModel(Model):
 
         # initialize the model state
         init_rng = jax.random.PRNGKey(onp.random.randint(0, 500))
-        self.params = self.init_fn(init_rng, input_shape=input_shape)
+        self.model_state = self._create_train_state(init_rng)
+
+    def compute_ntk(self, x_i: np.ndarray, x_j: np.ndarray = None):
+        """
+        Compute the NTK matrix for the model.
+
+        Parameters
+        ----------
+        x_i : np.ndarray
+                Dataset for which to compute the NTK matrix.
+        x_j : np.ndarray (optional)
+                Dataset for which to compute the NTK matrix.
+
+        Returns
+        -------
+        NTK : np.ndarray
+                The NTK matrix.
+
+        Raises
+        ------
+        NotImplementedError : It isn't done yet.
+        """
+        if x_j is None:
+            x_j = x_i
+
+        return self.kernel_fn(x_i, x_j, "ntk")
+
+    def _create_train_state(self, init_rng: int):
+        """
+        Create a training state of the model.
+
+        Parameters
+        ----------
+        init_rng : int
+                Initial rng for train state that is immediately deleted.
+
+        Returns
+        -------
+        initial state of model to then be trained.
+
+        Notes
+        -----
+        TODO: Make the TrainState class passable by the user as it can track custom
+              model properties.
+        """
+        _, params = self.init_fn(init_rng, self.input_shape)
+        return NTKTrainState(
+            apply_fn=self.apply_fn, params=params, tx=self.optimizer
+
+        )
+
+    def _compute_metrics(self, predictions: np.ndarray, targets: np.ndarray):
+        """
+        Compute the current metrics of the training.
+
+        Parameters
+        ----------
+        predictions : np.ndarray
+                Predictions made by the network.
+        targets : np.ndarray
+                Targets from the training data.
+
+        Returns
+        -------
+        metrics : dict
+                A dict of current training metrics, e.g. {"loss": ..., "accuracy": ...}
+        """
+        loss = self.loss_fn(predictions, targets)
+
+        metrics = {"loss": loss}
+
+        return metrics
 
     def _train_step(self, state: dict, batch: dict):
         """
@@ -112,7 +187,7 @@ class NTModel(Model):
             """
             helper loss computation
             """
-            predictions = self.model.apply({"params": params}, batch["inputs"])
+            predictions = self.apply_fn({"params": params}, batch["inputs"])
             loss = self.loss_fn(predictions, batch["targets"])
 
             return loss, predictions
@@ -127,3 +202,237 @@ class NTModel(Model):
 
         return state, metrics
 
+    def _evaluate_step(self, params: dict, batch: dict):
+        """
+        Evaluate the model on test data.
+
+        Parameters
+        ----------
+        state : dict
+                Current state of the neural network.
+        batch : dict
+                Batch of data to test on.
+
+        Returns
+        -------
+        metrics : dict
+                Metrics dict computed on test data.
+        """
+        predictions = self.apply_fn({"params": params}, batch["inputs"])
+
+        return self._compute_metrics(predictions, batch["targets"])
+
+    def _train_step(self, state: dict, batch: dict):
+        """
+        Train a single step.
+
+        Parameters
+        ----------
+        state : dict
+                Current state of the neural network.
+        batch : dict
+                Batch of data to train on.
+
+        Returns
+        -------
+        state : dict
+                Updated state of the neural network.
+        metrics : dict
+                Metrics for the current model.
+        """
+
+        def loss_fn(params):
+            """
+            helper loss computation
+            """
+            predictions = self.apply_fn({"params": params}, batch["inputs"])
+            loss = self.loss_fn(predictions, batch["targets"])
+
+            return loss, predictions
+
+        grad_fn = jax.value_and_grad(loss_fn, has_aux=True)
+
+        (_, predictions), grads = grad_fn(state.params)
+        state = state.apply_gradients(grads=grads)
+        metrics = self._compute_metrics(
+            predictions=predictions, targets=batch["targets"]
+        )
+
+        return state, metrics
+
+    def _evaluate_step(self, params: dict, batch: dict):
+        """
+        Evaluate the model on test data.
+
+        Parameters
+        ----------
+        state : dict
+                Current state of the neural network.
+        batch : dict
+                Batch of data to test on.
+
+        Returns
+        -------
+        metrics : dict
+                Metrics dict computed on test data.
+        """
+        predictions = self.apply_fn({"params": params}, batch["inputs"])
+
+        return self._compute_metrics(predictions, batch["targets"])
+
+    def _train_epoch(self, state: dict, train_ds: dict, batch_size: int):
+        """
+        Train for a single epoch.
+
+        Performs the following steps:
+
+        * Shuffles the data
+        * Runs an optimization step on each batch
+        * Computes the metrics for the batch
+        * Return an updated optimizer, state, and metrics dictionary.
+
+        Parameters
+        ----------
+        state : dict
+                Current state of the model.
+        train_ds : dict
+                Dataset on which to train.
+        batch_size : int
+                Size of each batch.
+
+        Returns
+        -------
+        state : dict
+                State of the model after the epoch.
+        metrics : dict
+                Dict of metrics for current state.
+        """
+        # Some housekeeping variables.
+        train_ds_size = len(train_ds["inputs"])
+        steps_per_epoch = train_ds_size // batch_size
+
+        # Prepare the shuffle.
+        permutations = jax.random.permutation(self.rng, train_ds_size)
+        permutations = permutations[: steps_per_epoch * batch_size]
+        permutations = permutations.reshape((steps_per_epoch, batch_size))
+
+        # Step over items in batch.
+        batch_metrics = []
+        for permutation in permutations:
+            batch = {k: v[permutation, ...] for k, v in train_ds.items()}
+            state, metrics = self._train_step(state, batch)
+            batch_metrics.append(metrics)
+
+        # Get the metrics off device for printing.
+        batch_metrics_np = jax.device_get(batch_metrics)
+        epoch_metrics_np = {
+            k: onp.mean([metrics[k] for metrics in batch_metrics_np])
+            for k in batch_metrics_np[0]
+        }
+
+        return state, epoch_metrics_np
+
+    def _evaluate_model(self, params: dict, test_ds: dict):
+        """
+        Evaluate the model.
+
+        Parameters
+        ----------
+        params : dict
+                Current state of the model.
+        test_ds : dict
+                Dataset on which to evaluate.
+        Returns
+        -------
+        loss : float
+                Loss of the model.
+        """
+        metrics = self._evaluate_step(params, test_ds)
+        metrics = jax.device_get(metrics)
+        summary = jax.tree_map(lambda x: x.item(), metrics)
+
+        return summary["loss"]
+
+    def train_model(
+        self,
+        train_ds: dict,
+        test_ds: dict,
+        epochs: int = 50,
+        batch_size: int = 1,
+    ):
+        """
+        Train the model.
+
+        See the parent class for a full doc-string.
+        """
+        if self.model_state is None:
+            init_rng = jax.random.PRNGKey(onp.random.randint(0, 500))
+            state = self._create_train_state(init_rng)
+            self.model_state = state
+        else:
+            state = self.model_state
+
+        loading_bar = trange(1, epochs + 1, ncols=100, unit="batch")
+        for i in loading_bar:
+            loading_bar.set_description(f"Epoch: {i}")
+
+            state, train_metrics = self._train_epoch(
+                state, train_ds, batch_size=batch_size
+            )
+            test_loss = self._evaluate_model(state.params, test_ds)
+
+            loading_bar.set_postfix(test_loss=test_loss)
+
+        # Update the final model state.
+        self.model_state = state
+
+    def train_model_recursively(
+        self, train_ds: dict, test_ds: dict, epochs: int = 100, batch_size: int = 1
+    ):
+        """
+        Check parent class for full doc string.
+        """
+        if self.model_state is None:
+            init_rng = jax.random.PRNGKey(onp.random.randint(0, 500))
+            state = self._create_train_state(init_rng)
+            self.model_state = state
+        else:
+            state = self.model_state
+
+        condition = False
+        counter = 0
+        while not condition:
+            loading_bar = trange(1, epochs + 1, ncols=100, unit="batch")
+            for i in loading_bar:
+                loading_bar.set_description(f"Epoch: {i}")
+
+                state, train_metrics = self._train_epoch(
+                    state, train_ds, batch_size=batch_size
+                )
+                test_loss = self._evaluate_model(state.params, test_ds)
+
+                loading_bar.set_postfix(test_loss=test_loss)
+
+            # Update the final model state.
+            self.model_state = state
+
+            # Perform checks and update parameters
+            counter += 1
+            epochs = int(1.1 * epochs)
+            if test_loss <= self.training_threshold:
+                condition = True
+
+            # Re-initialize the network if it is simply not converging.
+            if counter % 10 == 0:
+                logger.info("Model training stagnating, re-initializing model.")
+                init_rng = jax.random.PRNGKey(onp.random.randint(0, 500))
+                state = self._create_train_state(init_rng)
+                self.model_state = state
+
+    def __call__(self, feature_vector: np.ndarray):
+        """
+        See parent class for full doc string.
+        """
+        state = self.model_state
+
+        return self.apply_fn({"params": state.params}, feature_vector)

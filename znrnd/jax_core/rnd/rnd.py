@@ -299,14 +299,20 @@ class RND:
         """
         start = time.time()
         self._seed_process()
+        print("Seeded")
         criteria = False
         self.update_visualization(reference=True)
+        print("Update vis")
         self.update_visualization(reference=False)
 
         while not criteria:
             self._choose_points()
+            print("Points chose")
+
             self._store_metrics()
             self._retrain_network()
+            print("Model re-trained")
+
             criteria = self._evaluate_agent()
             self.update_visualization(reference=False)
             self.iterations += 1

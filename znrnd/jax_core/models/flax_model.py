@@ -170,11 +170,6 @@ class FlaxModel(Model):
         Returns
         -------
         initial state of model to then be trained.
-
-        Notes
-        -----
-        TODO: Make the TrainState class passable by the user as it can track custom
-              model properties.
         """
         params = self.model.init(init_rng, np.ones(list(self.input_shape)))["params"]
 
