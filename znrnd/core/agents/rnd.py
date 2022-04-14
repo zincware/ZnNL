@@ -14,13 +14,12 @@ from typing import Union
 import jax.numpy as np
 
 import znrnd
+from znrnd.core.agents.agent import Agent
 from znrnd.core.data.data_generator import DataGenerator
 from znrnd.core.distance_metrics.distance_metric import DistanceMetric
 from znrnd.core.models.model import Model
 from znrnd.core.point_selection.point_selection import PointSelection
 from znrnd.core.visualization.tsne_visualizer import TSNEVisualizer
-
-from znrnd.core.agents.agent import Agent
 
 
 class RND(Agent):
@@ -285,7 +284,7 @@ class RND(Agent):
         print(f"Seed points: {self.seed_point}\n")
 
     def build_dataset(
-            self, target_size: int = None, visualize: bool = False, report: bool = True
+        self, target_size: int = None, visualize: bool = False, report: bool = True
     ):
         """
         Run the random network distillation methods and build the target set.

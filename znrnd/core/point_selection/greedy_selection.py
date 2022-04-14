@@ -12,8 +12,8 @@ from typing import List, Union
 
 import jax.numpy as np
 
-from znrnd.core.point_selection.point_selection import PointSelection
 from znrnd.core.agents.rnd import RND
+from znrnd.core.point_selection.point_selection import PointSelection
 
 
 class GreedySelection(PointSelection):

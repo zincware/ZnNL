@@ -30,6 +30,7 @@ class MaximumEntropy(Agent):
     """
     Implement a maximum entropy data selection method.
     """
+
     def __init__(self):
         """
         Constructor for the Maximum Entropy agent.

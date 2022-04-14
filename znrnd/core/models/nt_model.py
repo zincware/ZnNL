@@ -30,15 +30,14 @@ from typing import Callable
 
 import jax
 import jax.numpy as np
-import numpy as onp
-from tqdm import trange
-from neural_tangents.stax import serial
-from flax.training import train_state
-from znrnd.core.models.model import Model
-
 import neural_tangents as nt
-
+import numpy as onp
 import optax
+from flax.training import train_state
+from neural_tangents.stax import serial
+from tqdm import trange
+
+from znrnd.core.models.model import Model
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +46,7 @@ class TrainState:
     """
     Train state for NTK models
     """
+
     def __init__(self, apply_fn, params, tx: optax.GradientTransformation):
         """
         Constructor of the train state.
@@ -85,15 +85,16 @@ class NTModel(Model):
     """
     Class for a neural tangents model.
     """
+
     rng = jax.random.PRNGKey(onp.random.randint(0, 500))
 
     def __init__(
-            self,
-            loss_fn: Callable,
-            optimizer: Callable,
-            input_shape: tuple,
-            training_threshold: float,
-            nt_module: serial = None
+        self,
+        loss_fn: Callable,
+        optimizer: Callable,
+        input_shape: tuple,
+        training_threshold: float,
+        nt_module: serial = None,
     ):
         """
         Constructor for a Flax model.
@@ -277,6 +278,7 @@ class NTModel(Model):
             loss = self.loss_fn(predictions, batch["targets"])
 
             return loss, predictions
+
         grad_fn = jax.value_and_grad(loss_fn, has_aux=True)
         (loss, predictions), grads = grad_fn(state.params)
         state = state.apply_gradients(grads=grads)

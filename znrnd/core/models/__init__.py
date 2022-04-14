@@ -9,7 +9,7 @@ Copyright Contributors to the Zincware Project.
 Description:
 """
 from znrnd.core.models.flax_model import FlaxModel
-from znrnd.core.models.nt_model import NTModel
 from znrnd.core.models.model import Model
+from znrnd.core.models.nt_model import NTModel
 
 __all__ = [Model.__name__, FlaxModel.__name__]

@@ -31,7 +31,7 @@ class Agent:
     """
 
     def build_dataset(
-            self, target_size: int = None, visualize: bool = False, report: bool = True
+        self, target_size: int = None, visualize: bool = False, report: bool = True
     ):
         """
         Run the random network distillation methods and build the target set.

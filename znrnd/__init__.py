@@ -4,15 +4,14 @@ main init file for the project.
 import logging
 
 import znrnd
-
 from znrnd.core import (
+    agents,
     data,
     distance_metrics,
     loss_functions,
     models,
     point_selection,
     similarity_measures,
-    agents
 )
 from znrnd.core.visualization import TSNEVisualizer
 

@@ -34,6 +34,7 @@ class TSNEVisualizer:
     """
     Perform visualization on network representations with TSNE.
     """
+
     x_max: int = 0
     x_min: int = 0
     y_max: int = 0

@@ -8,8 +8,8 @@ Copyright Contributors to the Zincware Project.
 
 Description:
 """
-from znrnd.core.agents.rnd import RND
-from znrnd.core.agents.maximum_entropy import MaximumEntropy
 from znrnd.core.agents.approximate_maximum_entropy import ApproximateMaximumEntropy
+from znrnd.core.agents.maximum_entropy import MaximumEntropy
+from znrnd.core.agents.rnd import RND
 
 __all__ = [RND.__name__, MaximumEntropy.__name__, ApproximateMaximumEntropy.__name__]

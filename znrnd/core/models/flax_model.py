@@ -80,7 +80,7 @@ class FlaxModel(Model):
         input_shape: tuple,
         training_threshold: float,
         layer_stack: List[nn.Module] = None,
-        flax_module: nn.Module = None
+        flax_module: nn.Module = None,
     ):
         """
         Constructor for a Flax model.
@@ -175,7 +175,6 @@ class FlaxModel(Model):
 
         return train_state.TrainState.create(
             apply_fn=self.model.apply, params=params, tx=self.optimizer
-
         )
 
     def _train_step(self, state: dict, batch: dict):
@@ -196,6 +195,7 @@ class FlaxModel(Model):
         metrics : dict
                 Metrics for the current model.
         """
+
         def loss_fn(params):
             """
             helper loss computation
