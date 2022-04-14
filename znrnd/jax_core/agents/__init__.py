@@ -8,6 +8,6 @@ Copyright Contributors to the Zincware Project.
 
 Description:
 """
-from .rnd import RND
+from znrnd.jax_core.agents.rnd import RND
 
 __all__ = [RND.__name__]

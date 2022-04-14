@@ -13,7 +13,7 @@ from typing import List, Union
 import jax.numpy as np
 
 from znrnd.jax_core.point_selection.point_selection import PointSelection
-from znrnd.jax_core.rnd.rnd import RND
+from znrnd.jax_core.agents.rnd import RND
 
 
 class GreedySelection(PointSelection):

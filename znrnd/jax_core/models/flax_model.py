@@ -196,7 +196,6 @@ class FlaxModel(Model):
         metrics : dict
                 Metrics for the current model.
         """
-
         def loss_fn(params):
             """
             helper loss computation
@@ -267,17 +266,22 @@ class FlaxModel(Model):
         train_ds_size = len(train_ds["inputs"])
         steps_per_epoch = train_ds_size // batch_size
 
-        # Prepare the shuffle.
-        permutations = jax.random.permutation(self.rng, train_ds_size)
-        permutations = permutations[: steps_per_epoch * batch_size]
-        permutations = permutations.reshape((steps_per_epoch, batch_size))
+        if train_ds_size == 1:
+            state, metrics = self._train_step(state, train_ds)
+            batch_metrics = [metrics]
 
-        # Step over items in batch.
-        batch_metrics = []
-        for permutation in permutations:
-            batch = {k: v[permutation, ...] for k, v in train_ds.items()}
-            state, metrics = self._train_step(state, batch)
-            batch_metrics.append(metrics)
+        else:
+            # Prepare the shuffle.
+            permutations = jax.random.permutation(self.rng, train_ds_size)
+            permutations = permutations[: steps_per_epoch * batch_size]
+            permutations = permutations.reshape((steps_per_epoch, batch_size))
+
+            # Step over items in batch.
+            batch_metrics = []
+            for permutation in permutations:
+                batch = {k: v[permutation, ...] for k, v in train_ds.items()}
+                state, metrics = self._train_step(state, batch)
+                batch_metrics.append(metrics)
 
         # Get the metrics off device for printing.
         batch_metrics_np = jax.device_get(batch_metrics)

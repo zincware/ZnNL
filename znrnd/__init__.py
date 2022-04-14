@@ -11,8 +11,9 @@ from znrnd.jax_core import (
     models,
     point_selection,
     similarity_measures,
+    agents
 )
-from znrnd.jax_core.rnd.rnd import RND
+from znrnd.jax_core.agents.rnd import RND
 from znrnd.jax_core.visualization import TSNEVisualizer
 
 logging.getLogger(znrnd.__name__).addHandler(logging.NullHandler())

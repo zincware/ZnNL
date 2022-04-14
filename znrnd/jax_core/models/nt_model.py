@@ -36,20 +36,47 @@ from neural_tangents.stax import serial
 from flax.training import train_state
 from znrnd.jax_core.models.model import Model
 
+import optax
+
 logger = logging.getLogger(__name__)
 
 
-class NTKTrainState:
+class TrainState:
     """
-    Train State class for NTK models
+    Train state for NTK models
     """
     def __init__(self, apply_fn, params, tx):
         """
-        Constructor for the train state.
+        Constructor of the train state.
+
+        Parameters
+        ----------
+        apply_fn
+        params
+        tx
         """
         self.apply_fn = apply_fn
         self.params = params
         self.optimizer = tx
+        self.opt_state = tx.init()
+
+    def apply_gradients(self, gradients):
+        """
+        Apply the gradients to parameters and update the state.
+
+        Parameters
+        ----------
+        gradients
+
+        Returns
+        -------
+
+        """
+
+        updates, self.opt_state = self.optimizer.update(
+            gradients, self.opt_state, self.params
+        )
+        self.params = optax.apply_updates(self.params, updates)
 
 
 class NTModel(Model):
@@ -108,10 +135,6 @@ class NTModel(Model):
         -------
         NTK : np.ndarray
                 The NTK matrix.
-
-        Raises
-        ------
-        NotImplementedError : It isn't done yet.
         """
         if x_j is None:
             x_j = x_i
@@ -137,9 +160,9 @@ class NTModel(Model):
               model properties.
         """
         _, params = self.init_fn(init_rng, self.input_shape)
-        return NTKTrainState(
-            apply_fn=self.apply_fn, params=params, tx=self.optimizer
 
+        return train_state.TrainState.create(
+            apply_fn=self.apply_fn, params=params, tx=self.optimizer
         )
 
     def _compute_metrics(self, predictions: np.ndarray, targets: np.ndarray):
@@ -159,7 +182,6 @@ class NTModel(Model):
                 A dict of current training metrics, e.g. {"loss": ..., "accuracy": ...}
         """
         loss = self.loss_fn(predictions, targets)
-
         metrics = {"loss": loss}
 
         return metrics
@@ -187,14 +209,14 @@ class NTModel(Model):
             """
             helper loss computation
             """
-            predictions = self.apply_fn({"params": params}, batch["inputs"])
+            predictions = self.apply_fn(params, batch["inputs"])
             loss = self.loss_fn(predictions, batch["targets"])
-
             return loss, predictions
 
         grad_fn = jax.value_and_grad(loss_fn, has_aux=True)
 
         (_, predictions), grads = grad_fn(state.params)
+
         state = state.apply_gradients(grads=grads)
         metrics = self._compute_metrics(
             predictions=predictions, targets=batch["targets"]
@@ -218,7 +240,7 @@ class NTModel(Model):
         metrics : dict
                 Metrics dict computed on test data.
         """
-        predictions = self.apply_fn({"params": params}, batch["inputs"])
+        predictions = self.apply_fn(params, batch["inputs"])
 
         return self._compute_metrics(predictions, batch["targets"])
 
@@ -245,14 +267,12 @@ class NTModel(Model):
             """
             helper loss computation
             """
-            predictions = self.apply_fn({"params": params}, batch["inputs"])
+            predictions = self.apply_fn(params, batch["inputs"])
             loss = self.loss_fn(predictions, batch["targets"])
 
             return loss, predictions
-
         grad_fn = jax.value_and_grad(loss_fn, has_aux=True)
-
-        (_, predictions), grads = grad_fn(state.params)
+        (loss, predictions), grads = grad_fn(state.params)
         state = state.apply_gradients(grads=grads)
         metrics = self._compute_metrics(
             predictions=predictions, targets=batch["targets"]
@@ -276,7 +296,7 @@ class NTModel(Model):
         metrics : dict
                 Metrics dict computed on test data.
         """
-        predictions = self.apply_fn({"params": params}, batch["inputs"])
+        predictions = self.apply_fn(params, batch["inputs"])
 
         return self._compute_metrics(predictions, batch["targets"])
 
@@ -311,17 +331,22 @@ class NTModel(Model):
         train_ds_size = len(train_ds["inputs"])
         steps_per_epoch = train_ds_size // batch_size
 
-        # Prepare the shuffle.
-        permutations = jax.random.permutation(self.rng, train_ds_size)
-        permutations = permutations[: steps_per_epoch * batch_size]
-        permutations = permutations.reshape((steps_per_epoch, batch_size))
+        if train_ds_size == 1:
+            state, metrics = self._train_step(state, train_ds)
+            batch_metrics = [metrics]
 
-        # Step over items in batch.
-        batch_metrics = []
-        for permutation in permutations:
-            batch = {k: v[permutation, ...] for k, v in train_ds.items()}
-            state, metrics = self._train_step(state, batch)
-            batch_metrics.append(metrics)
+        else:
+            # Prepare the shuffle.
+            permutations = jax.random.permutation(self.rng, train_ds_size)
+            permutations = permutations[: steps_per_epoch * batch_size]
+            permutations = permutations.reshape((steps_per_epoch, batch_size))
+
+            # Step over items in batch.
+            batch_metrics = []
+            for permutation in permutations:
+                batch = {k: v[permutation, ...] for k, v in train_ds.items()}
+                state, metrics = self._train_step(state, batch)
+                batch_metrics.append(metrics)
 
         # Get the metrics off device for printing.
         batch_metrics_np = jax.device_get(batch_metrics)
@@ -435,4 +460,4 @@ class NTModel(Model):
         """
         state = self.model_state
 
-        return self.apply_fn({"params": state.params}, feature_vector)
+        return self.apply_fn(state.params, feature_vector)

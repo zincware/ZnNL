@@ -85,7 +85,7 @@ class DataGenerator(metaclass=abc.ABCMeta):
         for item in indices:
             dataset.append(self[item])
 
-        return dataset
+        return np.array(dataset)
 
     def __len__(self):
         """

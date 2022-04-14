@@ -68,4 +68,4 @@ class OrderNDifference(DistanceMetric):
         """
         diff = point_1 - point_2
 
-        return np.sum(np.power(diff, self.order), axis=1)
+        return np.mean(np.power(diff, self.order), axis=1)
