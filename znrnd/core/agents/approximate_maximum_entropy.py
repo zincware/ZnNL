@@ -24,12 +24,24 @@ Summary
 Module for the approximate maximum entropy agent.
 """
 from znrnd.core.agents.agent import Agent
+from znrnd.core.models.model import Model
 
 
 class ApproximateMaximumEntropy(Agent):
     """
     Class for the approximate maximum entropy data selection agent.
     """
+
+    def __init__(self, target_network: Model):
+        """
+        Constructor for the Approximate maximum entropy agent.
+
+        Parameters
+        ----------
+        target_network : Model
+                Model of the target network.
+        """
+        self.target_network = target_network
 
     def build_dataset(
         self, target_size: int = None, visualize: bool = False, report: bool = True
@@ -51,28 +63,3 @@ class ApproximateMaximumEntropy(Agent):
         target_set : list
                 Returns the newly constructed target set.
         """
-        # Allow for optional target_sizes.
-        self.target_size = target_size
-        start = time.time()
-        self._seed_process()
-        criteria = False
-        self.update_visualization(reference=True)
-        self.update_visualization(reference=False)
-
-        while not criteria:
-            self._choose_points()
-            self._store_metrics()
-            self._retrain_network()
-
-            criteria = self._evaluate_agent()
-            self.update_visualization(reference=False)
-            self.iterations += 1
-
-        stop = time.time()
-        if visualize:
-            self.visualizer.run_visualization()
-
-        if report:
-            self._report_performance(stop - start)
-
-        return self.target_set
