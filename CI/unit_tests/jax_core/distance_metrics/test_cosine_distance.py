@@ -26,7 +26,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 import jax.numpy as np
 from numpy.testing import assert_array_almost_equal
 
-from znrnd.jax_core.distance_metrics.cosine_distance import CosineDistance
+from znrnd.core.distance_metrics.cosine_distance import CosineDistance
 
 
 class TestCosineDistance:

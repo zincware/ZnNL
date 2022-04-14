@@ -32,7 +32,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 import jax.numpy as np
 import pytest
 
-from znrnd.jax_core.data.points_on_a_circle import PointsOnCircle
+from znrnd.core.data.points_on_a_circle import PointsOnCircle
 
 
 class TestPointsOnCircle:

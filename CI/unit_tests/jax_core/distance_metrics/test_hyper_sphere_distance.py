@@ -30,7 +30,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 import jax.numpy as np
 from numpy.testing import assert_array_almost_equal
 
-from znrnd.jax_core.distance_metrics.hyper_sphere_distance import HyperSphere
+from znrnd.core.distance_metrics.hyper_sphere_distance import HyperSphere
 
 
 class TestCosineDistance:

@@ -32,7 +32,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 import jax.numpy as np
 from numpy.testing import assert_array_equal
 
-from znrnd.jax_core.data.data_generator import DataGenerator
+from znrnd.core.data.data_generator import DataGenerator
 
 
 class TestDataGenerator:

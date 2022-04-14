@@ -4,7 +4,8 @@ main init file for the project.
 import logging
 
 import znrnd
-from znrnd.jax_core import (
+
+from znrnd.core import (
     data,
     distance_metrics,
     loss_functions,
@@ -13,8 +14,7 @@ from znrnd.jax_core import (
     similarity_measures,
     agents
 )
-from znrnd.jax_core.agents.rnd import RND
-from znrnd.jax_core.visualization import TSNEVisualizer
+from znrnd.core.visualization import TSNEVisualizer
 
 logging.getLogger(znrnd.__name__).addHandler(logging.NullHandler())
 
@@ -26,6 +26,6 @@ __all__ = [
     point_selection.__name__,
     similarity_measures.__name__,
     data.__name__,
-    RND.__name__,
     TSNEVisualizer.__name__,
+    agents.__name__,
 ]

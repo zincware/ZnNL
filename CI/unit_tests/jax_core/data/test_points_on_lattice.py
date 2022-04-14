@@ -27,7 +27,7 @@ import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-from znrnd.jax_core.data.points_on_a_lattice import PointsOnLattice
+from znrnd.core.data.points_on_a_lattice import PointsOnLattice
 
 
 class TestPointsOnLattice:

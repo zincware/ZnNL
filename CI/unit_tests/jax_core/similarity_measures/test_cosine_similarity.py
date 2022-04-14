@@ -14,7 +14,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 import jax.numpy as np
 
-from znrnd.jax_core.similarity_measures.cosine_similarity import CosineSim
+from znrnd.core.similarity_measures.cosine_similarity import CosineSim
 
 
 class TestCosineSimilarity:

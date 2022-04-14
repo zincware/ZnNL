@@ -33,7 +33,7 @@ import numpy as onp
 import scipy.spatial.distance
 from numpy.testing import assert_almost_equal
 
-from znrnd.jax_core.distance_metrics.mahalanobis_distance import MahalanobisDistance
+from znrnd.core.distance_metrics.mahalanobis_distance import MahalanobisDistance
 
 
 class TestMahalanobisDistance:
