@@ -23,4 +23,5 @@ If you use this module please cite us with:
 
 Summary
 -------
+Test the random data selection agent.
 """

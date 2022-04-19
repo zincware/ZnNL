@@ -26,16 +26,16 @@ Summary
 Module for the analysis of the eigensystem of a matrix.
 """
 import jax.numpy as np
+import plotly.express as px
 
 from znrnd.core.utils.matrix_utils import compute_eigensystem
-
-import plotly.express as px
 
 
 class EigenSpaceAnalysis:
     """
     Analyse the Eigenspace of the matrix.
     """
+
     def __init__(self, matrix: np.ndarray):
         """
         Constructor for the Eigenspace class.

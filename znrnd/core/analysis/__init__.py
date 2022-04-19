@@ -24,6 +24,7 @@ If you use this module please cite us with:
 Summary
 -------
 """
+from znrnd.core.analysis.eigensystem import EigenSpaceAnalysis
 from znrnd.core.analysis.entropy import EntropyAnalysis
 
-__all__ = [EntropyAnalysis.__name__]
+__all__ = [EntropyAnalysis.__name__, EigenSpaceAnalysis.__name__]

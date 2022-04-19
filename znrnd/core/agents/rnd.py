@@ -300,7 +300,7 @@ class RND(Agent):
 
         Returns
         -------
-        target_set : list
+        target_set : np.ndarray
                 Returns the newly constructed target set.
         """
         # Allow for optional target_sizes.
@@ -327,4 +327,4 @@ class RND(Agent):
         if report:
             self._report_performance(stop - start)
 
-        return self.target_set
+        return np.array(self.target_set)

@@ -34,6 +34,7 @@ class EntropyAnalysis:
     """
     Analyse the entropy of a matrix.
     """
+
     eigenvalues: np.ndarray = None
 
     def __init__(self, matrix: np.ndarray):

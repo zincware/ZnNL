@@ -124,7 +124,9 @@ class NTModel(Model):
         init_rng = jax.random.PRNGKey(onp.random.randint(0, 500))
         self.model_state = self._create_train_state(init_rng)
 
-    def compute_ntk(self, x_i: np.ndarray, x_j: np.ndarray = None):
+    def compute_ntk(
+        self, x_i: np.ndarray, x_j: np.ndarray = None, normalize: bool = True
+    ):
         """
         Compute the NTK matrix for the model.
 
@@ -134,6 +136,8 @@ class NTModel(Model):
                 Dataset for which to compute the NTK matrix.
         x_j : np.ndarray (optional)
                 Dataset for which to compute the NTK matrix.
+        normalize : bool (default = True)
+                If true, divide each row by its max value.
 
         Returns
         -------
@@ -145,6 +149,17 @@ class NTModel(Model):
 
         empirical_ntk = self.empirical_ntk(x_i, x_j, self.model_state.params)
         infinite_ntk = self.kernel_fn(x_i, x_j, "ntk")
+
+        if normalize:
+            empirical_max = np.array(
+                [max(empirical_ntk[i]) for i in range(len(empirical_ntk))]
+            )
+            empirical_ntk /= empirical_max[:, None]
+
+            infinite_max = np.array(
+                [max(infinite_ntk[i]) for i in range(len(infinite_ntk))]
+            )
+            infinite_ntk /= infinite_max[:, None]
 
         return {"empirical": empirical_ntk, "infinite": infinite_ntk}
 

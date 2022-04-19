@@ -27,20 +27,20 @@ Test the eigen space analysis tools
 
 Notes
 -----
+None of these tests enforce any of the surmises. You can look at the generated plots
+to confirm that they are true but we need to add some return on the methods and check
+that the Wigner semi-circle rule and Wigner surmise are met for this data.
 """
-from znrnd.core.analysis.eigensystem import EigenSpaceAnalysis
-
-import jax.numpy as np
-import jax
 import jax.random as random
 
-import numpy as onp
+from znrnd.core.analysis.eigensystem import EigenSpaceAnalysis
 
 
 class TestEigenspaceAnalysis:
     """
     Test suite for the Eigenspace analysis module.
     """
+
     @classmethod
     def setup_class(cls):
         """

@@ -20,9 +20,7 @@ class GreedySelection(PointSelection):
     Class for the greedy selection routine.
     """
 
-    def __init__(
-        self, selected_points: int = -1, threshold: float = 0.01
-    ):
+    def __init__(self, selected_points: int = -1, threshold: float = 0.01):
         """
         Constructor for the GreedySelection class.
 

@@ -24,8 +24,8 @@ If you use this module please cite us with:
 Summary
 -------
 """
-import pytest
 import jax.numpy as np
+import pytest
 
 from znrnd.core.analysis.entropy import EntropyAnalysis
 
@@ -34,6 +34,7 @@ class TestEntropyAnalysis:
     """
     Test suite for the entropy analysis module.
     """
+
     def test_von_neumann_entropy(self):
         """
         Test the computation of the von-Neumann entropy.

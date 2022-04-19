@@ -4,16 +4,9 @@ main init file for the project.
 import logging
 
 import znrnd
-from znrnd.core import (
-    agents,
-    data,
-    distance_metrics,
-    loss_functions,
-    models,
-    point_selection,
-    similarity_measures,
-    analysis,
-)
+from znrnd.core import (agents, analysis, data, distance_metrics,
+                        loss_functions, models, point_selection,
+                        similarity_measures)
 from znrnd.core.visualization import TSNEVisualizer
 
 logging.getLogger(znrnd.__name__).addHandler(logging.NullHandler())
