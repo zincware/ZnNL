@@ -26,10 +26,9 @@ Summary
 Unit tests for the matrix utils module.
 """
 import jax.numpy as np
+from numpy.testing import assert_array_equal
 
 from znrnd.core.utils.matrix_utils import compute_eigensystem
-
-from numpy.testing import assert_array_equal
 
 
 class TestComputeEigensystem:
