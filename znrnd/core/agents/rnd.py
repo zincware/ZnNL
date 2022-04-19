@@ -103,7 +103,7 @@ class RND(Agent):
            * Models (default = dense model.)
         """
         if self.point_selector is None:
-            self.point_selector = znrnd.point_selection.GreedySelection(self)
+            self.point_selector = znrnd.point_selection.GreedySelection()
         if self.metric is None:
             self.metric = znrnd.similarity_measures.CosineSim()
         if self.visualizer is None:

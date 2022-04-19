@@ -12,7 +12,6 @@ from typing import List, Union
 
 import jax.numpy as np
 
-from znrnd.core.agents.rnd import RND
 from znrnd.core.point_selection.point_selection import PointSelection
 
 
@@ -22,7 +21,7 @@ class GreedySelection(PointSelection):
     """
 
     def __init__(
-        self, agent: RND = None, selected_points: int = -1, threshold: float = 0.01
+        self, selected_points: int = -1, threshold: float = 0.01
     ):
         """
         Constructor for the GreedySelection class.
@@ -39,7 +38,6 @@ class GreedySelection(PointSelection):
         super(GreedySelection, self).__init__()
         self.drawn_points = -1  # draw all points
         self.selected_points = selected_points
-        self.agent = agent
         self.threshold = threshold
 
     def select_points(self, distances: np.ndarray) -> Union[List, None]:
