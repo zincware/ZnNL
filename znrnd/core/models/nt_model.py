@@ -38,6 +38,7 @@ from neural_tangents.stax import serial
 from tqdm import trange
 
 from znrnd.core.models.model import Model
+from znrnd.core.utils.matrix_utils import normalize_covariance_matrix
 
 logger = logging.getLogger(__name__)
 
@@ -151,15 +152,8 @@ class NTModel(Model):
         infinite_ntk = self.kernel_fn(x_i, x_j, "ntk")
 
         if normalize:
-            empirical_max = np.array(
-                [max(empirical_ntk[i]) for i in range(len(empirical_ntk))]
-            )
-            empirical_ntk /= empirical_max[:, None]
-
-            infinite_max = np.array(
-                [max(infinite_ntk[i]) for i in range(len(infinite_ntk))]
-            )
-            infinite_ntk /= infinite_max[:, None]
+            empirical_ntk = normalize_covariance_matrix(empirical_ntk)
+            infinite_ntk = normalize_covariance_matrix(infinite_ntk)
 
         return {"empirical": empirical_ntk, "infinite": infinite_ntk}
 
