@@ -58,3 +58,24 @@ def compute_eigensystem(matrix: np.ndarray, reduce: bool = True):
         eigenvalues /= matrix.shape[0]
 
     return eigenvalues[::-1].sort(), eigenvectors
+
+
+def normalize_covariance_matrix(covariance_matrix: np.ndarray):
+    """
+    Method for normalizing a covariance matrix.
+
+    Returns
+    -------
+    normalized_covariance_matrix : np.ndarray
+            A normalized covariance matrix, i.e, the matrix given if all of its inputs
+            had been normalized.
+    """
+    order = np.shape(covariance_matrix)[0]
+
+    diagonals = np.diagonal(covariance_matrix)
+
+    repeated_diagonals = np.repeat(diagonals[None, :], order, axis=0)
+
+    normalizing_matrix = np.sqrt(repeated_diagonals * repeated_diagonals.T)
+
+    return covariance_matrix / normalizing_matrix

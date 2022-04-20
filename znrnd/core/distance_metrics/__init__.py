@@ -25,7 +25,8 @@ from znrnd.core.distance_metrics.cosine_distance import CosineDistance
 from znrnd.core.distance_metrics.distance_metric import DistanceMetric
 from znrnd.core.distance_metrics.hyper_sphere_distance import HyperSphere
 from znrnd.core.distance_metrics.l_p_norm import LPNorm
-from znrnd.core.distance_metrics.mahalanobis_distance import MahalanobisDistance
+from znrnd.core.distance_metrics.mahalanobis_distance import \
+    MahalanobisDistance
 from znrnd.core.distance_metrics.order_n_difference import OrderNDifference
 
 __all__ = [

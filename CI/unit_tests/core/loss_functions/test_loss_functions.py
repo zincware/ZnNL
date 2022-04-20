@@ -36,12 +36,8 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 import jax.numpy as np
 import pytest
 
-from znrnd.core.loss_functions import (
-    AngleDistanceLoss,
-    CosineDistanceLoss,
-    LPNormLoss,
-    MeanPowerLoss,
-)
+from znrnd.core.loss_functions import (AngleDistanceLoss, CosineDistanceLoss,
+                                       LPNormLoss, MeanPowerLoss)
 
 
 class TestLossFunctions:

@@ -44,7 +44,7 @@ class TestOrderNDifference:
         Assert the correct answer is returned for orthogonal, parallel, and
         somewhere in between.
         """
-        metric = OrderNDifference(order=2)
+        metric = OrderNDifference(order=2, reduce_operation="sum")
 
         # Test orthogonal vectors
         point_1 = np.array([[1.0, 7.0, 0.0, 0.0]])
@@ -60,7 +60,7 @@ class TestOrderNDifference:
         Assert the correct answer is returned for orthogonal, parallel, and
         somewhere in between.
         """
-        metric = OrderNDifference(order=3)
+        metric = OrderNDifference(order=3, reduce_operation="sum")
 
         # Test orthogonal vectors
         point_1 = np.array([[1.0, 1.0, 0.0, 0.0]])
@@ -77,7 +77,7 @@ class TestOrderNDifference:
         Assert the correct answer is returned for orthogonal, parallel, and
         somewhere in between.
         """
-        metric = OrderNDifference(order=3)
+        metric = OrderNDifference(order=3, reduce_operation="sum")
 
         # Test orthogonal vectors
         point_1 = np.array([[1.0, 7.0, 0.0, 0.0], [4, 7, 2, 1]])

@@ -32,7 +32,7 @@ class OrderNDifference(DistanceMetric):
     Compute the order n difference between points.
     """
 
-    def __init__(self, order: float = 2):
+    def __init__(self, order: float = 2, reduce_operation: str = "mean"):
         """
         Constructor for the order n distance.
 
@@ -40,8 +40,11 @@ class OrderNDifference(DistanceMetric):
         ----------
         order : float (default=2)
                 Order to which the difference should be raised.
+        reduce_operation : str (default = "mean")
+                How to reduce the order N difference, either a sum or a mean.
         """
         self.order = order
+        self.reduce_operation = reduce_operation
 
     def __call__(self, point_1: np.ndarray, point_2: np.ndarray, **kwargs):
         """
@@ -68,4 +71,9 @@ class OrderNDifference(DistanceMetric):
         """
         diff = point_1 - point_2
 
-        return np.mean(np.power(diff, self.order), axis=1)
+        if self.reduce_operation == "mean":
+            return np.mean(np.power(diff, self.order), axis=1)
+        elif self.reduce_operation == "sum":
+            return np.sum(np.power(diff, self.order), axis=1)
+        else:
+            raise ValueError(f"Invalid reduction operation: {self.reduce_operation}")
