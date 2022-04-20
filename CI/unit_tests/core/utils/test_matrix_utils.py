@@ -29,8 +29,10 @@ import jax.numpy as np
 import numpy as onp
 from numpy.testing import assert_array_equal
 
-from znrnd.core.utils.matrix_utils import (compute_eigensystem,
-                                           normalize_covariance_matrix)
+from znrnd.core.utils.matrix_utils import (
+    compute_eigensystem,
+    normalize_covariance_matrix,
+)
 
 
 class TestMatrixUtils:
