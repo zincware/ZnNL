@@ -16,3 +16,4 @@ jax
 plotly
 flax
 tqdm
+pandas
