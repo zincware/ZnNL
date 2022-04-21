@@ -123,12 +123,14 @@ class ApproximateMaximumEntropy(Agent):
 
         entropy_array = np.zeros(self.samples)
         for idx, sample in enumerate(samples):
-            data = self.data_generator.data_pool[sample]
+            data = np.take(self.data_generator.data_pool, sample, axis=0)
             entropy = self._compute_entropy(data)
             entropy_array = entropy_array.at(idx).set(entropy)
 
         max_set = samples[np.argmax(entropy_array)]
 
-        self.target_set = np.take(self.data_generator.data_pool, indices, axis=0)
+        self.target_set = np.take(
+            self.data_generator.data_pool, samples[max_set], axis=0
+        )
 
         return self.target_set
