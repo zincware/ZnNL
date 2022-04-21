@@ -8,8 +8,10 @@ Copyright Contributors to the Zincware Project.
 
 Description:
 """
+from znrnd.core.data.cifar10 import CIFAR10Generator
 from znrnd.core.data.confined_particles import ConfinedParticles
 from znrnd.core.data.data_generator import DataGenerator
+from znrnd.core.data.mnist import MNISTGenerator
 from znrnd.core.data.points_on_a_circle import PointsOnCircle
 from znrnd.core.data.points_on_a_lattice import PointsOnLattice
 
@@ -18,4 +20,6 @@ __all__ = [
     DataGenerator.__name__,
     PointsOnLattice.__name__,
     PointsOnCircle.__name__,
+    MNISTGenerator.__name__,
+    CIFAR10Generator.__name__,
 ]

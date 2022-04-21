@@ -55,7 +55,7 @@ class EntropyAnalysis:
         # Computes the reduced eigen-system
         eigenvalues, eigenvectors = compute_eigensystem(self.matrix)
 
-        self.eigenvalues = eigenvalues
+        self.eigenvalues = eigenvalues / eigenvalues.sum()
 
     def compute_von_neumann_entropy(self, normalize: bool = True):
         """
@@ -80,7 +80,7 @@ class EntropyAnalysis:
         entropy = self.eigenvalues * log_vals
 
         if normalize:
-            max = -1 * len(self.eigenvalues) * np.log(1 / len(self.eigenvalues))
+            max = np.log(len(self.eigenvalues))
 
             entropy /= max
 

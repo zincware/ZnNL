@@ -70,6 +70,28 @@ class Model:
         """
         raise NotImplemented("Implemented in child class.")
 
+    def compute_ntk(
+        self, x_i: np.ndarray, x_j: np.ndarray = None, normalize: bool = True
+    ):
+        """
+        Compute the NTK matrix for the model.
+
+        Parameters
+        ----------
+        x_i : np.ndarray
+                Dataset for which to compute the NTK matrix.
+        x_j : np.ndarray (optional)
+                Dataset for which to compute the NTK matrix.
+        normalize : bool (default = True)
+                If true, divide each row by its max value.
+
+        Returns
+        -------
+        NTK : dict
+                The NTK matrix for both the empirical and infinite width computation.
+        """
+        raise NotImplemented("Implemented in child class")
+
     def __call__(self, feature_vector: np.ndarray):
         """
         Call the network.

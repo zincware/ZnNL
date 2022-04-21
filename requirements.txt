@@ -18,3 +18,4 @@ flax
 tqdm
 pandas
 neural-tangents
+tensorflow-datasets

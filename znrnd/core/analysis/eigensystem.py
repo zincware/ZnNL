@@ -62,7 +62,7 @@ class EigenSpaceAnalysis:
         """
         eigenvalues, eigenvectors = compute_eigensystem(self.matrix, reduce=reduce)
 
-        return eigenvalues
+        return eigenvalues / eigenvalues.sum()
 
     def compute_eigenvalue_density(self, nbins: int = 500):
         """
