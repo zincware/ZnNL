@@ -42,6 +42,7 @@ class ApproximateMaximumEntropy(Agent):
     """
 
     target_set: np.ndarray
+    target_indices: list
 
     def __init__(
         self, target_network: Model, data_generator: DataGenerator, samples: int = 10
@@ -125,12 +126,11 @@ class ApproximateMaximumEntropy(Agent):
         for idx, sample in enumerate(samples):
             data = np.take(self.data_generator.data_pool, sample, axis=0)
             entropy = self._compute_entropy(data)
-            entropy_array = entropy_array.at(idx).set(entropy)
+            entropy_array = entropy_array.at[idx].set(entropy)
 
         max_set = samples[np.argmax(entropy_array)]
 
-        self.target_set = np.take(
-            self.data_generator.data_pool, samples[max_set], axis=0
-        )
+        self.target_set = np.take(self.data_generator.data_pool, max_set, axis=0)
+        self.target_indices = max_set
 
         return self.target_set

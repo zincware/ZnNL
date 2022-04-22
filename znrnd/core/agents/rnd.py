@@ -38,6 +38,7 @@ class RND(Agent):
 
     historical_length: int = 0
     target_set: list = []
+    target_indices: list = []
     iterations: int = 0
     stationary_iterations: int = 0
     metric_results = None
@@ -155,6 +156,7 @@ class RND(Agent):
         points = self.point_selector.select_points(distances)
         selected_points = data[points]
         self._update_target_set([selected_points])
+        self.target_indices.append(int(points))
 
     def _update_target_set(self, points: Union[np.ndarray, None]):
         """
@@ -202,6 +204,7 @@ class RND(Agent):
             seed_point = self.fetch_data(1)
         self._update_target_set(np.array(seed_point))
         self._retrain_network()
+        self.target_indices.append(0)
         self.update_visualization(reference=False)
 
     def _store_metrics(self):

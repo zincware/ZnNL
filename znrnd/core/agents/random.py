@@ -39,6 +39,7 @@ class RandomAgent(Agent):
     """
 
     target_set: np.ndarray
+    target_indices: list
 
     def __init__(self, data_generator: DataGenerator):
         """
@@ -74,5 +75,6 @@ class RandomAgent(Agent):
         indices = self._get_indices(target_size)
 
         self.target_set = np.take(self.data_generator.data_pool, indices, axis=0)
+        self.target_indices = indices
 
         return self.target_set
