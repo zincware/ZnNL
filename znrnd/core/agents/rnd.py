@@ -209,7 +209,7 @@ class RND(Agent):
 
         self._update_target_set(np.array(seed_point))
         self._retrain_network()
-        self.target_indices.append(0)
+        self.target_indices.append(seed_number)
         self.update_visualization(reference=False)
 
     def _store_metrics(self):
