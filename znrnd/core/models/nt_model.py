@@ -111,11 +111,16 @@ class NTModel(Model):
                 Shape of the NN input.
         training_threshold : float
                 The loss value at which point you consider the model trained.
+
+        Notes
+        -----
+        Kernel operations are batched to a fixed size of 10, reduce if needed.
+        This was selected to safely compute NTK on MNIST.
         """
         self.init_fn = nt_module[0]
         self.apply_fn = nt_module[1]
-        self.kernel_fn = nt_module[2]
-        self.empirical_ntk = nt.empirical_ntk_fn(self.apply_fn)
+        self.kernel_fn = nt.batch(nt_module[2], batch_size=10)
+        self.empirical_ntk = nt.batch(nt.empirical_ntk_fn(self.apply_fn), batch_size=10)
         self.loss_fn = loss_fn
         self.optimizer = optimizer
         self.input_shape = input_shape
