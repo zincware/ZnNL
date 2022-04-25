@@ -101,7 +101,7 @@ class DataGenerator(metaclass=abc.ABCMeta):
         point : np.ndarray
                 Data point at desired index.
         """
-        return self.data_pool[index]
+        return [self.data_pool[index]]
 
     def __len__(self):
         """
