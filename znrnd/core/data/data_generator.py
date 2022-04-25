@@ -87,6 +87,22 @@ class DataGenerator(metaclass=abc.ABCMeta):
 
         return np.array(dataset)
 
+    def take_index(self, index: int):
+        """
+        Select data by index.
+
+        Parameters
+        ----------
+        index : int
+                Data point to select.
+
+        Returns
+        -------
+        point : np.ndarray
+                Data point at desired index.
+        """
+        return self.data_pool[index]
+
     def __len__(self):
         """
         Return the size of the data pool.

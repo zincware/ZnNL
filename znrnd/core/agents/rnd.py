@@ -13,6 +13,8 @@ from typing import Union
 
 import jax.numpy as np
 
+import numpy as onp
+
 import znrnd
 from znrnd.core.agents.agent import Agent
 from znrnd.core.data.data_generator import DataGenerator
@@ -201,7 +203,10 @@ class RND(Agent):
         if self.seed_point:
             seed_point = self.seed_point
         else:
-            seed_point = self.fetch_data(1)
+            # seed_point = self.fetch_data(1)
+            seed_number = onp.random.randint(0, len(self.generator))
+            seed_point = self.generator.take_index(seed_number)
+
         self._update_target_set(np.array(seed_point))
         self._retrain_network()
         self.target_indices.append(0)
