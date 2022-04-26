@@ -53,4 +53,4 @@ class TestEntropyAnalysis:
 
         entropy = calculator.compute_von_neumann_entropy(normalize=True)
 
-        assert np.real(entropy) == pytest.approx(0.5, 0.001)
+        assert np.real(entropy) == pytest.approx(1.0, 0.001)
