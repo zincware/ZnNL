@@ -37,6 +37,8 @@ from neural_tangents import stax
 
 import znrnd as rnd
 
+import time
+
 set_size = 3  # DS_SIZE -- Set for linting
 
 data_generator = rnd.data.MNISTGenerator()
@@ -158,7 +160,7 @@ def run_experiment(data_set_size: int, ensembling: bool = False, ensembles: int 
         approximate_max_agent = rnd.agents.ApproximateMaximumEntropy(
             target_network=target,
             data_generator=data_generator,
-            samples=10,
+            samples=20,
             # How many sets it produces in the test. Takes the one with max entropy.
         )
 
@@ -167,14 +169,18 @@ def run_experiment(data_set_size: int, ensembling: bool = False, ensembles: int 
         random_set = random_agent.build_dataset(
             target_size=data_set_size, visualize=False
         )
+        start = time.time()
         apr_max_set = approximate_max_agent.build_dataset(
             target_size=data_set_size, visualize=False
         )
-
+        print(f"Apr max set: {time.time() - start}")
+        start = time.time()
         # Compute NTK for each set
         rnd_ntk = target.compute_ntk(x_i=rnd_set)["empirical"]
         random_ntk = target.compute_ntk(x_i=random_set)["empirical"]
         apr_max_ntk = target.compute_ntk(x_i=apr_max_set)["empirical"]
+
+        print(f"NTK Time: {time.time() - start}")
 
         # Compute the entropy of each set
         rnd_entropy = rnd.analysis.EntropyAnalysis(
@@ -360,7 +366,7 @@ def run_experiment(data_set_size: int, ensembling: bool = False, ensembles: int 
 
 
 entropy, eigenvalues, loss = run_experiment(
-    data_set_size=set_size, ensembling=True, ensembles=5
+    data_set_size=set_size, ensembling=True, ensembles=3
 )
 
 np.save(f"entropy_{set_size}.npy", entropy)

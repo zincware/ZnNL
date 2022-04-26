@@ -49,9 +49,9 @@ class MNISTGenerator(DataGenerator):
                 batch_size=-1,
             )
         )
-        self.ds_train["image"] = np.float32(self.ds_train["image"]) / 255.0
-        self.ds_test["image"] = np.float32(self.ds_test["image"]) / 255.0
-        self.data_pool = self.ds_train["image"]
+        self.ds_train["image"] = self.ds_train["image"] / 255.0
+        self.ds_test["image"] = self.ds_test["image"] / 255.0
+        self.data_pool = self.ds_train["image"].astype(float)
 
     def plot_image(self, indices: list = None, data_list: list = None):
         """
