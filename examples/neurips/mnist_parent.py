@@ -39,7 +39,7 @@ import znrnd as rnd
 
 import time
 
-set_size = 3  # DS_SIZE -- Set for linting
+set_size = DS_SIZE # -- Set for linting
 
 data_generator = rnd.data.MNISTGenerator()
 
@@ -273,17 +273,17 @@ def run_experiment(data_set_size: int, ensembling: bool = False, ensembles: int 
 
         rnd_losses.append(
             rnd_production.train_model(
-                train_ds=rnd_training_ds, test_ds=test_ds, epochs=500, batch_size=10
+                train_ds=rnd_training_ds, test_ds=test_ds, epochs=100, batch_size=10
             )
         )
         random_losses.append(
             random_production.train_model(
-                train_ds=random_training_ds, test_ds=test_ds, epochs=500, batch_size=10
+                train_ds=random_training_ds, test_ds=test_ds, epochs=100, batch_size=10
             )
         )
         apr_max_losses.append(
             apr_max_production.train_model(
-                train_ds=apr_max_training_ds, test_ds=test_ds, epochs=500, batch_size=10
+                train_ds=apr_max_training_ds, test_ds=test_ds, epochs=100, batch_size=10
             )
         )
 
