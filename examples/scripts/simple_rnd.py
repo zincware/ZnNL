@@ -53,7 +53,7 @@ if __name__ == "__main__":
         seed_point=[[-5.0, -5.0], [-5.0, 5.0]],
         tolerance=5,
     )
-    agent.run_rnd()
+    agent.build_dataset()
     target_set = np.array(agent.target_set)
 
     fig, ax = plt.subplots(3, figsize=(4, 12))

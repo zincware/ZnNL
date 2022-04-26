@@ -19,7 +19,7 @@ Summary
 -------
 Module for the ZnTrack cosine distance.
 """
-import tensorflow as tf
+import jax.numpy as np
 
 from znrnd.core.distance_metrics.distance_metric import DistanceMetric
 
@@ -33,7 +33,7 @@ class CosineDistance(DistanceMetric):
     This is not a real distance metric.
     """
 
-    def __call__(self, point_1: tf.Tensor, point_2: tf.Tensor, **kwargs):
+    def __call__(self, point_1: np.ndarray, point_2: np.ndarray, **kwargs):
         """
         Call the distance metric.
 
@@ -44,9 +44,9 @@ class CosineDistance(DistanceMetric):
 
         Parameters
         ----------
-        point_1 : tf.Tensor (n_points, point_dimension)
+        point_1 : np.ndarray (n_points, point_dimension)
             First set of points in the comparison.
-        point_2 : tf.Tensor (n_points, point_dimension)
+        point_2 : np.ndarray (n_points, point_dimension)
             Second set of points in the comparison.
         kwargs
                 Miscellaneous keyword arguments for the specific metric.
@@ -56,13 +56,10 @@ class CosineDistance(DistanceMetric):
         d(point_1, point_2) : tf.tensor : shape=(n_points, 1)
                 Array of distances for each point.
         """
-        numerator = tf.cast(tf.einsum("ij, ij -> i", point_1, point_2), tf.float32)
-        denominator = tf.sqrt(
-            tf.cast(
-                # tf.einsum("ij, ij, ij, ij -> i", point_1, point_1, point_2, point_2)
-                tf.einsum("ij, ij -> i", point_1, point_1)
-                * tf.einsum("ij, ij -> i", point_2, point_2),
-                tf.float32,
-            )
+        numerator = np.einsum("ij, ij -> i", point_1, point_2)
+        denominator = np.sqrt(
+            np.einsum("ij, ij -> i", point_1, point_1)
+            * np.einsum("ij, ij -> i", point_2, point_2)
         )
-        return 1 - abs(tf.divide(numerator, denominator))
+
+        return 1 - abs(np.divide(numerator, denominator))

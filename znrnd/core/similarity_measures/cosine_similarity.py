@@ -13,7 +13,7 @@ Notes
 These similarity measures will return 1 - S(A, B). This is because we need
 a quasi-distance for the comparison to occur.
 """
-import tensorflow as tf
+import jax.numpy as np
 
 
 class CosineSim:
@@ -31,12 +31,10 @@ class CosineSim:
                 Second point in the comparison.
         TODO: include factor sqrt2 that rescales on a real distance metric (look up)
         """
-        numerator = tf.cast(tf.einsum("ij, ij -> i", point_1, point_2), tf.float32)
-        denominator = tf.sqrt(
-            tf.cast(
-                tf.einsum("ij, ij -> i", point_1, point_1)
-                * tf.einsum("ij, ij -> i", point_2, point_2),
-                tf.float32,
-            )
+        numerator = np.einsum("ij, ij -> i", point_1, point_2)
+        denominator = np.sqrt(
+            np.einsum("ij, ij -> i", point_1, point_1)
+            * np.einsum("ij, ij -> i", point_2, point_2),
         )
-        return tf.divide(numerator, denominator)
+
+        return np.divide(numerator, denominator)

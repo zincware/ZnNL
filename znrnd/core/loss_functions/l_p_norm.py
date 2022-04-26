@@ -21,8 +21,7 @@ Summary
 ZnRND L^{p} norm TF loss function.
 """
 from znrnd.core.distance_metrics.l_p_norm import LPNorm
-
-from .simple_loss import SimpleLoss
+from znrnd.core.loss_functions.simple_loss import SimpleLoss
 
 
 class LPNormLoss(SimpleLoss):

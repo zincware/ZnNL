@@ -20,21 +20,20 @@ Summary
 -------
 distance metric module
 """
-from .distance_metric import DistanceMetric
-from .cosine_distance import CosineDistance
-from .angular_distance import AngularDistance
-from .l_p_norm import LPNorm
-from .order_n_difference import OrderNDifference
-from .mahalanobis_distance import MahalanobisDistance
-from .mlp import MLPMetric
-from .hyper_sphere_distance import HyperSphere
+from znrnd.core.distance_metrics.angular_distance import AngularDistance
+from znrnd.core.distance_metrics.cosine_distance import CosineDistance
+from znrnd.core.distance_metrics.distance_metric import DistanceMetric
+from znrnd.core.distance_metrics.hyper_sphere_distance import HyperSphere
+from znrnd.core.distance_metrics.l_p_norm import LPNorm
+from znrnd.core.distance_metrics.mahalanobis_distance import MahalanobisDistance
+from znrnd.core.distance_metrics.order_n_difference import OrderNDifference
 
 __all__ = [
-    "DistanceMetric",
-    "CosineDistance",
-    "MLPMetric",
-    "AngularDistance",
-    "LPNorm",
-    "OrderNDifference",
-    "MahalanobisDistance" "HyperSphere",
+    DistanceMetric.__name__,
+    CosineDistance.__name__,
+    AngularDistance.__name__,
+    LPNorm.__name__,
+    OrderNDifference.__name__,
+    MahalanobisDistance.__name__,
+    HyperSphere.__name__,
 ]

@@ -21,10 +21,9 @@ Summary
 Compute the angular distance between two points normalized by the point density in the
 circle.
 """
-import numpy as np
-import tensorflow as tf
+import jax.numpy as np
 
-from .distance_metric import DistanceMetric
+from znrnd.core.distance_metrics.distance_metric import DistanceMetric
 
 
 class AngularDistance(DistanceMetric):
@@ -48,7 +47,7 @@ class AngularDistance(DistanceMetric):
         else:
             raise ValueError("Invalid points input.")
 
-    def __call__(self, point_1: tf.Tensor, point_2: tf.Tensor, **kwargs):
+    def __call__(self, point_1: np.ndarray, point_2: np.ndarray, **kwargs):
         """
         Call the distance metric.
 
@@ -59,9 +58,9 @@ class AngularDistance(DistanceMetric):
 
         Parameters
         ----------
-        point_1 : tf.Tensor (n_points, point_dimension)
+        point_1 : np.ndarray (n_points, point_dimension)
             First set of points in the comparison.
-        point_2 : tf.Tensor (n_points, point_dimension)
+        point_2 : np.ndarray (n_points, point_dimension)
             Second set of points in the comparison.
         kwargs
                 Miscellaneous keyword arguments for the specific metric.
@@ -71,12 +70,9 @@ class AngularDistance(DistanceMetric):
         d(point_1, point_2) : tf.tensor,  shape=(n_points, 1)
                 Array of distances for each point.
         """
-        numerator = tf.cast(tf.einsum("ij, ij -> i", point_1, point_2), tf.float32)
-        denominator = tf.sqrt(
-            tf.cast(
-                tf.einsum("ij, ij -> i", point_1, point_1)
-                * tf.einsum("ij, ij -> i", point_2, point_2),
-                tf.float32,
-            )
+        numerator = np.einsum("ij, ij -> i", point_1, point_2)
+        denominator = np.sqrt(
+            np.einsum("ij, ij -> i", point_1, point_1)
+            * np.einsum("ij, ij -> i", point_2, point_2)
         )
-        return tf.acos(abs(tf.divide(numerator, denominator))) / self.normalization
+        return np.arccos(abs(np.divide(numerator, denominator))) / self.normalization

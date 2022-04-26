@@ -21,8 +21,7 @@ Summary
 ZnRND mean square error TF loss function.
 """
 from znrnd.core.distance_metrics.order_n_difference import OrderNDifference
-
-from .simple_loss import SimpleLoss
+from znrnd.core.loss_functions.simple_loss import SimpleLoss
 
 
 class MeanPowerLoss(SimpleLoss):

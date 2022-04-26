@@ -20,15 +20,17 @@ Summary
 -------
 Test the order n norm metric.
 """
-import unittest
+import os
 
-import numpy as np
-import tensorflow as tf
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-import znrnd
+import jax.numpy as np
+from numpy.testing import assert_almost_equal
+
+from znrnd.core.distance_metrics.order_n_difference import OrderNDifference
 
 
-class TestOrderNDifference(unittest.TestCase):
+class TestOrderNDifference:
     """
     Class to test the cosine distance measure module.
     """
@@ -42,12 +44,12 @@ class TestOrderNDifference(unittest.TestCase):
         Assert the correct answer is returned for orthogonal, parallel, and
         somewhere in between.
         """
-        metric = znrnd.distance_metrics.OrderNDifference(order=2)
+        metric = OrderNDifference(order=2, reduce_operation="sum")
 
         # Test orthogonal vectors
-        point_1 = tf.convert_to_tensor([[1.0, 7.0, 0.0, 0.0]], dtype=tf.float32)
-        point_2 = tf.convert_to_tensor([[1.0, 1.0, 0.0, 0.0]], dtype=tf.float32)
-        self.assertEqual(metric(point_1, point_2), [36.0])
+        point_1 = np.array([[1.0, 7.0, 0.0, 0.0]])
+        point_2 = np.array([[1.0, 1.0, 0.0, 0.0]])
+        metric(point_1, point_2) == [36.0]
 
     def test_order_3_distance(self):
         """
@@ -58,12 +60,13 @@ class TestOrderNDifference(unittest.TestCase):
         Assert the correct answer is returned for orthogonal, parallel, and
         somewhere in between.
         """
-        metric = znrnd.distance_metrics.OrderNDifference(order=3)
+        metric = OrderNDifference(order=3, reduce_operation="sum")
 
         # Test orthogonal vectors
-        point_1 = tf.convert_to_tensor([[1.0, 1.0, 0.0, 0.0]], dtype=tf.float32)
-        point_2 = tf.convert_to_tensor([[1.0, 7.0, 0.0, 0.0]], dtype=tf.float32)
-        np.testing.assert_almost_equal(metric(point_1, point_2), [-216.0], decimal=4)
+        point_1 = np.array([[1.0, 1.0, 0.0, 0.0]])
+        point_2 = np.array([[1.0, 7.0, 0.0, 0.0]])
+
+        assert_almost_equal(metric(point_1, point_2), [-216.0], decimal=4)
 
     def test_multi_distance(self):
         """
@@ -74,15 +77,9 @@ class TestOrderNDifference(unittest.TestCase):
         Assert the correct answer is returned for orthogonal, parallel, and
         somewhere in between.
         """
-        metric = znrnd.distance_metrics.OrderNDifference(order=3)
+        metric = OrderNDifference(order=3, reduce_operation="sum")
 
         # Test orthogonal vectors
-        point_1 = tf.convert_to_tensor(
-            [[1.0, 7.0, 0.0, 0.0], [4, 7, 2, 1]], dtype=tf.float32
-        )
-        point_2 = tf.convert_to_tensor(
-            [[1.0, 1.0, 0.0, 0.0], [6, 3, 1, 8]], dtype=tf.float32
-        )
-        np.testing.assert_almost_equal(
-            metric(point_1, point_2), [216.0, -286.0], decimal=4
-        )
+        point_1 = np.array([[1.0, 7.0, 0.0, 0.0], [4, 7, 2, 1]])
+        point_2 = np.array([[1.0, 1.0, 0.0, 0.0], [6, 3, 1, 8]])
+        assert_almost_equal(metric(point_1, point_2), [216.0, -286.0], decimal=4)

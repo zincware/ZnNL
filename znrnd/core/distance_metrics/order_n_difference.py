@@ -22,9 +22,9 @@ Raise a difference to a power of order n.
 
 e.g. (a - b)^n
 """
-import tensorflow as tf
+import jax.numpy as np
 
-from .distance_metric import DistanceMetric
+from znrnd.core.distance_metrics.distance_metric import DistanceMetric
 
 
 class OrderNDifference(DistanceMetric):
@@ -32,7 +32,7 @@ class OrderNDifference(DistanceMetric):
     Compute the order n difference between points.
     """
 
-    def __init__(self, order: float = 2):
+    def __init__(self, order: float = 2, reduce_operation: str = "mean"):
         """
         Constructor for the order n distance.
 
@@ -40,10 +40,13 @@ class OrderNDifference(DistanceMetric):
         ----------
         order : float (default=2)
                 Order to which the difference should be raised.
+        reduce_operation : str (default = "mean")
+                How to reduce the order N difference, either a sum or a mean.
         """
         self.order = order
+        self.reduce_operation = reduce_operation
 
-    def __call__(self, point_1: tf.Tensor, point_2: tf.Tensor, **kwargs):
+    def __call__(self, point_1: np.ndarray, point_2: np.ndarray, **kwargs):
         """
         Call the distance metric.
 
@@ -54,18 +57,23 @@ class OrderNDifference(DistanceMetric):
 
         Parameters
         ----------
-        point_1 : tf.Tensor (n_points, point_dimension)
+        point_1 : np.ndarray (n_points, point_dimension)
             First set of points in the comparison.
-        point_2 : tf.Tensor (n_points, point_dimension)
+        point_2 : np.ndarray (n_points, point_dimension)
             Second set of points in the comparison.
         kwargs
                 Miscellaneous keyword arguments for the specific metric.
 
         Returns
         -------
-        d(point_1, point_2) : tf.tensor : shape=(n_points, 1)
+        d(point_1, point_2) : np.ndarray : shape=(n_points, 1)
                 Array of distances for each point.
         """
         diff = point_1 - point_2
-        # return tf.cast(tf.einsum("ij, ij -> i", diff, diff), tf.float32)
-        return tf.cast(tf.reduce_sum(tf.pow(diff, self.order), axis=1), tf.float32)
+
+        if self.reduce_operation == "mean":
+            return np.mean(np.power(diff, self.order), axis=1)
+        elif self.reduce_operation == "sum":
+            return np.sum(np.power(diff, self.order), axis=1)
+        else:
+            raise ValueError(f"Invalid reduction operation: {self.reduce_operation}")

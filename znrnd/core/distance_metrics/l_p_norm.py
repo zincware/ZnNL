@@ -24,9 +24,9 @@ Module for the L_p norm class.
 
     d = (|r[0]|^p + |r[1]|^p + ... + |r[n]|^p)^(1/p)
 """
-import tensorflow as tf
+import jax.numpy as np
 
-from .distance_metric import DistanceMetric
+from znrnd.core.distance_metrics.distance_metric import DistanceMetric
 
 
 class LPNorm(DistanceMetric):
@@ -45,7 +45,7 @@ class LPNorm(DistanceMetric):
         """
         self.order = order
 
-    def __call__(self, point_1: tf.Tensor, point_2: tf.Tensor, **kwargs):
+    def __call__(self, point_1: np.ndarray, point_2: np.ndarray, **kwargs):
         """
         Call the distance metric.
 
@@ -56,16 +56,16 @@ class LPNorm(DistanceMetric):
 
         Parameters
         ----------
-        point_1 : tf.Tensor (n_points, point_dimension)
+        point_1 : np.ndarray (n_points, point_dimension)
             First set of points in the comparison.
-        point_2 : tf.Tensor (n_points, point_dimension)
+        point_2 : np.ndarray (n_points, point_dimension)
             Second set of points in the comparison.
         kwargs
                 Miscellaneous keyword arguments for the specific metric.
 
         Returns
         -------
-        d(point_1, point_2) : tf.tensor : shape=(n_points, 1)
+        d(point_1, point_2) : np.ndarray : shape=(n_points, 1)
                 Array of distances for each point.
         """
-        return tf.cast(tf.norm(point_1 - point_2, axis=1, ord=self.order), tf.float32)
+        return np.linalg.norm(point_1 - point_2, axis=1, ord=self.order)

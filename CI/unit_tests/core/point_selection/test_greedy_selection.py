@@ -19,12 +19,15 @@ Summary
 -------
 Test the greedy selection module.
 """
-import unittest
+import os
 
-import numpy as np
-import tensorflow as tf
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-import znrnd
+import jax.numpy as np
+from numpy.testing import assert_array_equal
+
+from znrnd.core.distance_metrics.cosine_distance import CosineDistance
+from znrnd.core.point_selection.greedy_selection import GreedySelection
 
 
 class Agent:
@@ -33,7 +36,7 @@ class Agent:
     """
 
     @staticmethod
-    def generate_points(n_points: int = 1):
+    def generate_points(n_points: int = -1):
         """
         Generate dummy points.
 
@@ -44,30 +47,30 @@ class Agent:
 
         Returns
         -------
-        points : tf.Tensor
+        points : np.array
         """
         if n_points == -1:
-            return tf.convert_to_tensor([[0, 1], [1, 0]])
+            return np.array([[0, 1], [1, 0]])
 
     @staticmethod
-    def compute_distance(points: tf.Tensor):
+    def compute_distance(points: np.ndarray):
         """
         Compute the distance between points.
 
         Parameters
         ----------
-        points : tf.Tensor
+        points : np.ndarray
                 First set of points to look at
 
         Returns
         -------
 
         """
-        metric = znrnd.distance_metrics.CosineDistance()
-        return metric(points, tf.convert_to_tensor([[1, 0], [1, 0]]))
+        metric = CosineDistance()
+        return metric(points, np.array([[1, 0], [1, 0]]))
 
 
-class TestGreedySelection(unittest.TestCase):
+class TestGreedySelection:
     """
     A class to test the greedy selection method.
     """
@@ -76,8 +79,10 @@ class TestGreedySelection(unittest.TestCase):
         """
         Test the select points methods.
         """
-        self.agent = Agent()
-        self.selector = znrnd.point_selection.GreedySelection(self.agent)
-        point = self.selector.select_points()
+        agent = Agent()
+        data = agent.generate_points(-1)
+        distances = agent.compute_distance(data)
 
-        np.testing.assert_array_equal(point[0], np.array([0, 1]))
+        self.selector = GreedySelection()
+        point = self.selector.select_points(distances)
+        assert_array_equal(data[point], np.array([0, 1]))

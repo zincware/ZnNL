@@ -20,7 +20,7 @@ Summary
 -------
 Module for the parent class of a ZnRND distance metric.
 """
-import tensorflow as tf
+import jax.numpy as np
 
 
 class DistanceMetric:
@@ -28,7 +28,7 @@ class DistanceMetric:
     Parent class for a ZnRND distance metric.
     """
 
-    def __call__(self, point_1: tf.Tensor, point_2: tf.Tensor, **kwargs):
+    def __call__(self, point_1: np.ndarray, point_2: np.ndarray, **kwargs):
         """
         Call the distance metric.
 
@@ -39,9 +39,9 @@ class DistanceMetric:
 
         Parameters
         ----------
-        point_1 : tf.Tensor (n_points, point_dimension)
+        point_1 : np.ndarray (n_points, point_dimension)
             First set of points in the comparison.
-        point_2 : tf.Tensor (n_points, point_dimension)
+        point_2 : np.ndarray (n_points, point_dimension)
             Second set of points in the comparison.
         kwargs
                 Miscellaneous keyword arguments for the specific metric.

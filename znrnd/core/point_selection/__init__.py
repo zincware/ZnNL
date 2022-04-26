@@ -1,7 +1,7 @@
 """
 Module for the point selection.
 """
-from .point_selection import PointSelection
-from .greedy_selection import GreedySelection
+from znrnd.core.point_selection.greedy_selection import GreedySelection
+from znrnd.core.point_selection.point_selection import PointSelection
 
-__all__ = ["PointSelection", "GreedySelection"]
+__all__ = [PointSelection.__name__, GreedySelection.__name__]

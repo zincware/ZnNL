@@ -21,8 +21,7 @@ Summary
 ZnRND Cosine similarity TF loss function.
 """
 from znrnd.core.distance_metrics.cosine_distance import CosineDistance
-
-from .simple_loss import SimpleLoss
+from znrnd.core.loss_functions.simple_loss import SimpleLoss
 
 
 class CosineDistanceLoss(SimpleLoss):

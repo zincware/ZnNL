@@ -19,15 +19,16 @@ Summary
 -------
 Test the angular distance module.
 """
-import unittest
+import os
 
-import numpy as np
-import tensorflow as tf
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-import znrnd
+import jax.numpy as np
+
+from znrnd.core.distance_metrics.angular_distance import AngularDistance
 
 
-class TestAngularDistance(unittest.TestCase):
+class TestAngularDistance:
     """
     Class to test the cosine distance measure module.
     """
@@ -41,17 +42,17 @@ class TestAngularDistance(unittest.TestCase):
         Assert the correct answer is returned for orthogonal, parallel, and
         somewhere in between.
         """
-        metric = znrnd.distance_metrics.AngularDistance()
+        metric = AngularDistance()
 
         # Test orthogonal vectors
-        point_1 = tf.convert_to_tensor([[1, 0]])
-        point_2 = tf.convert_to_tensor([[0, 1]])
-        self.assertEqual(metric(point_1, point_2), [0.5])
+        point_1 = np.array([[1, 0]])
+        point_2 = np.array([[0, 1]])
+        metric(point_1, point_2) == [0.5]
 
         # Test parallel vectors
-        point_1 = tf.convert_to_tensor([[1, 0]])
-        point_2 = tf.convert_to_tensor([[1, 1]])
-        self.assertEqual(metric(point_1, point_2), [0.25])
+        point_1 = np.array([[1, 0]])
+        point_2 = np.array([[1, 1]])
+        metric(point_1, point_2) == [0.25]
 
     def test_multiple_distances(self):
         """
@@ -62,9 +63,9 @@ class TestAngularDistance(unittest.TestCase):
         Assert the correct answer is returned for orthogonal, parallel, and
         somewhere in between.
         """
-        metric = znrnd.distance_metrics.AngularDistance()
+        metric = AngularDistance()
 
         # Test orthogonal vectors
-        point_1 = tf.convert_to_tensor([[1, 0], [1, 0]])
-        point_2 = tf.convert_to_tensor([[0, 1], [1, 1]])
-        np.testing.assert_array_equal(metric(point_1, point_2), [0.5, 0.25])
+        point_1 = np.array([[1, 0], [1, 0]])
+        point_2 = np.array([[0, 1], [1, 1]])
+        metric(point_1, point_2) == [0.5, 0.25]

@@ -1,4 +1,3 @@
-tensorflow
 numpy
 matplotlib
 sphinx
@@ -12,3 +11,12 @@ nbsphinx
 tensorflow_probability
 scipy
 sklearn
+jaxlib
+jax
+plotly
+flax
+tqdm
+pandas
+neural-tangents
+tensorflow-datasets
+tensorflow

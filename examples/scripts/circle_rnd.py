@@ -66,7 +66,7 @@ def main():
         tolerance=5,
         # target_size=10,
     )
-    agent.run_rnd()
+    agent.build_dataset()
 
     return agent.target_set, preprocess_data(agent.metric_results.numpy())
 

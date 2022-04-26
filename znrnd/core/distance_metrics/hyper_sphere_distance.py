@@ -20,11 +20,11 @@ Summary
 -------
 Module for a distance that combines the properties of cosine and lp-norm distance.
 """
-import tensorflow as tf
+import jax.numpy as np
 
-from .cosine_distance import CosineDistance
-from .distance_metric import DistanceMetric
-from .l_p_norm import LPNorm
+from znrnd.core.distance_metrics.cosine_distance import CosineDistance
+from znrnd.core.distance_metrics.distance_metric import DistanceMetric
+from znrnd.core.distance_metrics.l_p_norm import LPNorm
 
 
 class HyperSphere(DistanceMetric):
@@ -43,7 +43,7 @@ class HyperSphere(DistanceMetric):
         """
         self.order = order
 
-    def __call__(self, point_1: tf.Tensor, point_2: tf.Tensor, **kwargs):
+    def __call__(self, point_1: np.ndarray, point_2: np.ndarray, **kwargs):
         """
         Call the distance metric.
 
@@ -54,9 +54,9 @@ class HyperSphere(DistanceMetric):
 
         Parameters
         ----------
-        point_1 : tf.Tensor (n_points, point_dimension)
+        point_1 : np.ndarray (n_points, point_dimension)
             First set of points in the comparison.
-        point_2 : tf.Tensor (n_points, point_dimension)
+        point_2 : np.ndarray (n_points, point_dimension)
             Second set of points in the comparison.
         kwargs
                 Miscellaneous keyword arguments for the specific metric.

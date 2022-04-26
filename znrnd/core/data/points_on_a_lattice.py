@@ -25,10 +25,9 @@ Summary
 -------
 Module to generate points on a lattice.
 """
-import random
 from abc import ABC
 
-import numpy as np
+import numpy as onp
 
 from znrnd.core.data.data_generator import DataGenerator
 
@@ -59,36 +58,12 @@ class PointsOnLattice(DataGenerator, ABC):
         -------
         Will call a method which updates the class state.
         """
-        x = np.linspace(-x_points / 2, x_points / 2, x_points + 1, dtype=int)
-        y = np.linspace(-y_points / 2, y_points / 2, y_points + 1, dtype=int)
+        x = onp.linspace(-x_points / 2, x_points / 2, x_points + 1, dtype=int).astype(
+            float
+        )
+        y = onp.linspace(-y_points / 2, y_points / 2, y_points + 1, dtype=int).astype(
+            float
+        )
 
-        grid = np.stack(np.meshgrid(x, y), axis=2)
+        grid = onp.stack(onp.meshgrid(x, y), axis=2)
         self.data_pool = grid.reshape(-1, grid.shape[-1])
-
-    def get_points(self, n_points: int) -> np.ndarray:
-        """
-        Fetch N points from the data pool.
-
-        Parameters
-        ----------
-        n_points : int
-                Number of points to fetch.
-
-        Returns
-        -------
-        data : np.ndarray
-                A numpy array of data points.
-        """
-
-        if n_points == -1:
-            return self.data_pool
-        else:
-            try:
-                indices = random.sample(range(0, len(self.data_pool) - 1), n_points)
-                data = self.data_pool[indices].astype(np.float)
-            except ValueError:
-                indices = random.sample(
-                    range(0, len(self.data_pool) - 1), len(self.data_pool)
-                )
-                data = self.data_pool[indices].astype(np.float)
-            return data

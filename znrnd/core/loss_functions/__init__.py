@@ -25,20 +25,20 @@ Summary
 -------
 Package containing custom loss functions.
 """
-from .absolute_angle_difference import AngleDistanceLoss
-from .cosine_distance import CosineDistanceLoss
-from .distance_metric_loss import DistanceMetricLoss
-from .l_p_norm import LPNormLoss
-from .mahalanobis import MahalanobisLoss
-from .mean_power_error import MeanPowerLoss
-from .simple_loss import SimpleLoss
+from znrnd.core.loss_functions.absolute_angle_difference import AngleDistanceLoss
+from znrnd.core.loss_functions.cosine_distance import CosineDistanceLoss
+from znrnd.core.loss_functions.cross_entropy_loss import CrossEntropyLoss
+from znrnd.core.loss_functions.l_p_norm import LPNormLoss
+from znrnd.core.loss_functions.mahalanobis import MahalanobisLoss
+from znrnd.core.loss_functions.mean_power_error import MeanPowerLoss
+from znrnd.core.loss_functions.simple_loss import SimpleLoss
 
 __all__ = [
-    "AngleDistanceLoss",
-    "CosineDistanceLoss",
-    "DistanceMetricLoss",
-    "LPNormLoss",
-    "MahalanobisLoss",
-    "MeanPowerLoss",
-    "SimpleLoss",
+    AngleDistanceLoss.__name__,
+    CosineDistanceLoss.__name__,
+    LPNormLoss.__name__,
+    MahalanobisLoss.__name__,
+    MeanPowerLoss.__name__,
+    SimpleLoss.__name__,
+    CrossEntropyLoss.__name__,
 ]

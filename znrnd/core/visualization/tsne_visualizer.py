@@ -23,11 +23,10 @@ If you use this module please cite us with:
 
 Summary
 -------
-TSNE visualizer.
+TSNE visualizer for the RND.
 """
-import matplotlib.animation as animation
-import matplotlib.pyplot as plt
 import numpy as np
+import plotly.graph_objects as go
 from sklearn.manifold import TSNE
 
 
@@ -35,6 +34,11 @@ class TSNEVisualizer:
     """
     Perform visualization on network representations with TSNE.
     """
+
+    x_max: int = 0
+    x_min: int = 0
+    y_max: int = 0
+    y_min: int = 0
 
     def __init__(self, components: int = 2):
         """
@@ -45,7 +49,9 @@ class TSNEVisualizer:
         components : int
                 Number of components to use in the representation. Either 2 or 3.
         """
-        self.model = TSNE(n_components=components, init="random")
+        self.model = TSNE(
+            n_components=components, init="pca", learning_rate=200, n_jobs=-1
+        )
 
         self.reference = []
         self.dynamic = []
@@ -65,31 +71,157 @@ class TSNEVisualizer:
         -------
         stores a plot
         """
+        representation = self.model.fit_transform(data)
+
+        x_max = max(representation[:, 0])
+        x_min = min(representation[:, 0])
+        y_max = max(representation[:, 1])
+        y_min = min(representation[:, 1])
+
+        self.x_max = np.ceil(max(self.x_max, x_max))
+        self.x_min = np.floor(min(self.x_min, x_min))
+        self.y_max = np.ceil(max(self.y_max, y_max))
+        self.y_min = np.floor(min(self.y_min, y_min))
+
         if reference:
-            self.reference.append(self.model.fit_transform(data))
+            self.reference.append(representation)
         else:
-            self.dynamic.append(self.model.fit_transform(data))
-
-    def data_gen(self):
-        """
-        Generate next data point for the animation.
-
-        Returns
-        -------
-
-        """
-        for count in self.dynamic:
-            yield count[:, 0], count[:, 1]
+            self.dynamic.append(representation)
 
     def run_visualization(self):
         """
         Run the visualization.
         """
-        # create a figure with two subplots
-        fig, (ax1, ax2) = plt.subplots(1, 2)
+        fig_dict = {"data": [], "layout": {}, "frames": []}
 
-        # initialize two line objects (one in each axes)
-        ax1.plot(self.reference[0][:, 0], self.reference[0][:, 1], ".")
-        ax2.plot(self.dynamic[-1][:, 0], self.dynamic[-1][:, 1], ".")
+        # fill in most of layout
+        fig_dict["layout"]["xaxis"] = {
+            "range": [self.x_min, self.x_max],
+            "title": "x",
+            "domain": [0.0, 0.7],
+        }
+        fig_dict["layout"]["yaxis"] = {"title": "y", "range": [self.y_min, self.y_max]}
+        fig_dict["layout"]["xaxis2"] = {"domain": [0.8, 1.0]}
+        fig_dict["layout"]["yaxis2"] = {"anchor": "x2"}
+        fig_dict["layout"]["hovermode"] = "closest"
+        fig_dict["layout"]["updatemenus"] = [
+            {
+                "buttons": [
+                    {
+                        "args": [
+                            None,
+                            {
+                                "frame": {"duration": 500, "redraw": False},
+                                "fromcurrent": True,
+                                "transition": {
+                                    "duration": 300,
+                                    "easing": "quadratic-in-out",
+                                },
+                            },
+                        ],
+                        "label": "Play",
+                        "method": "animate",
+                    },
+                    {
+                        "args": [
+                            [None],
+                            {
+                                "frame": {"duration": 0, "redraw": False},
+                                "mode": "immediate",
+                                "transition": {"duration": 0},
+                            },
+                        ],
+                        "label": "Pause",
+                        "method": "animate",
+                    },
+                ],
+                "direction": "left",
+                "pad": {"r": 10, "t": 87},
+                "showactive": False,
+                "type": "buttons",
+                "x": 0.1,
+                "xanchor": "right",
+                "y": 0,
+                "yanchor": "top",
+            }
+        ]
 
-        plt.show()
+        sliders_dict = {
+            "active": 0,
+            "yanchor": "top",
+            "xanchor": "left",
+            "currentvalue": {
+                "font": {"size": 20},
+                "prefix": "Step:",
+                "visible": True,
+                "xanchor": "right",
+            },
+            "transition": {"duration": 300, "easing": "cubic-in-out"},
+            "pad": {"b": 10, "t": 50},
+            "len": 0.9,
+            "x": 0.1,
+            "y": 0,
+            "steps": [],
+        }
+
+        # Add initial data
+        fig_dict["data"].append(
+            {
+                "x": self.dynamic[0][:, 0],
+                "y": self.dynamic[0][:, 1],
+                "mode": "markers",
+                "name": "Predictor",
+            }
+        )
+        fig_dict["data"].append(
+            {
+                "x": self.reference[0][:, 0],
+                "y": self.reference[0][:, 1],
+                "mode": "markers",
+                "xaxis": "x2",
+                "yaxis": "y2",
+                "name": "Target",
+            }
+        )
+
+        # Make the figure frames.
+        for i, item in enumerate(self.dynamic):
+            frame = {
+                "data": [
+                    {
+                        "x": item[:, 0],
+                        "y": item[:, 1],
+                        "mode": "markers",
+                        "name": "Predictor",
+                    },
+                    {
+                        "x": self.reference[0][:, 0],
+                        "y": self.reference[0][:, 1],
+                        "mode": "markers",
+                        "xaxis": "x2",
+                        "yaxis": "y2",
+                        "name": "Target",
+                    },
+                ]
+            }
+
+            fig_dict["frames"].append(frame)
+
+            slider_step = {
+                "args": [
+                    [i],
+                    {
+                        "frame": {"duration": 300, "redraw": False},
+                        "mode": "immediate",
+                        "transition": {"duration": 300},
+                    },
+                ],
+                "label": i,
+                "method": "animate",
+            }
+            sliders_dict["steps"].append(slider_step)
+
+        fig_dict["layout"]["sliders"] = [sliders_dict]
+
+        figure = go.Figure(fig_dict)
+        figure.show()

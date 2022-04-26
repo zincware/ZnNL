@@ -1,5 +1,6 @@
 """
 ZnRND: A Zincwarecode package.
+
 License
 -------
 This program and the accompanying materials are made available under the terms
@@ -7,32 +8,45 @@ of the Eclipse Public License v2.0 which accompanies this distribution, and is
 available at https://www.eclipse.org/legal/epl-v20.html
 SPDX-License-Identifier: EPL-2.0
 Copyright Contributors to the Zincwarecode Project.
+
 Contact Information
 -------------------
 email: zincwarecode@gmail.com
 github: https://github.com/zincware
 web: https://zincwarecode.com/
+
 Citation
 --------
 If you use this module please cite us with:
+
 Summary
 -------
 Test the angular distance module.
 """
-import unittest
+import os
 
-import numpy as np
-import numpy.random
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
+import jax
+import jax.numpy as np
+import numpy as onp
 import scipy.spatial.distance
-import tensorflow as tf
+from numpy.testing import assert_almost_equal
 
-import znrnd
+from znrnd.core.distance_metrics.mahalanobis_distance import MahalanobisDistance
 
 
-class TestMahalanobisDistance(unittest.TestCase):
+class TestMahalanobisDistance:
     """
     Class to test the cosine distance measure module.
     """
+
+    @classmethod
+    def setup_class(cls):
+        """
+        Prepare the test suite.
+        """
+        cls.key = jax.random.PRNGKey(0)
 
     def test_mahalanobis_distance(self):
         """
@@ -44,25 +58,20 @@ class TestMahalanobisDistance(unittest.TestCase):
         Assert if the Mahalanobis distance returns true values for sample set of
         random normal distributed points in two dimensions.
         """
-        metric = znrnd.distance_metrics.MahalanobisDistance()
+        metric = MahalanobisDistance()
 
         # Create sample set
         point_1, point_2 = self.create_sample_set()
 
         # Calculate results from distance metric
-        metric_results = metric(
-            tf.convert_to_tensor(point_1, dtype=tf.float32),
-            tf.convert_to_tensor(point_2, dtype=tf.float32),
-        )
+        metric_results = metric(np.array(point_1), np.array(point_2))
 
         # Calculate test results from numpy distance metric
         test_metric_results = []
         self.calculate_numpy_mahalanobis_distance(point_1, point_2, test_metric_results)
 
         # Assert results
-        np.testing.assert_almost_equal(
-            metric_results.numpy(), np.array(test_metric_results), decimal=1
-        )
+        assert_almost_equal(metric_results, test_metric_results, decimal=1)
 
     def test_identity(self):
         """
@@ -77,17 +86,13 @@ class TestMahalanobisDistance(unittest.TestCase):
         point_1, point_2 = self.create_sample_set()
 
         # Add point of interest
-        point_of_interest = tf.convert_to_tensor([[7.0, 3.0]], dtype=tf.float32)
-        point_1 = tf.concat(
-            [tf.convert_to_tensor(point_1, dtype=tf.float32), point_of_interest], axis=0
-        )
-        point_2 = tf.concat(
-            [tf.convert_to_tensor(point_2, dtype=tf.float32), point_of_interest], axis=0
-        )
+        point_of_interest = np.array([[7.0, 3.0]])
+        point_1 = np.concatenate([np.array(point_1), point_of_interest], axis=0)
+        point_2 = np.concatenate([np.array(point_2), point_of_interest], axis=0)
 
         # Assert identity
-        metric = znrnd.distance_metrics.MahalanobisDistance()
-        self.assertEqual(metric(point_1, point_2)[-1], 0)
+        metric = MahalanobisDistance()
+        metric(point_1, point_2)[-1] == 0
 
     def test_symmetry(self):
         """
@@ -103,37 +108,34 @@ class TestMahalanobisDistance(unittest.TestCase):
         point_1, point_2 = self.create_sample_set()
 
         # Add point of interest
-        point_1_of_interest = tf.convert_to_tensor(
-            [[-2.0, 5.0], [7.0, 3.0]], dtype=tf.float32
-        )
-        point_2_of_interest = tf.convert_to_tensor(
-            [[7.0, 3.0], [-2.0, 5.0]], dtype=tf.float32
-        )
-        point_1 = tf.concat(
-            [tf.convert_to_tensor(point_1, dtype=tf.float32), point_1_of_interest],
+        point_1_of_interest = np.array([[-2.0, 5.0], [7.0, 3.0]])
+        point_2_of_interest = np.array([[7.0, 3.0], [-2.0, 5.0]])
+        point_1 = np.concatenate(
+            [np.array(point_1), point_1_of_interest],
             axis=0,
         )
-        point_2 = tf.concat(
-            [tf.convert_to_tensor(point_2, dtype=tf.float32), point_2_of_interest],
+        point_2 = np.concatenate(
+            [np.array(point_2), point_2_of_interest],
             axis=0,
         )
 
         # Assert identity
-        metric = znrnd.distance_metrics.MahalanobisDistance()
-        self.assertEqual(metric(point_1, point_2)[-1], (metric(point_1, point_2)[-2]))
+        metric = MahalanobisDistance()
+        metric(point_1, point_2)[-1] == (metric(point_1, point_2)[-2])
 
     @staticmethod
     def create_sample_set():
         """
+
         Returns
         -------
         Creates a random normal distributed sample set
         """
         point_1 = np.array(
-            [np.random.normal(0, 10, 100), np.random.normal(0, 20, 100)]
+            [onp.random.normal(0, 10, 100), onp.random.normal(0, 20, 100)]
         ).T
         point_2 = np.array(
-            [np.random.normal(0, 10, 100), np.random.normal(0, 20, 100)]
+            [onp.random.normal(0, 10, 100), onp.random.normal(0, 20, 100)]
         ).T
         return point_1, point_2
 

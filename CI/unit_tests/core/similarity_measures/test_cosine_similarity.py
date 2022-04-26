@@ -8,15 +8,16 @@ Copyright Contributors to the Zincware Project.
 
 Description: Test for the similarity measures.
 """
-import unittest
+import os
 
-import numpy as np
-import tensorflow as tf
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-import znrnd
+import jax.numpy as np
+
+from znrnd.core.similarity_measures.cosine_similarity import CosineSim
 
 
-class TestCosineSimilarity(unittest.TestCase):
+class TestCosineSimilarity:
     """
     Class to test the similarity measure module.
     """
@@ -30,19 +31,19 @@ class TestCosineSimilarity(unittest.TestCase):
         Assert the correct answer is returned for orthogonal, parallel, and
         somewhere in between.
         """
-        metric = znrnd.similarity_measures.CosineSim()
+        metric = CosineSim()
 
         # Test orthogonal vectors
-        point_1 = tf.convert_to_tensor([[1, 0, 0, 0]])
-        point_2 = tf.convert_to_tensor([[0, 1, 0, 0]])
-        self.assertEqual(metric(point_1, point_2), [0])
+        point_1 = np.array([[1, 0, 0, 0]])
+        point_2 = np.array([[0, 1, 0, 0]])
+        metric(point_1, point_2) == [0]
 
         # Test parallel vectors
-        point_1 = tf.convert_to_tensor([[1, 0, 0, 0]])
-        point_2 = tf.convert_to_tensor([[1, 0, 0, 0]])
-        self.assertEqual(metric(point_1, point_2), [1])
+        point_1 = np.array([[1, 0, 0, 0]])
+        point_2 = np.array([[1, 0, 0, 0]])
+        metric(point_1, point_2) == [1]
 
         # Somewhere in between
-        point_1 = tf.convert_to_tensor([[1.0, 0, 0, 0]])
-        point_2 = tf.convert_to_tensor([[0.5, 1.0, 0, 3.0]])
-        self.assertEqual(metric(point_1, point_2), [1 - 0.84382623])
+        point_1 = np.array([[1.0, 0, 0, 0]])
+        point_2 = np.array([[0.5, 1.0, 0, 3.0]])
+        metric(point_1, point_2) == [1 - 0.84382623]

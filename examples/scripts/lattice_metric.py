@@ -63,7 +63,7 @@ if __name__ == "__main__":
         tolerance=5,
         target_size=10,
     )
-    agent.run_rnd()
+    agent.build_dataset()
 
     plt.plot(
         data_generator.data_pool[:, 0],

@@ -1,5 +1,6 @@
 """
 ZnRND: A Zincwarecode package.
+
 License
 -------
 This program and the accompanying materials are made available under the terms
@@ -7,11 +8,13 @@ of the Eclipse Public License v2.0 which accompanies this distribution, and is
 available at https://www.eclipse.org/legal/epl-v20.html
 SPDX-License-Identifier: EPL-2.0
 Copyright Contributors to the Zincwarecode Project.
+
 Contact Information
 -------------------
 email: zincwarecode@gmail.com
 github: https://github.com/zincware
 web: https://zincwarecode.com/
+
 Citation
 --------
 If you use this module please cite us with:
@@ -20,11 +23,10 @@ Summary
 -------
 Module for the Mahalanobis distance.
 """
-import tensorflow as tf
-import tensorflow_probability as tfp
+import jax.numpy as np
+import scipy.spatial.distance
 
-from .distance_metric import DistanceMetric
-from .l_p_norm import LPNorm
+from znrnd.core.distance_metrics.distance_metric import DistanceMetric
 
 
 class MahalanobisDistance(DistanceMetric):
@@ -32,22 +34,7 @@ class MahalanobisDistance(DistanceMetric):
     Compute the mahalanobis distance between points.
     """
 
-    def __init__(self):
-        """
-        Constructor for the Mahalanobis Distance
-        Parameters
-        ----------
-        """
-        # Class defined attributes
-        self.cov = None
-        self.decomposed = None
-        self.pool = None
-        self.point_1 = None
-        self.point_2 = None
-
-        self.euclidean = LPNorm(order=2)
-
-    def __call__(self, point_1: tf.Tensor, point_2: tf.Tensor, **kwargs) -> tf.Tensor:
+    def __call__(self, point_1: np.array, point_2: np.array, **kwargs) -> np.array:
         """
         Call the distance metric.
 
@@ -69,28 +56,12 @@ class MahalanobisDistance(DistanceMetric):
         d(point_1, point_2) : tf.tensor : shape=(n_points, 1)
                 Array of distances for each point.
         """
-        self.point_1, self.point_2 = point_1, point_2
-        self._update_covariance_matrix()
-        self._compute_cholesky_decomposition()
+        inverted_covariance = np.linalg.inv(np.cov(point_1.T))
+        distances = []
+        for i in range(len(point_1.T[0, :])):
+            distance = scipy.spatial.distance.mahalanobis(
+                point_1[i], point_2[i], inverted_covariance
+            )
+            distances.append(distance)
 
-        point_1_rescaled = tf.matmul(self.point_1, self.decomposed)
-        point_2_rescaled = tf.matmul(self.point_2, self.decomposed)
-        return self.euclidean(point_1_rescaled, point_2_rescaled)
-
-    def _update_covariance_matrix(self):
-        """
-        Updates / computes the inverse covariance matrix of the representation point_1
-        point_1 : tf.tensor
-                neural network representation
-        Returns
-        -------
-        """
-        self.cov = tf.linalg.inv(tfp.stats.covariance(self.point_1))
-
-    def _compute_cholesky_decomposition(self):
-        """
-        Returns
-        -------
-        The Cholesky decomposition of the the covariance matrices of both points
-        """
-        self.decomposed = tf.linalg.cholesky(self.cov)
+        return distances
