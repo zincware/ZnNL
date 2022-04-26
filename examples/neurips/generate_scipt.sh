@@ -4,7 +4,7 @@
 
 base_file='mnist_parent.py'
 
-for i in 20 30 40 50 60 70 80 90 100
+for i in 10 15 20 25 30 35 40 50 60
 do
   mkdir ${i}_analysis
   sed "s/DS_SIZE/${i}/g" ${base_file} > ${i}_analysis/analysis.py
