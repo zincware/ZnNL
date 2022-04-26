@@ -12,7 +12,6 @@ import time
 from typing import Union
 
 import jax.numpy as np
-
 import numpy as onp
 
 import znrnd

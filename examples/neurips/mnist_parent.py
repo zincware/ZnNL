@@ -26,17 +26,16 @@ Summary
 Parent class for the MNIST experiment
 """
 import os
+
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-
-import znrnd as rnd
-
-from neural_tangents import stax
 
 import numpy as np
 import optax
 from flax import linen as nn
+from neural_tangents import stax
 
+import znrnd as rnd
 
 set_size = DS_SIZE
 
@@ -50,7 +49,7 @@ model = stax.serial(
     stax.Relu(),
     stax.AvgPool(window_shape=(2, 2), strides=(2, 2)),
     stax.Flatten(),
-    stax.Dense(256)
+    stax.Dense(256),
 )
 model1 = stax.serial(
     stax.Conv(32, (3, 3)),
@@ -60,7 +59,7 @@ model1 = stax.serial(
     stax.Relu(),
     stax.AvgPool((2, 2), (2, 2)),
     stax.Flatten(),
-    stax.Dense(256)
+    stax.Dense(256),
 )
 
 
@@ -132,7 +131,7 @@ def run_experiment(data_set_size: int, ensembling: bool = False, ensembles: int 
             optimizer=optax.adam(0.01),
             loss_fn=rnd.loss_functions.MeanPowerLoss(order=2),
             input_shape=(1, 28, 28, 1),
-            training_threshold=0.01
+            training_threshold=0.01,
         )
 
         predictor = rnd.models.NTModel(
@@ -140,7 +139,7 @@ def run_experiment(data_set_size: int, ensembling: bool = False, ensembles: int 
             optimizer=optax.adam(0.01),
             loss_fn=rnd.loss_functions.MeanPowerLoss(order=2),
             input_shape=(1, 28, 28, 1),
-            training_threshold=0.01
+            training_threshold=0.01,
         )
 
         # Define the agents for a fresh run.
@@ -150,7 +149,7 @@ def run_experiment(data_set_size: int, ensembling: bool = False, ensembles: int 
             data_generator=data_generator,
             target_network=target,
             predictor_network=predictor,
-            tolerance=15
+            tolerance=15,
         )
         rnd_agent.target_set = []
         rnd_agent.target_indices = []
@@ -165,8 +164,9 @@ def run_experiment(data_set_size: int, ensembling: bool = False, ensembles: int 
 
         # Compute the sets
         rnd_set = rnd_agent.build_dataset(target_size=data_set_size, visualize=False)
-        random_set = random_agent.build_dataset(target_size=data_set_size,
-                                                visualize=False)
+        random_set = random_agent.build_dataset(
+            target_size=data_set_size, visualize=False
+        )
         apr_max_set = approximate_max_agent.build_dataset(
             target_size=data_set_size, visualize=False
         )
@@ -178,19 +178,25 @@ def run_experiment(data_set_size: int, ensembling: bool = False, ensembles: int 
 
         # Compute the entropy of each set
         rnd_entropy = rnd.analysis.EntropyAnalysis(
-            matrix=rnd_ntk).compute_von_neumann_entropy()
+            matrix=rnd_ntk
+        ).compute_von_neumann_entropy()
         random_entropy = rnd.analysis.EntropyAnalysis(
-            matrix=random_ntk).compute_von_neumann_entropy()
+            matrix=random_ntk
+        ).compute_von_neumann_entropy()
         apr_max_entropy = rnd.analysis.EntropyAnalysis(
-            matrix=apr_max_ntk).compute_von_neumann_entropy()
+            matrix=apr_max_ntk
+        ).compute_von_neumann_entropy()
 
         # Compute eigenvalues
         rnd_eigval = rnd.analysis.EigenSpaceAnalysis(
-            matrix=rnd_ntk).compute_eigenvalues()
+            matrix=rnd_ntk
+        ).compute_eigenvalues()
         random_eigval = rnd.analysis.EigenSpaceAnalysis(
-            matrix=random_ntk).compute_eigenvalues()
+            matrix=random_ntk
+        ).compute_eigenvalues()
         apr_max_eigval = rnd.analysis.EigenSpaceAnalysis(
-            matrix=rnd_ntk).compute_eigenvalues()
+            matrix=rnd_ntk
+        ).compute_eigenvalues()
 
         rnd_entropy_arr.append(rnd_entropy)
         random_entropy_arr.append(random_entropy)
@@ -206,7 +212,7 @@ def run_experiment(data_set_size: int, ensembling: bool = False, ensembles: int 
             optimizer=optax.adam(learning_rate=0.1),
             loss_fn=rnd.loss_functions.CrossEntropyLoss(classes=10),
             input_shape=(1, 28, 28, 1),
-            training_threshold=0.001
+            training_threshold=0.001,
         )
 
         random_production = rnd.models.FlaxModel(
@@ -214,7 +220,7 @@ def run_experiment(data_set_size: int, ensembling: bool = False, ensembles: int 
             optimizer=optax.adam(learning_rate=0.1),
             loss_fn=rnd.loss_functions.CrossEntropyLoss(classes=10),
             input_shape=(1, 28, 28, 1),
-            training_threshold=0.001
+            training_threshold=0.001,
         )
 
         apr_max_production = rnd.models.FlaxModel(
@@ -222,42 +228,58 @@ def run_experiment(data_set_size: int, ensembling: bool = False, ensembles: int 
             optimizer=optax.adam(learning_rate=0.1),
             loss_fn=rnd.loss_functions.CrossEntropyLoss(classes=10),
             input_shape=(1, 28, 28, 1),
-            training_threshold=0.001
+            training_threshold=0.001,
         )
 
         rnd_training_ds = {
-            "inputs": np.take(data_generator.ds_train["image"],
-                              rnd_agent.target_indices, axis=0),
-            "targets": np.take(data_generator.ds_train["label"],
-                               rnd_agent.target_indices, axis=0)
+            "inputs": np.take(
+                data_generator.ds_train["image"], rnd_agent.target_indices, axis=0
+            ),
+            "targets": np.take(
+                data_generator.ds_train["label"], rnd_agent.target_indices, axis=0
+            ),
         }
         random_training_ds = {
-            "inputs": np.take(data_generator.ds_train["image"],
-                              random_agent.target_indices, axis=0),
-            "targets": np.take(data_generator.ds_train["label"],
-                               random_agent.target_indices, axis=0)
+            "inputs": np.take(
+                data_generator.ds_train["image"], random_agent.target_indices, axis=0
+            ),
+            "targets": np.take(
+                data_generator.ds_train["label"], random_agent.target_indices, axis=0
+            ),
         }
         apr_max_training_ds = {
-            "inputs": np.take(data_generator.ds_train["image"],
-                              approximate_max_agent.target_indices, axis=0),
-            "targets": np.take(data_generator.ds_train["label"],
-                               approximate_max_agent.target_indices, axis=0)
+            "inputs": np.take(
+                data_generator.ds_train["image"],
+                approximate_max_agent.target_indices,
+                axis=0,
+            ),
+            "targets": np.take(
+                data_generator.ds_train["label"],
+                approximate_max_agent.target_indices,
+                axis=0,
+            ),
         }
 
         test_ds = {
             "inputs": data_generator.ds_test["image"],
-            "targets": data_generator.ds_test["label"]
+            "targets": data_generator.ds_test["label"],
         }
 
         rnd_losses.append(
-            rnd_production.train_model(train_ds=rnd_training_ds, test_ds=test_ds, epochs=500, batch_size=10)
+            rnd_production.train_model(
+                train_ds=rnd_training_ds, test_ds=test_ds, epochs=500, batch_size=10
+            )
         )
         random_losses.append(
-            random_production.train_model(train_ds=random_training_ds, test_ds=test_ds, epochs=500, batch_size=10)
+            random_production.train_model(
+                train_ds=random_training_ds, test_ds=test_ds, epochs=500, batch_size=10
+            )
         )
         apr_max_losses.append(
-            apr_max_production.train_model(train_ds=apr_max_training_ds,
-                                           test_ds=test_ds, epochs=500, batch_size=10))
+            apr_max_production.train_model(
+                train_ds=apr_max_training_ds, test_ds=test_ds, epochs=500, batch_size=10
+            )
+        )
 
         del rnd_agent
         del random_agent
@@ -290,34 +312,52 @@ def run_experiment(data_set_size: int, ensembling: bool = False, ensembles: int 
         [np.mean(rnd_eig_arr, axis=0), np.std(rnd_eig_arr, axis=0) / np.sqrt(ensembles)]
     )
     random_eigval = np.array(
-        [np.mean(random_eig_arr, axis=0),
-         np.std(random_eig_arr, axis=0) / np.sqrt(ensembles)]
+        [
+            np.mean(random_eig_arr, axis=0),
+            np.std(random_eig_arr, axis=0) / np.sqrt(ensembles),
+        ]
     )
     apr_max_eigval = np.array(
-        [np.mean(apr_max_eig_arr, axis=0),
-         np.std(apr_max_eig_arr, axis=0) / np.sqrt(ensembles)]
+        [
+            np.mean(apr_max_eig_arr, axis=0),
+            np.std(apr_max_eig_arr, axis=0) / np.sqrt(ensembles),
+        ]
     )
 
     rnd_loss = np.array(
         [np.mean(rnd_losses, axis=0), np.std(rnd_losses, axis=0) / np.sqrt(ensembles)]
     )
     random_loss = np.array(
-        [np.mean(random_losses, axis=0),
-         np.std(random_losses, axis=0) / np.sqrt(ensembles)]
+        [
+            np.mean(random_losses, axis=0),
+            np.std(random_losses, axis=0) / np.sqrt(ensembles),
+        ]
     )
     apr_max_loss = np.array(
-        [np.mean(apr_max_losses, axis=0),
-         np.std(apr_max_losses, axis=0) / np.sqrt(ensembles)]
+        [
+            np.mean(apr_max_losses, axis=0),
+            np.std(apr_max_losses, axis=0) / np.sqrt(ensembles),
+        ]
     )
 
-    entropy = {"rnd": rnd_entropy, "random": random_entropy,
-               "approximate_maximum": apr_max_entropy}
-    eigenvalues = {"rnd": rnd_eigval, "random": random_eigval,
-                   "approximate_maximum": apr_max_eigval}
-    losses = {"rnd": rnd_loss, "random": random_loss,
-              "approximate_maximum": apr_max_loss}
+    entropy = {
+        "rnd": rnd_entropy,
+        "random": random_entropy,
+        "approximate_maximum": apr_max_entropy,
+    }
+    eigenvalues = {
+        "rnd": rnd_eigval,
+        "random": random_eigval,
+        "approximate_maximum": apr_max_eigval,
+    }
+    losses = {
+        "rnd": rnd_loss,
+        "random": random_loss,
+        "approximate_maximum": apr_max_loss,
+    }
 
     return entropy, eigenvalues, losses
+
 
 entropy, eigenvalues, loss = run_experiment(
     data_set_size=set_size, ensembling=True, ensembles=5
