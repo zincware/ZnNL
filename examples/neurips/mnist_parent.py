@@ -37,7 +37,7 @@ from neural_tangents import stax
 
 import znrnd as rnd
 
-set_size = DS_SIZE
+set_size = 3  # DS_SIZE -- Set for linting
 
 data_generator = rnd.data.MNISTGenerator()
 
