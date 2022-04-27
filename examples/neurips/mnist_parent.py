@@ -39,7 +39,7 @@ from neural_tangents import stax
 
 import znrnd as rnd
 
-set_size = 3  # DS_SIZE
+set_size = DS_SIZE
 
 data_generator = rnd.data.MNISTGenerator()
 
@@ -108,6 +108,8 @@ def run_experiment(data_set_size: int, ensembling: bool = False, ensembles: int 
     eigenvalues : dict
             Dictionary of eigenvalues
             e.g {"rnd": np.array(), "random": np.array(), "approximate_maximum": np.array()}
+    losses
+    accuracy
 
     """
     # Turnoff averaging if required.
@@ -125,6 +127,10 @@ def run_experiment(data_set_size: int, ensembling: bool = False, ensembles: int 
     rnd_losses = []
     random_losses = []
     apr_max_losses = []
+
+    rnd_accuracy = []
+    random_accuracy = []
+    apr_max_accuracy = []
 
     for i in range(ensembles):
         # Define the models
@@ -271,21 +277,23 @@ def run_experiment(data_set_size: int, ensembling: bool = False, ensembles: int 
             "targets": data_generator.ds_test["label"],
         }
 
-        rnd_losses.append(
-            rnd_production.train_model(
+        rnd_loss, rnd_acc = rnd_production.train_model(
                 train_ds=rnd_training_ds, test_ds=test_ds, epochs=50, batch_size=10
             )
-        )
-        random_losses.append(
-            random_production.train_model(
+        rnd_losses.append(rnd_loss)
+        rnd_accuracy.append(rnd_acc)
+
+        random_loss, random_acc = random_production.train_model(
                 train_ds=random_training_ds, test_ds=test_ds, epochs=50, batch_size=10
             )
-        )
-        apr_max_losses.append(
-            apr_max_production.train_model(
+        random_losses.append(random_loss)
+        random_accuracy.append(random_acc)
+
+        apr_max_loss, apr_max_acc = apr_max_production.train_model(
                 train_ds=apr_max_training_ds, test_ds=test_ds, epochs=50, batch_size=10
             )
-        )
+        apr_max_losses.append(apr_max_loss)
+        apr_max_accuracy.append(apr_max_acc)
 
         del rnd_agent
         del random_agent
@@ -303,6 +311,10 @@ def run_experiment(data_set_size: int, ensembling: bool = False, ensembles: int 
     rnd_losses = np.array(rnd_losses)
     random_losses = np.array(random_losses)
     apr_max_losses = np.array(apr_max_losses)
+
+    rnd_accuracy = np.array(rnd_accuracy)
+    random_accuracy = np.array(random_accuracy)
+    apr_max_accuracy = np.array(apr_max_accuracy)
 
     rnd_entropy = np.array(
         [np.mean(rnd_entropy_arr), np.std(rnd_entropy_arr) / np.sqrt(ensembles)]
@@ -346,6 +358,22 @@ def run_experiment(data_set_size: int, ensembling: bool = False, ensembles: int 
         ]
     )
 
+    rnd_acc = np.array(
+        [np.mean(rnd_accuracy, axis=0), np.std(rnd_accuracy, axis=0) / np.sqrt(ensembles)]
+    )
+    random_acc = np.array(
+        [
+            np.mean(random_accuracy, axis=0),
+            np.std(random_accuracy, axis=0) / np.sqrt(ensembles),
+        ]
+    )
+    apr_max_acc = np.array(
+        [
+            np.mean(apr_max_accuracy, axis=0),
+            np.std(apr_max_accuracy, axis=0) / np.sqrt(ensembles),
+        ]
+    )
+
     entropy = {
         "rnd": rnd_entropy,
         "random": random_entropy,
@@ -361,14 +389,20 @@ def run_experiment(data_set_size: int, ensembling: bool = False, ensembles: int 
         "random": random_loss,
         "approximate_maximum": apr_max_loss,
     }
+    accuracy = {
+        "rnd": rnd_acc,
+        "random": random_acc,
+        "approximate_maximum": apr_max_acc
+    }
 
-    return entropy, eigenvalues, losses
+    return entropy, eigenvalues, losses, accuracy
 
 
-entropy, eigenvalues, loss = run_experiment(
+entropy, eigenvalues, loss, accuracy = run_experiment(
     data_set_size=set_size, ensembling=True, ensembles=3
 )
 
 np.save(f"entropy_{set_size}.npy", entropy)
 np.save(f"eigenvalues_{set_size}", eigenvalues)
 np.save(f"losses_{set_size}", loss)
+np.save(f"accuracy_{set_size}", accuracy)
