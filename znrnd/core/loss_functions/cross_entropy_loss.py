@@ -30,6 +30,8 @@ import jax.numpy as np
 
 from znrnd.core.loss_functions.simple_loss import SimpleLoss
 
+import optax
+
 
 class CrossEntropyDistance:
     """
@@ -61,7 +63,7 @@ class CrossEntropyDistance:
         """
         one_hot_labels = jax.nn.one_hot(target, num_classes=self.classes)
 
-        return -1 * np.sum(prediction * one_hot_labels, axis=-1)
+        return optax.softmax_cross_entropy(logits=prediction, labels=one_hot_labels)
 
 
 class CrossEntropyLoss(SimpleLoss):
