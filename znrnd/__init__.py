@@ -13,6 +13,7 @@ from znrnd.core import (
     models,
     point_selection,
     similarity_measures,
+    utils,
 )
 from znrnd.core.visualization import TSNEVisualizer
 
@@ -29,4 +30,5 @@ __all__ = [
     TSNEVisualizer.__name__,
     agents.__name__,
     analysis.__name__,
+    utils.__name__
 ]

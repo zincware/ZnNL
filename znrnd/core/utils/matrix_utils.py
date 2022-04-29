@@ -28,7 +28,7 @@ Module for helper functions related to matrices
 import jax.numpy as np
 
 
-def compute_eigensystem(matrix: np.ndarray, reduce: bool = True):
+def compute_eigensystem(matrix: np.ndarray, reduce: bool = False):
     """
     Compute the eigenspace of a matrix.
 
@@ -36,7 +36,7 @@ def compute_eigensystem(matrix: np.ndarray, reduce: bool = True):
     ----------
     matrix : np.ndarray
             Matrix for which the space should be computed.
-    reduce : bool (default=True)
+    reduce : bool (default=False)
             If true, the eigenvalues are divided by the size of the zeroth axis of the
             given matrix. This is equivalent to dividing by the size of the dataset.
 

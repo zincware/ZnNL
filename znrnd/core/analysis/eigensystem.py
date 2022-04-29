@@ -47,14 +47,19 @@ class EigenSpaceAnalysis:
         """
         self.matrix = matrix
 
-    def compute_eigenvalues(self, reduce: bool = True):
+    def compute_eigenvalues(self, reduce: bool = False, normalize: bool = True):
         """
         Compute the eigenvalues of the matrix.
 
         Parameters
         ----------
-        reduce : bool (default = True)
+        reduce : bool (default = False)
                 If true, the result is divided by the zeroth axis size of the matrix.
+                Normalizing destroys this process anyway so it is defaulted to False
+                for the occasion in which you wish to compare unnormalized eigenvalues
+                directly.
+        normalize : bool
+                If true, apply the sum to one interpretation of the eigenvalues.
         Returns
         -------
         eigenvalues : np.ndarray
@@ -62,7 +67,10 @@ class EigenSpaceAnalysis:
         """
         eigenvalues, eigenvectors = compute_eigensystem(self.matrix, reduce=reduce)
 
-        return eigenvalues / eigenvalues.sum()
+        if normalize:
+            return eigenvalues / eigenvalues.sum()
+        else:
+            return eigenvalues
 
     def compute_eigenvalue_density(self, nbins: int = 500):
         """
