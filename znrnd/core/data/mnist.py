@@ -38,14 +38,19 @@ class MNISTGenerator(DataGenerator):
     Data generator for MNIST datasets
     """
 
-    def __init__(self):
+    def __init__(self, ds_size: int = 500):
         """
         Constructor for the MNIST generator class.
+
+        Parameters
+        ----------
+        ds_size : int (default = 500)
+                Number of points to download in the train and test set.
         """
         self.ds_train, self.ds_test = tfds.as_numpy(
             tfds.load(
                 "mnist:3.*.*",
-                split=["train[:%d]" % 500, "test[:%d]" % 500],
+                split=["train[:%d]" % ds_size, "test[:%d]" % ds_size],
                 batch_size=-1,
             )
         )
