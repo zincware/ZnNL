@@ -43,7 +43,7 @@ class EntropyAnalysis:
         """
         self.matrix = matrix
 
-    def _compute_eigensystem(self):
+    def _compute_eigensystem(self, normalize: bool = True):
         """
         Compute the eigensystem of the matrix.
 
@@ -55,9 +55,14 @@ class EntropyAnalysis:
         # Computes the reduced eigen-system
         eigenvalues, eigenvectors = compute_eigensystem(self.matrix)
 
-        self.eigenvalues = eigenvalues / eigenvalues.sum()
+        if normalize:
+            self.eigenvalues = eigenvalues / eigenvalues.sum()
+        else:
+            self.eigenvalues = eigenvalues
 
-    def compute_von_neumann_entropy(self, normalize: bool = True):
+    def compute_von_neumann_entropy(
+            self, normalize: bool = True, normalize_eig: bool = True
+    ):
         """
         Compute the von-Neumann entropy of the matrix.
 
@@ -72,8 +77,8 @@ class EntropyAnalysis:
         entropy : float
             Entropy of the matrix.
         """
-        if self.eigenvalues is None:
-            self._compute_eigensystem()
+        # if self.eigenvalues is None:
+        self._compute_eigensystem(normalize=normalize_eig)
 
         log_vals = np.log(self.eigenvalues)
 

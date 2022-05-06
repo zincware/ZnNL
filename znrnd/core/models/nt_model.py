@@ -203,7 +203,9 @@ class NTModel(Model):
                 A dict of current training metrics, e.g. {"loss": ..., "accuracy": ...}
         """
         loss = self.loss_fn(predictions, targets)
-        metrics = {"loss": loss}
+        accuracy = np.mean(np.argmax(predictions, -1) == targets)
+
+        metrics = {"loss": loss, "accuracy": accuracy}
 
         return metrics
 
@@ -398,7 +400,7 @@ class NTModel(Model):
         metrics = jax.device_get(metrics)
         summary = jax.tree_map(lambda x: x.item(), metrics)
 
-        return summary["loss"]
+        return summary
 
     def train_model(
         self,
@@ -428,10 +430,14 @@ class NTModel(Model):
             )
             test_loss = self._evaluate_model(state.params, test_ds)
 
-            loading_bar.set_postfix(test_loss=test_loss)
+            loading_bar.set_postfix(
+                test_loss=test_loss["loss"], accuracy=test_loss["accuracy"]
+            )
 
         # Update the final model state.
         self.model_state = state
+
+        return test_loss
 
     def train_model_recursively(
         self, train_ds: dict, test_ds: dict, epochs: int = 100, batch_size: int = 1
