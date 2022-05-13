@@ -267,63 +267,6 @@ class NTModel(Model):
 
         return self._compute_metrics(predictions, batch["targets"])
 
-    def _train_step(self, state: dict, batch: dict):
-        """
-        Train a single step.
-
-        Parameters
-        ----------
-        state : dict
-                Current state of the neural network.
-        batch : dict
-                Batch of data to train on.
-
-        Returns
-        -------
-        state : dict
-                Updated state of the neural network.
-        metrics : dict
-                Metrics for the current model.
-        """
-
-        def loss_fn(params):
-            """
-            helper loss computation
-            """
-            predictions = self.apply_fn(params, batch["inputs"])
-            loss = self.loss_fn(predictions, batch["targets"])
-
-            return loss, predictions
-
-        grad_fn = jax.value_and_grad(loss_fn, has_aux=True)
-        (loss, predictions), grads = grad_fn(state.params)
-        state = state.apply_gradients(grads=grads)
-        metrics = self._compute_metrics(
-            predictions=predictions, targets=batch["targets"]
-        )
-
-        return state, metrics
-
-    def _evaluate_step(self, params: dict, batch: dict):
-        """
-        Evaluate the model on test data.
-
-        Parameters
-        ----------
-        state : dict
-                Current state of the neural network.
-        batch : dict
-                Batch of data to test on.
-
-        Returns
-        -------
-        metrics : dict
-                Metrics dict computed on test data.
-        """
-        predictions = self.apply_fn(params, batch["inputs"])
-
-        return self._compute_metrics(predictions, batch["targets"])
-
     def _train_epoch(self, state: dict, train_ds: dict, batch_size: int):
         """
         Train for a single epoch.
@@ -422,22 +365,28 @@ class NTModel(Model):
             state = self.model_state
 
         loading_bar = trange(1, epochs + 1, ncols=100, unit="batch")
+        test_losses = []
+        test_accuracy = []
+        training_metrics = []
         for i in loading_bar:
             loading_bar.set_description(f"Epoch: {i}")
 
             state, train_metrics = self._train_epoch(
                 state, train_ds, batch_size=batch_size
             )
+            training_metrics.append(train_metrics)
             test_loss = self._evaluate_model(state.params, test_ds)
 
             loading_bar.set_postfix(
                 test_loss=test_loss["loss"], accuracy=test_loss["accuracy"]
             )
+            test_losses.append(test_loss["loss"])
+            test_accuracy.append(test_loss["accuracy"])
 
         # Update the final model state.
         self.model_state = state
 
-        return test_loss
+        return test_losses, test_accuracy, training_metrics
 
     def train_model_recursively(
         self, train_ds: dict, test_ds: dict, epochs: int = 100, batch_size: int = 1
