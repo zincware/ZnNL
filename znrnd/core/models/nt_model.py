@@ -207,13 +207,11 @@ class NTModel(Model):
 
         if compute_accuracy:
             accuracy = np.mean(np.argmax(predictions, -1) == targets)
-            metric = LPNormLoss(order=4)
-            l4 = None  # metric(predictions, targets)
         else:
             accuracy = None
             l4 = None
 
-        metrics = {"loss": loss, "accuracy": accuracy, "l4": l4}
+        metrics = {"loss": loss, "accuracy": accuracy}
 
         return metrics
 
@@ -422,7 +420,7 @@ class NTModel(Model):
                     state, train_ds, batch_size=batch_size
                 )
                 test_loss = self._evaluate_model(
-                    state.params, test_ds, compute_acc=False
+                    state.params, test_ds, compute_acc=True
                 )["loss"]
 
                 loading_bar.set_postfix(test_loss=test_loss)
