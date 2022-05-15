@@ -414,7 +414,7 @@ class NTModel(Model):
                 state, train_metrics = self._train_epoch(
                     state, train_ds, batch_size=batch_size
                 )
-                test_loss = self._evaluate_model(state.params, test_ds)
+                test_loss = self._evaluate_model(state.params, test_ds)["loss"]
 
                 loading_bar.set_postfix(test_loss=test_loss)
 
