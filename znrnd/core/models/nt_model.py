@@ -39,6 +39,7 @@ from tqdm import trange
 
 from znrnd.core.models.model import Model
 from znrnd.core.utils.matrix_utils import normalize_covariance_matrix
+from znrnd.core.loss_functions.l_p_norm import LPNormLoss
 
 logger = logging.getLogger(__name__)
 
@@ -154,13 +155,13 @@ class NTModel(Model):
             x_j = x_i
 
         empirical_ntk = self.empirical_ntk(x_i, x_j, self.model_state.params)
-        infinite_ntk = self.kernel_fn(x_i, x_j, "ntk")
+        # infinite_ntk = self.kernel_fn(x_i, x_j, "ntk")
 
         if normalize:
             empirical_ntk = normalize_covariance_matrix(empirical_ntk)
-            infinite_ntk = normalize_covariance_matrix(infinite_ntk)
+            # infinite_ntk = normalize_covariance_matrix(infinite_ntk)
 
-        return {"empirical": empirical_ntk, "infinite": infinite_ntk}
+        return {"empirical": empirical_ntk, "infinite": None}
 
     def _create_train_state(self, init_rng: int):
         """
@@ -204,8 +205,10 @@ class NTModel(Model):
         """
         loss = self.loss_fn(predictions, targets)
         accuracy = np.mean(np.argmax(predictions, -1) == targets)
+        metric = LPNormLoss(order=4)
+        l4 = metric(predictions, targets)
 
-        metrics = {"loss": loss, "accuracy": accuracy}
+        metrics = {"loss": loss, "accuracy": accuracy, "l4": l4}
 
         return metrics
 
@@ -381,7 +384,7 @@ class NTModel(Model):
                 test_loss=test_loss["loss"], accuracy=test_loss["accuracy"]
             )
             test_losses.append(test_loss["loss"])
-            test_accuracy.append(test_loss["accuracy"])
+            test_accuracy.append(test_loss["l4"])
 
         # Update the final model state.
         self.model_state = state

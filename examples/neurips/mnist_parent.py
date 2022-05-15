@@ -64,6 +64,18 @@ model1 = stax.serial(
     stax.Dense(256),
 )
 
+prod_model = stax.serial(
+    stax.Conv(32, (3, 3)),
+    stax.Relu(),
+    stax.AvgPool(window_shape=(2, 2), strides=(2, 2)),
+    stax.Conv(64, (3, 3)),
+    stax.Relu(),
+    stax.AvgPool(window_shape=(2, 2), strides=(2, 2)),
+    stax.Flatten(),
+    stax.Dense(256),
+    stax.Relu(),
+    stax.Dense(10)
+)
 
 class CustomModule(nn.Module):
     """
@@ -219,21 +231,21 @@ def run_experiment(data_set_size: int, ensembling: bool = False, ensembles: int 
         #apr_max_eig_arr.append(apr_max_eigval)
 
         # Train production model
-        rnd_production = rnd.models.FlaxModel(
-            flax_module=CustomModule(),
-            optimizer=optax.adam(learning_rate=0.01),
-            loss_fn=rnd.loss_functions.CrossEntropyLoss(classes=10),
-            input_shape=(1, 28, 28, 1),
-            training_threshold=0.001,
-        )
+        rnd_production = rnd.models.NTModel(
+        nt_module=prod_model,
+        optimizer=optax.adam(learning_rate=0.001),
+        loss_fn=rnd.loss_functions.CrossEntropyLoss(classes=10, apply_softmax=False),
+        input_shape=(1, 28, 28, 1),
+        training_threshold=0.001
+    )
 
-        random_production = rnd.models.FlaxModel(
-            flax_module=CustomModule(),
-            optimizer=optax.adam(learning_rate=0.01),
-            loss_fn=rnd.loss_functions.CrossEntropyLoss(classes=10),
-            input_shape=(1, 28, 28, 1),
-            training_threshold=0.001,
-        )
+        random_production = rnd_production = rnd.models.NTModel(
+        nt_module=prod_model,
+        optimizer=optax.adam(learning_rate=0.001),
+        loss_fn=rnd.loss_functions.CrossEntropyLoss(classes=10, apply_softmax=False),
+        input_shape=(1, 28, 28, 1),
+        training_threshold=0.001
+    )
 
         #apr_max_production = rnd.models.FlaxModel(
         #    flax_module=CustomModule(),
@@ -277,13 +289,13 @@ def run_experiment(data_set_size: int, ensembling: bool = False, ensembles: int 
             "targets": data_generator.ds_test["label"],
         }
 
-        rnd_loss, rnd_acc = rnd_production.train_model(
+        rnd_loss, rnd_acc, other = rnd_production.train_model(
                 train_ds=rnd_training_ds, test_ds=test_ds, epochs=50, batch_size=10
             )
         rnd_losses.append(rnd_loss)
         rnd_accuracy.append(rnd_acc)
 
-        random_loss, random_acc = random_production.train_model(
+        random_loss, random_acc, other = random_production.train_model(
                 train_ds=random_training_ds, test_ds=test_ds, epochs=50, batch_size=10
             )
         random_losses.append(random_loss)
