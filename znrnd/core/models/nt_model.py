@@ -39,7 +39,6 @@ from tqdm import trange
 
 from znrnd.core.models.model import Model
 from znrnd.core.utils.matrix_utils import normalize_covariance_matrix
-from znrnd.core.loss_functions.l_p_norm import LPNormLoss
 
 logger = logging.getLogger(__name__)
 
@@ -420,7 +419,7 @@ class NTModel(Model):
                     state, train_ds, batch_size=batch_size
                 )
                 test_loss = self._evaluate_model(
-                    state.params, test_ds, compute_acc=True
+                    state.params, test_ds, compute_acc=False
                 )["loss"]
 
                 loading_bar.set_postfix(test_loss=test_loss)
