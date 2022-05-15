@@ -208,7 +208,7 @@ class NTModel(Model):
         if compute_accuracy:
             accuracy = np.mean(np.argmax(predictions, -1) == targets)
             metric = LPNormLoss(order=4)
-            l4 = metric(predictions, targets)
+            l4 = None  # metric(predictions, targets)
         else:
             accuracy = None
             l4 = None
@@ -273,7 +273,9 @@ class NTModel(Model):
         """
         predictions = self.apply_fn(params, batch["inputs"])
 
-        return self._compute_metrics(predictions, batch["targets"], compute_accuracy=compute_acc)
+        return self._compute_metrics(
+            predictions, batch["targets"], compute_accuracy=compute_acc
+        )
 
     def _train_epoch(self, state: dict, train_ds: dict, batch_size: int):
         """
@@ -389,7 +391,7 @@ class NTModel(Model):
                 test_loss=test_loss["loss"], accuracy=test_loss["accuracy"]
             )
             test_losses.append(test_loss["loss"])
-            test_accuracy.append(test_loss["l4"])
+            test_accuracy.append(test_loss["accuracy"])
 
         # Update the final model state.
         self.model_state = state
@@ -419,7 +421,9 @@ class NTModel(Model):
                 state, train_metrics = self._train_epoch(
                     state, train_ds, batch_size=batch_size
                 )
-                test_loss = self._evaluate_model(state.params, test_ds, compute_acc=False)["loss"]
+                test_loss = self._evaluate_model(
+                    state.params, test_ds, compute_acc=False
+                )["loss"]
 
                 loading_bar.set_postfix(test_loss=test_loss)
 
