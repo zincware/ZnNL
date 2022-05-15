@@ -205,10 +205,10 @@ class NTModel(Model):
         """
         loss = self.loss_fn(predictions, targets)
         accuracy = np.mean(np.argmax(predictions, -1) == targets)
-        metric = LPNormLoss(order=4)
-        l4 = metric(predictions, targets)
+        # metric = LPNormLoss(order=4)
+        # l4 = metric(predictions, targets)
 
-        metrics = {"loss": loss, "accuracy": accuracy, "l4": l4}
+        metrics = {"loss": loss, "accuracy": accuracy, "l4": None}
 
         return metrics
 
