@@ -187,7 +187,7 @@ class NTModel(Model):
             apply_fn=self.apply_fn, params=params, tx=self.optimizer
         )
 
-    def _compute_metrics(self, predictions: np.ndarray, targets: np.ndarray):
+    def _compute_metrics(self, predictions: np.ndarray, targets: np.ndarray, compute_accuracy: bool = True):
         """
         Compute the current metrics of the training.
 
@@ -204,9 +204,14 @@ class NTModel(Model):
                 A dict of current training metrics, e.g. {"loss": ..., "accuracy": ...}
         """
         loss = self.loss_fn(predictions, targets)
-        accuracy = np.mean(np.argmax(predictions, -1) == targets)
-        metric = LPNormLoss(order=4)
-        l4 = metric(predictions, targets)
+
+        if compute_accuracy:
+            accuracy = np.mean(np.argmax(predictions, -1) == targets)
+            metric = LPNormLoss(order=4)
+            l4 = metric(predictions, targets)
+        else:
+            accuracy = None
+            l4 = None
 
         metrics = {"loss": loss, "accuracy": accuracy, "l4": l4}
 
@@ -250,7 +255,7 @@ class NTModel(Model):
 
         return state, metrics
 
-    def _evaluate_step(self, params: dict, batch: dict):
+    def _evaluate_step(self, params: dict, batch: dict, compute_acc = True):
         """
         Evaluate the model on test data.
 
@@ -268,7 +273,7 @@ class NTModel(Model):
         """
         predictions = self.apply_fn(params, batch["inputs"])
 
-        return self._compute_metrics(predictions, batch["targets"])
+        return self._compute_metrics(predictions, batch["targets"], compute_accuracy=compute_acc)
 
     def _train_epoch(self, state: dict, train_ds: dict, batch_size: int):
         """
@@ -327,7 +332,7 @@ class NTModel(Model):
 
         return state, epoch_metrics_np
 
-    def _evaluate_model(self, params: dict, test_ds: dict):
+    def _evaluate_model(self, params: dict, test_ds: dict, compute_acc = True):
         """
         Evaluate the model.
 
@@ -342,7 +347,7 @@ class NTModel(Model):
         loss : float
                 Loss of the model.
         """
-        metrics = self._evaluate_step(params, test_ds)
+        metrics = self._evaluate_step(params, test_ds, compute_acc=compute_acc)
         metrics = jax.device_get(metrics)
         summary = jax.tree_map(lambda x: x.item(), metrics)
 
@@ -414,7 +419,7 @@ class NTModel(Model):
                 state, train_metrics = self._train_epoch(
                     state, train_ds, batch_size=batch_size
                 )
-                test_loss = self._evaluate_model(state.params, test_ds)["loss"]
+                test_loss = self._evaluate_model(state.params, test_ds, compute_acc=False)["loss"]
 
                 loading_bar.set_postfix(test_loss=test_loss)
 
