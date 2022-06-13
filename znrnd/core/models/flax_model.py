@@ -24,7 +24,7 @@ Summary
 Module for the use of a Flax model with ZnRND.
 """
 import logging
-from typing import Callable, List
+from typing import Callable, List, Tuple
 
 import jax
 import jax.numpy as np
@@ -69,8 +69,8 @@ class FlaxModel(Model):
     """
     Class for the Flax model in ZnRND.
     """
-
-    model_state: dict = None
+    model: nn.Module
+    model_state: train_state.TrainState = None
     rng = jax.random.PRNGKey(onp.random.randint(0, 500))
 
     def __init__(
@@ -98,6 +98,8 @@ class FlaxModel(Model):
                 Shape of the NN input.
         training_threshold : float
                 The loss value at which point you consider the model trained.
+        flax_module : nn.Module
+                Flax module to use instead of building one from scratch here.
         """
         if layer_stack is not None:
             self.model = FundamentalModel(layer_stack)
@@ -116,27 +118,31 @@ class FlaxModel(Model):
         state = self._create_train_state(init_rng)
         self.model_state = state
 
-    def compute_ntk(self, dataset: np.ndarray):
+    def compute_ntk(
+            self, x_i: np.ndarray, x_j: np.ndarray = None, normalize: bool = True
+    ):
         """
         Compute the NTK matrix for the model.
 
         Parameters
         ----------
-        dataset : np.ndarray
+        x_i : np.ndarray
                 Dataset for which to compute the NTK matrix.
+        x_j : np.ndarray (optional)
+                Dataset for which to compute the NTK matrix.
+        normalize : bool (default = True)
+                If true, divide each row by its max value.
 
         Returns
         -------
-        NTK : np.ndarray
-                The NTK matrix.
-
-        Raises
-        ------
-        NotImplementedError : It isn't done yet.
+        NTK : dict
+                The NTK matrix for both the empirical and infinite width computation.
         """
-        raise NotImplementedError("Turns out this is not super trivial.")
+        raise NotImplemented("Not yet available.")
 
-    def _compute_metrics(self, predictions: np.ndarray, targets: np.ndarray):
+    def _compute_metrics(
+            self, predictions: np.ndarray, targets: np.ndarray, accuracy: bool = False
+    ):
         """
         Compute the current metrics of the training.
 
@@ -146,6 +152,8 @@ class FlaxModel(Model):
                 Predictions made by the network.
         targets : np.ndarray
                 Targets from the training data.
+        accuracy : bool (default = False)
+                If true, an accuracy calculation is also performed.
 
         Returns
         -------
@@ -154,9 +162,12 @@ class FlaxModel(Model):
         """
         loss = self.loss_fn(predictions, targets)
 
-        accuracy = np.mean(np.argmax(predictions, -1) == targets)
+        if accuracy:
+            acc = np.mean(np.argmax(predictions, -1) == targets)
+        else:
+            acc = None
 
-        metrics = {"loss": loss, "accuracy": accuracy}
+        metrics = {"loss": loss, "accuracy": acc}
 
         return metrics
 
@@ -179,7 +190,7 @@ class FlaxModel(Model):
             apply_fn=self.model.apply, params=params, tx=self.optimizer
         )
 
-    def _train_step(self, state: dict, batch: dict):
+    def _train_step(self, state: train_state.TrainState, batch: dict):
         """
         Train a single step.
 
@@ -197,13 +208,12 @@ class FlaxModel(Model):
         metrics : dict
                 Metrics for the current model.
         """
-
         def loss_fn(params):
             """
             helper loss computation
             """
-            predictions = self.model.apply({"params": params}, batch["inputs"])
-            loss = self.loss_fn(predictions, batch["targets"])
+            inner_predictions = self.model.apply({"params": params}, batch["inputs"])
+            loss = self.loss_fn(inner_predictions, batch["targets"])
 
             return loss, predictions
 
@@ -223,8 +233,8 @@ class FlaxModel(Model):
 
         Parameters
         ----------
-        state : dict
-                Current state of the neural network.
+        params : dict
+                Current parameters of the neural network.
         batch : dict
                 Batch of data to test on.
 
@@ -237,7 +247,9 @@ class FlaxModel(Model):
 
         return self._compute_metrics(predictions, batch["targets"])
 
-    def _train_epoch(self, state: dict, train_ds: dict, batch_size: int):
+    def _train_epoch(
+            self, state: train_state.TrainState, train_ds: dict, batch_size: int
+    ) -> Tuple[train_state.TrainState, dict]:
         """
         Train for a single epoch.
 
@@ -259,7 +271,7 @@ class FlaxModel(Model):
 
         Returns
         -------
-        state : dict
+        state : train_state.TrainState
                 State of the model after the epoch.
         metrics : dict
                 Dict of metrics for current state.
@@ -294,7 +306,7 @@ class FlaxModel(Model):
 
         return state, epoch_metrics_np
 
-    def _evaluate_model(self, params: dict, test_ds: dict):
+    def _evaluate_model(self, params: dict, test_ds: dict) -> dict:
         """
         Evaluate the model.
 
@@ -306,7 +318,7 @@ class FlaxModel(Model):
                 Dataset on which to evaluate.
         Returns
         -------
-        loss : float
+        loss : dict
                 Loss of the model.
         """
         metrics = self._evaluate_step(params, test_ds)
@@ -348,6 +360,7 @@ class FlaxModel(Model):
             test_accuracy.append(test_loss["accuracy"])
 
             loading_bar.set_postfix(test_loss=test_loss["loss"])
+            loading_bar.set_postfix(accuracy=test_loss["accuracy"])
 
         # Update the final model state.
         self.model_state = state
@@ -387,7 +400,7 @@ class FlaxModel(Model):
             # Perform checks and update parameters
             counter += 1
             epochs = int(1.1 * epochs)
-            if test_loss <= self.training_threshold:
+            if test_loss["loss"] <= self.training_threshold:
                 condition = True
 
             # Re-initialize the network if it is simply not converging.
