@@ -19,4 +19,7 @@ tqdm
 pandas
 neural-tangents
 tensorflow-datasets
+isort
 tensorflow
+pyyaml
+jupyter

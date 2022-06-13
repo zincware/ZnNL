@@ -47,10 +47,10 @@ class TestEntropyAnalysis:
 
         calculator = EntropyAnalysis(matrix=matrix)
 
-        entropy = calculator.compute_von_neumann_entropy(normalize=False)
+        entropy = calculator.compute_von_neumann_entropy(effective=False)
 
         assert np.real(entropy) == pytest.approx(0.69, 0.01)
 
-        entropy = calculator.compute_von_neumann_entropy(normalize=True)
+        entropy = calculator.compute_von_neumann_entropy(effective=True)
 
         assert np.real(entropy) == pytest.approx(1.0, 0.001)

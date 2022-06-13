@@ -71,7 +71,11 @@ class Model:
         raise NotImplemented("Implemented in child class.")
 
     def compute_ntk(
-        self, x_i: np.ndarray, x_j: np.ndarray = None, normalize: bool = True
+        self,
+        x_i: np.ndarray,
+        x_j: np.ndarray = None,
+        normalize: bool = True,
+        infinite: bool = False,
     ):
         """
         Compute the NTK matrix for the model.
@@ -84,6 +88,8 @@ class Model:
                 Dataset for which to compute the NTK matrix.
         normalize : bool (default = True)
                 If true, divide each row by its max value.
+        infinite : bool (default = False)
+                If true, compute the infinite width limit as well.
 
         Returns
         -------
