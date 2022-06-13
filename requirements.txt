@@ -22,3 +22,4 @@ tensorflow-datasets
 isort
 tensorflow
 pyyaml
+jupyter
