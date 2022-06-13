@@ -253,7 +253,7 @@ class NTModel(Model):
         )
 
     def _train_epoch(
-            self, state: train_state.TrainState, train_ds: dict, batch_size: int
+        self, state: train_state.TrainState, train_ds: dict, batch_size: int
     ):
         """
         Train for a single epoch.
