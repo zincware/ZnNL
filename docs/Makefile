@@ -10,7 +10,7 @@ APIBUILD	  = sphinx-apidoc
 
 define copy_notebooks
 	mkdir source/examples/_notebooks/
-	cp ../examples/notebooks/* source/examples/_notebooks/
+	cp ../examples/* source/examples/_notebooks/
 endef
 
 define clean_generated_files
