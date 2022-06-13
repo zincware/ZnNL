@@ -215,7 +215,7 @@ class FlaxModel(Model):
             inner_predictions = self.model.apply({"params": params}, batch["inputs"])
             loss = self.loss_fn(inner_predictions, batch["targets"])
 
-            return loss, predictions
+            return loss, inner_predictions
 
         grad_fn = jax.value_and_grad(loss_fn, has_aux=True)
 

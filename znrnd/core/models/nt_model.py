@@ -131,7 +131,11 @@ class NTModel(Model):
         self.model_state = self._create_train_state(init_rng)
 
     def compute_ntk(
-        self, x_i: np.ndarray, x_j: np.ndarray = None, normalize: bool = True
+            self,
+            x_i: np.ndarray,
+            x_j: np.ndarray = None,
+            normalize: bool = True,
+            infinite: bool = False
     ):
         """
         Compute the NTK matrix for the model.
@@ -144,6 +148,8 @@ class NTModel(Model):
                 Dataset for which to compute the NTK matrix.
         normalize : bool (default = True)
                 If true, divide each row by its max value.
+        infinite : bool (default = False)
+                If true, compute the infinite width limit as well.
 
         Returns
         -------
@@ -154,13 +160,18 @@ class NTModel(Model):
             x_j = x_i
 
         empirical_ntk = self.empirical_ntk(x_i, x_j, self.model_state.params)
-        # infinite_ntk = self.kernel_fn(x_i, x_j, "ntk")
+
+        if infinite:
+            infinite_ntk = self.kernel_fn(x_i, x_j, "ntk")
+        else:
+            infinite_ntk = None
 
         if normalize:
             empirical_ntk = normalize_covariance_matrix(empirical_ntk)
-            # infinite_ntk = normalize_covariance_matrix(infinite_ntk)
+            if infinite:
+                infinite_ntk = normalize_covariance_matrix(infinite_ntk)
 
-        return {"empirical": empirical_ntk, "infinite": None}
+        return {"empirical": empirical_ntk, "infinite": infinite_ntk}
 
     def _create_train_state(self, init_rng: int):
         """
@@ -186,7 +197,12 @@ class NTModel(Model):
             apply_fn=self.apply_fn, params=params, tx=self.optimizer
         )
 
-    def _compute_metrics(self, predictions: np.ndarray, targets: np.ndarray, compute_accuracy: bool = True):
+    def _compute_metrics(
+            self,
+            predictions: np.ndarray,
+            targets: np.ndarray,
+            compute_accuracy: bool = True
+    ):
         """
         Compute the current metrics of the training.
 
@@ -196,6 +212,8 @@ class NTModel(Model):
                 Predictions made by the network.
         targets : np.ndarray
                 Targets from the training data.
+        compute_accuracy : bool
+                If true, compute the accuracy of the predictions.
 
         Returns
         -------
@@ -208,19 +226,18 @@ class NTModel(Model):
             accuracy = np.mean(np.argmax(predictions, -1) == targets)
         else:
             accuracy = None
-            l4 = None
 
         metrics = {"loss": loss, "accuracy": accuracy}
 
         return metrics
 
-    def _train_step(self, state: dict, batch: dict):
+    def _train_step(self, state: TrainState, batch: dict):
         """
         Train a single step.
 
         Parameters
         ----------
-        state : dict
+        state : TrainState
                 Current state of the neural network.
         batch : dict
                 Batch of data to train on.
@@ -237,15 +254,15 @@ class NTModel(Model):
             """
             helper loss computation
             """
-            predictions = self.apply_fn(params, batch["inputs"])
-            loss = self.loss_fn(predictions, batch["targets"])
-            return loss, predictions
+            inner_predictions = self.apply_fn(params, batch["inputs"])
+            loss = self.loss_fn(inner_predictions, batch["targets"])
+            return loss, inner_predictions
 
         grad_fn = jax.value_and_grad(loss_fn, has_aux=True)
 
         (_, predictions), grads = grad_fn(state.params)
 
-        state = state.apply_gradients(grads=grads)
+        state.apply_gradients(gradients=grads)  # in place state update.
         metrics = self._compute_metrics(
             predictions=predictions, targets=batch["targets"]
         )
@@ -274,7 +291,7 @@ class NTModel(Model):
             predictions, batch["targets"], compute_accuracy=compute_acc
         )
 
-    def _train_epoch(self, state: dict, train_ds: dict, batch_size: int):
+    def _train_epoch(self, state: TrainState, train_ds: dict, batch_size: int):
         """
         Train for a single epoch.
 
@@ -287,7 +304,7 @@ class NTModel(Model):
 
         Parameters
         ----------
-        state : dict
+        state : TrainState
                 Current state of the model.
         train_ds : dict
                 Dataset on which to train.
@@ -296,7 +313,7 @@ class NTModel(Model):
 
         Returns
         -------
-        state : dict
+        state : TrainState
                 State of the model after the epoch.
         metrics : dict
                 Dict of metrics for current state.
