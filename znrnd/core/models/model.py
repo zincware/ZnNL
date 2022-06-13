@@ -71,11 +71,11 @@ class Model:
         raise NotImplemented("Implemented in child class.")
 
     def compute_ntk(
-            self,
-            x_i: np.ndarray,
-            x_j: np.ndarray = None,
-            normalize: bool = True,
-            infinite: bool = False
+        self,
+        x_i: np.ndarray,
+        x_j: np.ndarray = None,
+        normalize: bool = True,
+        infinite: bool = False,
     ):
         """
         Compute the NTK matrix for the model.

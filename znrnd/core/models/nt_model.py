@@ -131,11 +131,11 @@ class NTModel(Model):
         self.model_state = self._create_train_state(init_rng)
 
     def compute_ntk(
-            self,
-            x_i: np.ndarray,
-            x_j: np.ndarray = None,
-            normalize: bool = True,
-            infinite: bool = False
+        self,
+        x_i: np.ndarray,
+        x_j: np.ndarray = None,
+        normalize: bool = True,
+        infinite: bool = False,
     ):
         """
         Compute the NTK matrix for the model.
@@ -198,10 +198,10 @@ class NTModel(Model):
         )
 
     def _compute_metrics(
-            self,
-            predictions: np.ndarray,
-            targets: np.ndarray,
-            compute_accuracy: bool = True
+        self,
+        predictions: np.ndarray,
+        targets: np.ndarray,
+        compute_accuracy: bool = True,
     ):
         """
         Compute the current metrics of the training.
@@ -269,7 +269,7 @@ class NTModel(Model):
 
         return state, metrics
 
-    def _evaluate_step(self, params: dict, batch: dict, compute_acc = True):
+    def _evaluate_step(self, params: dict, batch: dict, compute_acc=True):
         """
         Evaluate the model on test data.
 
@@ -348,7 +348,7 @@ class NTModel(Model):
 
         return state, epoch_metrics_np
 
-    def _evaluate_model(self, params: dict, test_ds: dict, compute_acc = True):
+    def _evaluate_model(self, params: dict, test_ds: dict, compute_acc=True):
         """
         Evaluate the model.
 

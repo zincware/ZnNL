@@ -69,6 +69,7 @@ class FlaxModel(Model):
     """
     Class for the Flax model in ZnRND.
     """
+
     model: nn.Module
     model_state: train_state.TrainState = None
     rng = jax.random.PRNGKey(onp.random.randint(0, 500))
@@ -119,7 +120,7 @@ class FlaxModel(Model):
         self.model_state = state
 
     def compute_ntk(
-            self, x_i: np.ndarray, x_j: np.ndarray = None, normalize: bool = True
+        self, x_i: np.ndarray, x_j: np.ndarray = None, normalize: bool = True
     ):
         """
         Compute the NTK matrix for the model.
@@ -141,7 +142,7 @@ class FlaxModel(Model):
         raise NotImplemented("Not yet available.")
 
     def _compute_metrics(
-            self, predictions: np.ndarray, targets: np.ndarray, accuracy: bool = False
+        self, predictions: np.ndarray, targets: np.ndarray, accuracy: bool = False
     ):
         """
         Compute the current metrics of the training.
@@ -208,6 +209,7 @@ class FlaxModel(Model):
         metrics : dict
                 Metrics for the current model.
         """
+
         def loss_fn(params):
             """
             helper loss computation
@@ -248,7 +250,7 @@ class FlaxModel(Model):
         return self._compute_metrics(predictions, batch["targets"])
 
     def _train_epoch(
-            self, state: train_state.TrainState, train_ds: dict, batch_size: int
+        self, state: train_state.TrainState, train_ds: dict, batch_size: int
     ) -> Tuple[train_state.TrainState, dict]:
         """
         Train for a single epoch.

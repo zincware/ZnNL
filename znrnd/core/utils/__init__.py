@@ -25,7 +25,8 @@ Summary
 -------
 """
 from znrnd.core.utils.matrix_utils import (
-    compute_eigensystem, normalize_covariance_matrix
+    compute_eigensystem,
+    normalize_covariance_matrix,
 )
 
 __all__ = [compute_eigensystem.__name__, normalize_covariance_matrix.__name__]

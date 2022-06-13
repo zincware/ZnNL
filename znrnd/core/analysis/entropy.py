@@ -61,7 +61,7 @@ class EntropyAnalysis:
             self.eigenvalues = eigenvalues
 
     def compute_von_neumann_entropy(
-            self, normalize: bool = True, normalize_eig: bool = True
+        self, normalize: bool = True, normalize_eig: bool = True
     ):
         """
         Compute the von-Neumann entropy of the matrix.

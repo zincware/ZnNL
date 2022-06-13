@@ -27,10 +27,9 @@ Implement a cross entropy loss function.
 """
 import jax
 import jax.numpy as np
+import optax
 
 from znrnd.core.loss_functions.simple_loss import SimpleLoss
-
-import optax
 
 
 class CrossEntropyDistance:
@@ -67,13 +66,9 @@ class CrossEntropyDistance:
         if self.apply_softmax:
             prediction = jax.nn.softmax(prediction)
 
-        one_hot_labels = jax.nn.one_hot(
-            target, num_classes=self.classes
-        )
+        one_hot_labels = jax.nn.one_hot(target, num_classes=self.classes)
 
-        return optax.softmax_cross_entropy(
-            logits=prediction, labels=one_hot_labels
-        )
+        return optax.softmax_cross_entropy(logits=prediction, labels=one_hot_labels)
 
 
 class CrossEntropyLoss(SimpleLoss):
@@ -93,6 +88,4 @@ class CrossEntropyLoss(SimpleLoss):
                 If true, softmax is applied to the prediction before computing the loss.
         """
         super(CrossEntropyLoss, self).__init__()
-        self.metric = CrossEntropyDistance(
-            classes=classes, apply_softmax=apply_softmax
-        )
+        self.metric = CrossEntropyDistance(classes=classes, apply_softmax=apply_softmax)

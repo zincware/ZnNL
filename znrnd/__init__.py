@@ -30,5 +30,5 @@ __all__ = [
     TSNEVisualizer.__name__,
     agents.__name__,
     analysis.__name__,
-    utils.__name__
+    utils.__name__,
 ]

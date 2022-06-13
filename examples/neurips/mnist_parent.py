@@ -74,8 +74,9 @@ prod_model = stax.serial(
     stax.Flatten(),
     stax.Dense(256),
     stax.Relu(),
-    stax.Dense(10)
+    stax.Dense(10),
 )
+
 
 class CustomModule(nn.Module):
     """
@@ -178,28 +179,28 @@ def run_experiment(data_set_size: int, ensembling: bool = False, ensembles: int 
         rnd_agent.target_indices = []
 
         random_agent = rnd.agents.RandomAgent(data_generator=data_generator)
-        #approximate_max_agent = rnd.agents.ApproximateMaximumEntropy(
+        # approximate_max_agent = rnd.agents.ApproximateMaximumEntropy(
         #    target_network=target,
         #    data_generator=data_generator,
         #    samples=20,
         #    # How many sets it produces in the test. Takes the one with max entropy.
-        #)
+        # )
 
         # Compute the sets
         rnd_set = rnd_agent.build_dataset(target_size=data_set_size, visualize=False)
         random_set = random_agent.build_dataset(
             target_size=data_set_size, visualize=False
         )
-        #start = time.time()
-        #apr_max_set = approximate_max_agent.build_dataset(
+        # start = time.time()
+        # apr_max_set = approximate_max_agent.build_dataset(
         #    target_size=data_set_size, visualize=False
-        #)
-        #print(f"Apr max set: {time.time() - start}")
+        # )
+        # print(f"Apr max set: {time.time() - start}")
         start = time.time()
         # Compute NTK for each set
         rnd_ntk = target.compute_ntk(x_i=rnd_set)["empirical"]
         random_ntk = target.compute_ntk(x_i=random_set)["empirical"]
-        #apr_max_ntk = target.compute_ntk(x_i=apr_max_set)["empirical"]
+        # apr_max_ntk = target.compute_ntk(x_i=apr_max_set)["empirical"]
 
         print(f"NTK Time: {time.time() - start}")
 
@@ -210,9 +211,9 @@ def run_experiment(data_set_size: int, ensembling: bool = False, ensembles: int 
         random_entropy = rnd.analysis.EntropyAnalysis(
             matrix=random_ntk
         ).compute_von_neumann_entropy()
-        #apr_max_entropy = rnd.analysis.EntropyAnalysis(
+        # apr_max_entropy = rnd.analysis.EntropyAnalysis(
         #    matrix=apr_max_ntk
-        #).compute_von_neumann_entropy()
+        # ).compute_von_neumann_entropy()
 
         # Compute eigenvalues
         rnd_eigval = rnd.analysis.EigenSpaceAnalysis(
@@ -221,42 +222,46 @@ def run_experiment(data_set_size: int, ensembling: bool = False, ensembles: int 
         random_eigval = rnd.analysis.EigenSpaceAnalysis(
             matrix=random_ntk
         ).compute_eigenvalues()
-        #apr_max_eigval = rnd.analysis.EigenSpaceAnalysis(
+        # apr_max_eigval = rnd.analysis.EigenSpaceAnalysis(
         #    matrix=rnd_ntk
-        #).compute_eigenvalues()
+        # ).compute_eigenvalues()
 
         rnd_entropy_arr.append(rnd_entropy)
         random_entropy_arr.append(random_entropy)
-        #apr_max_entropy_arr.append(apr_max_entropy)
+        # apr_max_entropy_arr.append(apr_max_entropy)
 
         rnd_eig_arr.append(rnd_eigval)
         random_eig_arr.append(random_eigval)
-        #apr_max_eig_arr.append(apr_max_eigval)
+        # apr_max_eig_arr.append(apr_max_eigval)
 
         # Train production model
         rnd_production = rnd.models.NTModel(
-        nt_module=prod_model,
-        optimizer=optax.adam(learning_rate=0.001),
-        loss_fn=rnd.loss_functions.CrossEntropyLoss(classes=10, apply_softmax=False),
-        input_shape=(1, 28, 28, 1),
-        training_threshold=0.001
-    )
+            nt_module=prod_model,
+            optimizer=optax.adam(learning_rate=0.001),
+            loss_fn=rnd.loss_functions.CrossEntropyLoss(
+                classes=10, apply_softmax=False
+            ),
+            input_shape=(1, 28, 28, 1),
+            training_threshold=0.001,
+        )
 
         random_production = rnd_production = rnd.models.NTModel(
-        nt_module=prod_model,
-        optimizer=optax.adam(learning_rate=0.001),
-        loss_fn=rnd.loss_functions.CrossEntropyLoss(classes=10, apply_softmax=False),
-        input_shape=(1, 28, 28, 1),
-        training_threshold=0.001
-    )
+            nt_module=prod_model,
+            optimizer=optax.adam(learning_rate=0.001),
+            loss_fn=rnd.loss_functions.CrossEntropyLoss(
+                classes=10, apply_softmax=False
+            ),
+            input_shape=(1, 28, 28, 1),
+            training_threshold=0.001,
+        )
 
-        #apr_max_production = rnd.models.FlaxModel(
+        # apr_max_production = rnd.models.FlaxModel(
         #    flax_module=CustomModule(),
         #    optimizer=optax.adam(learning_rate=0.1),
         #    loss_fn=rnd.loss_functions.CrossEntropyLoss(classes=10),
         #    input_shape=(1, 28, 28, 1),
         #    training_threshold=0.001,
-        #)
+        # )
 
         rnd_training_ds = {
             "inputs": np.take(
@@ -274,7 +279,7 @@ def run_experiment(data_set_size: int, ensembling: bool = False, ensembles: int 
                 data_generator.ds_train["label"], random_agent.target_indices, axis=0
             ),
         }
-        #apr_max_training_ds = {
+        # apr_max_training_ds = {
         #    "inputs": np.take(
         #        data_generator.ds_train["image"],
         #        approximate_max_agent.target_indices,
@@ -285,7 +290,7 @@ def run_experiment(data_set_size: int, ensembling: bool = False, ensembles: int 
         #        approximate_max_agent.target_indices,
         #        axis=0,
         #    ),
-        #}
+        # }
 
         test_ds = {
             "inputs": data_generator.ds_test["image"],
@@ -293,45 +298,45 @@ def run_experiment(data_set_size: int, ensembling: bool = False, ensembles: int 
         }
 
         rnd_loss, rnd_acc, rnd_train_met = rnd_production.train_model(
-                train_ds=rnd_training_ds, test_ds=test_ds, epochs=50, batch_size=10
-            )
+            train_ds=rnd_training_ds, test_ds=test_ds, epochs=50, batch_size=10
+        )
         rnd_losses.append(rnd_loss)
         rnd_accuracy.append(rnd_acc)
         rnd_train_loss.append(np.min([item["loss"] for item in rnd_train_met]))
 
         random_loss, random_acc, random_train_met = random_production.train_model(
-                train_ds=random_training_ds, test_ds=test_ds, epochs=50, batch_size=10
-            )
+            train_ds=random_training_ds, test_ds=test_ds, epochs=50, batch_size=10
+        )
         random_losses.append(random_loss)
         random_accuracy.append(random_acc)
         random_train_loss.append(np.min([item["loss"] for item in random_train_met]))
 
-        #apr_max_loss, apr_max_acc = apr_max_production.train_model(
+        # apr_max_loss, apr_max_acc = apr_max_production.train_model(
         #        train_ds=apr_max_training_ds, test_ds=test_ds, epochs=50, batch_size=10
         #    )
-        #apr_max_losses.append(apr_max_loss)
-        #apr_max_accuracy.append(apr_max_acc)
+        # apr_max_losses.append(apr_max_loss)
+        # apr_max_accuracy.append(apr_max_acc)
 
         del rnd_agent
         del random_agent
-        #del approximate_max_agent
+        # del approximate_max_agent
 
     # Get mean and uncertainty.
     rnd_entropy_arr = np.array(rnd_entropy_arr)
     random_entropy_arr = np.array(random_entropy_arr)
-    #apr_max_entropy_arr = np.array(apr_max_entropy_arr)
+    # apr_max_entropy_arr = np.array(apr_max_entropy_arr)
 
     rnd_eig_arr = np.array(rnd_eig_arr)
     random_eig_arr = np.array(random_eig_arr)
-    #apr_max_eig_arr = np.array(apr_max_eig_arr)
+    # apr_max_eig_arr = np.array(apr_max_eig_arr)
 
     rnd_losses = np.array(rnd_losses)
     random_losses = np.array(random_losses)
-    #apr_max_losses = np.array(apr_max_losses)
+    # apr_max_losses = np.array(apr_max_losses)
 
     rnd_accuracy = np.array(rnd_accuracy)
     random_accuracy = np.array(random_accuracy)
-    #apr_max_accuracy = np.array(apr_max_accuracy)
+    # apr_max_accuracy = np.array(apr_max_accuracy)
 
     rnd_train_loss = np.array(rnd_train_loss)
     random_train_loss = np.array(random_train_loss)
@@ -349,9 +354,9 @@ def run_experiment(data_set_size: int, ensembling: bool = False, ensembles: int 
     random_entropy = np.array(
         [np.mean(random_entropy_arr), np.std(random_entropy_arr) / np.sqrt(ensembles)]
     )
-    #apr_max_entropy = np.array(
+    # apr_max_entropy = np.array(
     #    [np.mean(apr_max_entropy_arr), np.std(apr_max_entropy_arr) / np.sqrt(ensembles)]
-    #)
+    # )
 
     rnd_eigval = np.array(
         [np.mean(rnd_eig_arr, axis=0), np.std(rnd_eig_arr, axis=0) / np.sqrt(ensembles)]
@@ -362,12 +367,12 @@ def run_experiment(data_set_size: int, ensembling: bool = False, ensembles: int 
             np.std(random_eig_arr, axis=0) / np.sqrt(ensembles),
         ]
     )
-    #apr_max_eigval = np.array(
+    # apr_max_eigval = np.array(
     #    [
     #        np.mean(apr_max_eig_arr, axis=0),
     #        np.std(apr_max_eig_arr, axis=0) / np.sqrt(ensembles),
     #    ]
-    #)
+    # )
 
     rnd_loss = np.array(
         [np.mean(rnd_losses, axis=0), np.std(rnd_losses, axis=0) / np.sqrt(ensembles)]
@@ -378,15 +383,18 @@ def run_experiment(data_set_size: int, ensembling: bool = False, ensembles: int 
             np.std(random_losses, axis=0) / np.sqrt(ensembles),
         ]
     )
-    #apr_max_loss = np.array(
+    # apr_max_loss = np.array(
     #    [
     #        np.mean(apr_max_losses, axis=0),
     #        np.std(apr_max_losses, axis=0) / np.sqrt(ensembles),
     #    ]
-    #)
+    # )
 
     rnd_acc = np.array(
-        [np.mean(rnd_accuracy, axis=0), np.std(rnd_accuracy, axis=0) / np.sqrt(ensembles)]
+        [
+            np.mean(rnd_accuracy, axis=0),
+            np.std(rnd_accuracy, axis=0) / np.sqrt(ensembles),
+        ]
     )
     random_acc = np.array(
         [
@@ -394,38 +402,35 @@ def run_experiment(data_set_size: int, ensembling: bool = False, ensembles: int 
             np.std(random_accuracy, axis=0) / np.sqrt(ensembles),
         ]
     )
-    #apr_max_acc = np.array(
+    # apr_max_acc = np.array(
     #    [
     #        np.mean(apr_max_accuracy, axis=0),
     #        np.std(apr_max_accuracy, axis=0) / np.sqrt(ensembles),
     #    ]
-    #)
+    # )
 
     entropy = {
         "rnd": rnd_entropy,
         "random": random_entropy,
-        #"approximate_maximum": apr_max_entropy,
+        # "approximate_maximum": apr_max_entropy,
     }
     eigenvalues = {
         "rnd": rnd_eigval,
         "random": random_eigval,
-        #"approximate_maximum": apr_max_eigval,
+        # "approximate_maximum": apr_max_eigval,
     }
     losses = {
         "rnd": rnd_loss,
         "random": random_loss,
-        #"approximate_maximum": apr_max_loss,
+        # "approximate_maximum": apr_max_loss,
     }
     accuracy = {
         "rnd": rnd_acc,
         "random": random_acc,
-        #"approximate_maximum": apr_max_acc
+        # "approximate_maximum": apr_max_acc
     }
 
-    train = {
-        "rnd": rnd_train,
-        "random": random_train
-    }
+    train = {"rnd": rnd_train, "random": random_train}
 
     return entropy, eigenvalues, losses, accuracy, train
 
