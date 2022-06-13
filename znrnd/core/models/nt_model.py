@@ -56,7 +56,7 @@ class NTModel(Model):
         input_shape: tuple,
         training_threshold: float,
         nt_module: serial = None,
-        compute_accuracy: bool = False
+        compute_accuracy: bool = False,
     ):
         """
         Constructor for a Flax model.
@@ -250,9 +250,7 @@ class NTModel(Model):
         """
         predictions = self.apply_fn(params, batch["inputs"])
 
-        return self._compute_metrics(
-            predictions, batch["targets"]
-        )
+        return self._compute_metrics(predictions, batch["targets"])
 
     def _train_epoch(
         self, state: train_state.TrainState, train_ds: dict, batch_size: int
@@ -400,9 +398,7 @@ class NTModel(Model):
                 state, train_metrics = self._train_epoch(
                     state, train_ds, batch_size=batch_size
                 )
-                metrics = self._evaluate_model(
-                    state.params, test_ds
-                )
+                metrics = self._evaluate_model(state.params, test_ds)
 
                 loading_bar.set_postfix(test_loss=metrics["loss"])
 

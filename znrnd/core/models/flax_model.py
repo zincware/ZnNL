@@ -82,7 +82,7 @@ class FlaxModel(Model):
         training_threshold: float,
         layer_stack: List[nn.Module] = None,
         flax_module: nn.Module = None,
-        compute_accuracy: bool = False
+        compute_accuracy: bool = False,
     ):
         """
         Constructor for a Flax model.
@@ -153,9 +153,7 @@ class FlaxModel(Model):
         """
         raise NotImplemented("Not yet available.")
 
-    def _compute_metrics(
-        self, predictions: np.ndarray, targets: np.ndarray
-    ):
+    def _compute_metrics(self, predictions: np.ndarray, targets: np.ndarray):
         """
         Compute the current metrics of the training.
 
