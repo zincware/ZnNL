@@ -351,12 +351,14 @@ class FlaxModel(Model):
         loading_bar = trange(1, epochs + 1, ncols=100, unit="batch")
         test_losses = []
         test_accuracy = []
+        training_metrics = []
         for i in loading_bar:
             loading_bar.set_description(f"Epoch: {i}")
 
             state, train_metrics = self._train_epoch(
                 state, train_ds, batch_size=batch_size
             )
+            training_metrics.append(train_metrics)
             test_loss = self._evaluate_model(state.params, test_ds)
             test_losses.append(test_loss["loss"])
             test_accuracy.append(test_loss["accuracy"])
@@ -367,7 +369,7 @@ class FlaxModel(Model):
         # Update the final model state.
         self.model_state = state
 
-        return test_losses, test_accuracy
+        return test_losses, test_accuracy, training_metrics
 
     def train_model_recursively(
         self, train_ds: dict, test_ds: dict, epochs: int = 100, batch_size: int = 1

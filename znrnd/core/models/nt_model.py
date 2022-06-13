@@ -43,45 +43,6 @@ from znrnd.core.utils.matrix_utils import normalize_covariance_matrix
 logger = logging.getLogger(__name__)
 
 
-class TrainState:
-    """
-    Train state for NTK models
-    """
-
-    def __init__(self, apply_fn, params, tx: optax.GradientTransformation):
-        """
-        Constructor of the train state.
-
-        Parameters
-        ----------
-        apply_fn
-        params
-        tx
-        """
-        self.apply_fn = apply_fn
-        self.params = params
-        self.optimizer = tx
-        self.opt_state = tx.init()
-
-    def apply_gradients(self, gradients):
-        """
-        Apply the gradients to parameters and update the state.
-
-        Parameters
-        ----------
-        gradients
-
-        Returns
-        -------
-
-        """
-
-        updates, self.opt_state = self.optimizer.update(
-            gradients, self.opt_state, self.params
-        )
-        self.params = optax.apply_updates(self.params, updates)
-
-
 class NTModel(Model):
     """
     Class for a neural tangents model.
@@ -231,7 +192,7 @@ class NTModel(Model):
 
         return metrics
 
-    def _train_step(self, state: TrainState, batch: dict):
+    def _train_step(self, state: train_state.TrainState, batch: dict):
         """
         Train a single step.
 
@@ -262,7 +223,7 @@ class NTModel(Model):
 
         (_, predictions), grads = grad_fn(state.params)
 
-        state.apply_gradients(gradients=grads)  # in place state update.
+        state = state.apply_gradients(grads=grads)  # in place state update.
         metrics = self._compute_metrics(
             predictions=predictions, targets=batch["targets"]
         )
@@ -275,8 +236,8 @@ class NTModel(Model):
 
         Parameters
         ----------
-        state : dict
-                Current state of the neural network.
+        params : dict
+                Parameters of the model.
         batch : dict
                 Batch of data to test on.
 
@@ -291,7 +252,9 @@ class NTModel(Model):
             predictions, batch["targets"], compute_accuracy=compute_acc
         )
 
-    def _train_epoch(self, state: TrainState, train_ds: dict, batch_size: int):
+    def _train_epoch(
+            self, state: train_state.TrainState, train_ds: dict, batch_size: int
+    ):
         """
         Train for a single epoch.
 
