@@ -25,7 +25,13 @@ Summary
 -------
 Data generator for the CIFAR 10 dataset.
 """
+import jax.numpy as np
+import plotly.graph_objects as go
 import tensorflow_datasets as tfds
+from plotly.subplots import make_subplots
+
+from znrnd.core.data.data_generator import DataGenerator
+import numpy as np
 
 from znrnd.core.data.data_generator import DataGenerator
 
@@ -35,15 +41,66 @@ class CIFAR10Generator(DataGenerator):
     Data generator for MNIST datasets
     """
 
-    def __init__(self):
+    def __init__(self, ds_size: int = 500):
         """
         Constructor for the MNIST generator class.
+
+        Parameters
+        ----------
+        ds_size : int
+                Size of the dataset to load.
         """
         self.ds_train, self.ds_test = tfds.as_numpy(
             tfds.load(
                 "cifar10:3.*.*",
-                split=["train[:%d]" % 500, "test[:%d]" % 500],
+                split=["train[:%d]" % ds_size, "test[:%d]" % ds_size],
                 batch_size=-1,
             )
         )
+        self.ds_train["image"] = self.ds_train["image"] / 255.0
+        self.ds_test["image"] = self.ds_test["image"] / 255.0
         self.data_pool = self.ds_train["image"].astype(float)
+
+    def plot_image(self, indices: list = None, data_list: list = None):
+        """
+        Plot a images from the training dataset.
+
+        Parameters
+        ----------
+        indices : list (None)
+                Indices of the dataset you want to plot.
+        data_list : list (None)
+                A list of data objects to plot.
+        """
+        if indices is not None:
+            data_length = len(indices)
+            data_source = self.ds_train["image"][indices]
+        elif data_list is not None:
+            data_length = len(data_list)
+            data_source = data_list
+        else:
+            raise TypeError("No valid data provided")
+
+        if data_length <= 4:
+            columns = data_length
+            rows = 1
+        else:
+            columns = 4
+            rows = int(np.ceil(data_length / 4))
+
+        fig = make_subplots(rows=rows, cols=columns)
+
+        img_counter = 0
+        for i in range(1, rows + 1):
+            for j in range(1, columns + 1):
+                if indices is not None:
+                    data = self.ds_train["image"][img_counter] * 255.0
+                else:
+                    data = data_list[img_counter] * 255.0
+                fig.add_trace(go.Image(z=data), row=i, col=j)
+                if img_counter == len(data_source) - 1:
+                    break
+                else:
+                    img_counter += 1
+
+        fig.show()
