@@ -1,11 +1,8 @@
-# This workflow will install Python dependencies, run tests and lint with a variety of
-# Python versions
-name: pytest
+# Run the code testing component of the CI.
+name: Run tests
 
 on:
   push:
-
-  pull_request:
 
 jobs:
   build:
@@ -35,4 +32,4 @@ jobs:
         pytest
       env:
         CUDA_VISIBLE_DEVICES: -1
-        TF_CPP_MIN_LOG_LEVEL: 3  # We have to suppress libcudart error
+        TF_CPP_MIN_LOG_LEVEL: 3
