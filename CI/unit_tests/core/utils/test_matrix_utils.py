@@ -46,7 +46,7 @@ class TestMatrixUtils:
         """
         matrix = np.eye(2)
 
-        values, vectors = compute_eigensystem(matrix, reduce=False)
+        values, vectors = compute_eigensystem(matrix, normalize=False)
 
         assert_array_equal(np.real(values), [1, 1])
 
@@ -61,7 +61,7 @@ class TestMatrixUtils:
         """
         matrix = np.eye(2)
 
-        values, vectors = compute_eigensystem(matrix, reduce=True)
+        values, vectors = compute_eigensystem(matrix, normalize=True)
 
         assert_array_equal(np.real(values), [0.5, 0.5])
 

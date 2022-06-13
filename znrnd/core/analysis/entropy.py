@@ -53,24 +53,23 @@ class EntropyAnalysis:
         eigenvectors
         """
         # Computes the reduced eigen-system
-        eigenvalues, eigenvectors = compute_eigensystem(self.matrix)
-
-        if normalize:
-            self.eigenvalues = eigenvalues / eigenvalues.sum()
-        else:
-            self.eigenvalues = eigenvalues
+        self.eigenvalues, eigenvectors = compute_eigensystem(
+            self.matrix, normalize=normalize
+        )
 
     def compute_von_neumann_entropy(
-        self, normalize: bool = True, normalize_eig: bool = True
+        self, effective: bool = True, normalize_eig: bool = True
     ):
         """
         Compute the von-Neumann entropy of the matrix.
 
         Parameters
         ----------
-        normalize : bool (default=True)
+        effective : bool (default=True)
                 If true, the entropy is divided by the theoretical maximum entropy of
-                the system.
+                the system thereby returning the effective entropy.
+        normalize_eig : bool (default = True)
+                If true, the eigenvalues are scaled to look like probabilities.
 
         Returns
         -------
@@ -84,9 +83,8 @@ class EntropyAnalysis:
 
         entropy = self.eigenvalues * log_vals
 
-        if normalize:
+        if effective:
             max = np.log(len(self.eigenvalues))
-
             entropy /= max
 
         return -1 * entropy.sum()
