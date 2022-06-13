@@ -4,6 +4,8 @@ Conf file for the PyRND docs.
 import os
 import sys
 
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
 import sphinx_rtd_theme
 
 sys.path.insert(0, os.path.abspath("."))

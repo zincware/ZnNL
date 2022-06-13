@@ -27,6 +27,7 @@ Implement a cross entropy loss function.
 """
 import jax
 import jax.numpy as np
+import optax
 
 from znrnd.core.loss_functions.simple_loss import SimpleLoss
 
@@ -36,7 +37,7 @@ class CrossEntropyDistance:
     Class for the cross entropy distance
     """
 
-    def __init__(self, classes: int):
+    def __init__(self, classes: int, apply_softmax: bool = False):
         """
         Constructor for the distance
 
@@ -44,24 +45,30 @@ class CrossEntropyDistance:
         ----------
         classes : int
                 Number of classes in the one-hot encoding.
+        apply_softmax : bool (default = False)
+                If true, softmax is applied to the prediction before computing the loss.
         """
         self.classes = classes
+        self.apply_softmax = apply_softmax
 
     def __call__(self, prediction, target):
         """
 
         Parameters
         ----------
-        prediction
+        prediction (batch_size, n_classes)
         target
 
         Returns
         -------
 
         """
+        if self.apply_softmax:
+            prediction = jax.nn.softmax(prediction)
+
         one_hot_labels = jax.nn.one_hot(target, num_classes=self.classes)
 
-        return -1 * np.sum(prediction * one_hot_labels, axis=-1)
+        return optax.softmax_cross_entropy(logits=prediction, labels=one_hot_labels)
 
 
 class CrossEntropyLoss(SimpleLoss):
@@ -69,7 +76,7 @@ class CrossEntropyLoss(SimpleLoss):
     Class for the cross entropy loss
     """
 
-    def __init__(self, classes: int = 10):
+    def __init__(self, classes: int = 10, apply_softmax: bool = False):
         """
         Constructor for the mean power loss class.
 
@@ -77,6 +84,8 @@ class CrossEntropyLoss(SimpleLoss):
         ----------
         classes : int (default=10)
                 Number of classes in the loss.
+        apply_softmax : bool (default = False)
+                If true, softmax is applied to the prediction before computing the loss.
         """
         super(CrossEntropyLoss, self).__init__()
-        self.metric = CrossEntropyDistance(classes=classes)
+        self.metric = CrossEntropyDistance(classes=classes, apply_softmax=apply_softmax)

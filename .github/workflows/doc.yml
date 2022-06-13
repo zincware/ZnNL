@@ -11,11 +11,12 @@ jobs:
       - name: Setup Python environment
         uses: actions/setup-python@v2
         with:
-          python-version: '3.7'
+          python-version: '3.8'
       - name: Install dependencies
         run: |
           sudo apt install pandoc
           pip3 install -r requirements.txt
+          pip install .
           pip3 install h5py --upgrade --no-dependencies
           pip3 install cached-property
       - name: Build documentation
