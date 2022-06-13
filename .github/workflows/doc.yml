@@ -2,7 +2,6 @@ name: Build the documentation
 
 on:
   push:
-  pull_request:
 
 jobs:
   doc:
