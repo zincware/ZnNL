@@ -32,7 +32,6 @@ import jax
 import jax.numpy as np
 import neural_tangents as nt
 import numpy as onp
-import optax
 from flax.training import train_state
 from neural_tangents.stax import serial
 from tqdm import trange
@@ -57,6 +56,7 @@ class NTModel(Model):
         input_shape: tuple,
         training_threshold: float,
         nt_module: serial = None,
+        compute_accuracy: bool = False
     ):
         """
         Constructor for a Flax model.
@@ -72,6 +72,9 @@ class NTModel(Model):
                 Shape of the NN input.
         training_threshold : float
                 The loss value at which point you consider the model trained.
+        compute_accuracy : bool (default = False)
+                If true, an accuracy computation will be performed. Only valid for
+                classification tasks.
 
         Notes
         -----
@@ -90,6 +93,8 @@ class NTModel(Model):
         # initialize the model state
         init_rng = jax.random.PRNGKey(onp.random.randint(0, 500))
         self.model_state = self._create_train_state(init_rng)
+
+        self.compute_accuracy = compute_accuracy
 
     def compute_ntk(
         self,
@@ -162,7 +167,6 @@ class NTModel(Model):
         self,
         predictions: np.ndarray,
         targets: np.ndarray,
-        compute_accuracy: bool = True,
     ):
         """
         Compute the current metrics of the training.
@@ -173,8 +177,6 @@ class NTModel(Model):
                 Predictions made by the network.
         targets : np.ndarray
                 Targets from the training data.
-        compute_accuracy : bool
-                If true, compute the accuracy of the predictions.
 
         Returns
         -------
@@ -183,12 +185,12 @@ class NTModel(Model):
         """
         loss = self.loss_fn(predictions, targets)
 
-        if compute_accuracy:
+        if self.compute_accuracy:
             accuracy = np.mean(np.argmax(predictions, -1) == targets)
-        else:
-            accuracy = None
+            metrics = {"loss": loss, "accuracy": accuracy}
 
-        metrics = {"loss": loss, "accuracy": accuracy}
+        else:
+            metrics = {"loss": loss}
 
         return metrics
 
@@ -230,7 +232,7 @@ class NTModel(Model):
 
         return state, metrics
 
-    def _evaluate_step(self, params: dict, batch: dict, compute_acc=True):
+    def _evaluate_step(self, params: dict, batch: dict):
         """
         Evaluate the model on test data.
 
@@ -249,7 +251,7 @@ class NTModel(Model):
         predictions = self.apply_fn(params, batch["inputs"])
 
         return self._compute_metrics(
-            predictions, batch["targets"], compute_accuracy=compute_acc
+            predictions, batch["targets"]
         )
 
     def _train_epoch(
@@ -311,7 +313,7 @@ class NTModel(Model):
 
         return state, epoch_metrics_np
 
-    def _evaluate_model(self, params: dict, test_ds: dict, compute_acc=True):
+    def _evaluate_model(self, params: dict, test_ds: dict) -> dict:
         """
         Evaluate the model.
 
@@ -323,10 +325,10 @@ class NTModel(Model):
                 Dataset on which to evaluate.
         Returns
         -------
-        loss : float
+        metrics : dict
                 Loss of the model.
         """
-        metrics = self._evaluate_step(params, test_ds, compute_acc=compute_acc)
+        metrics = self._evaluate_step(params, test_ds)
         metrics = jax.device_get(metrics)
         summary = jax.tree_map(lambda x: x.item(), metrics)
 
@@ -362,13 +364,13 @@ class NTModel(Model):
                 state, train_ds, batch_size=batch_size
             )
             training_metrics.append(train_metrics)
-            test_loss = self._evaluate_model(state.params, test_ds)
+            metrics = self._evaluate_model(state.params, test_ds)
 
-            loading_bar.set_postfix(
-                test_loss=test_loss["loss"], accuracy=test_loss["accuracy"]
-            )
-            test_losses.append(test_loss["loss"])
-            test_accuracy.append(test_loss["accuracy"])
+            loading_bar.set_postfix(test_loss=metrics["loss"])
+            if self.compute_accuracy:
+                loading_bar.set_postfix(accuracy=metrics["accuracy"])
+            test_losses.append(metrics["loss"])
+            test_accuracy.append(metrics["accuracy"])
 
         # Update the final model state.
         self.model_state = state
@@ -398,11 +400,11 @@ class NTModel(Model):
                 state, train_metrics = self._train_epoch(
                     state, train_ds, batch_size=batch_size
                 )
-                test_loss = self._evaluate_model(
-                    state.params, test_ds, compute_acc=False
-                )["loss"]
+                metrics = self._evaluate_model(
+                    state.params, test_ds
+                )
 
-                loading_bar.set_postfix(test_loss=test_loss)
+                loading_bar.set_postfix(test_loss=metrics["loss"])
 
             # Update the final model state.
             self.model_state = state
@@ -410,7 +412,7 @@ class NTModel(Model):
             # Perform checks and update parameters
             counter += 1
             epochs = int(1.1 * epochs)
-            if test_loss <= self.training_threshold:
+            if metrics["loss"] <= self.training_threshold:
                 condition = True
 
             # Re-initialize the network if it is simply not converging.

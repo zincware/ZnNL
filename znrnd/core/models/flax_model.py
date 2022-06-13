@@ -82,6 +82,7 @@ class FlaxModel(Model):
         training_threshold: float,
         layer_stack: List[nn.Module] = None,
         flax_module: nn.Module = None,
+        compute_accuracy: bool = False
     ):
         """
         Constructor for a Flax model.
@@ -101,6 +102,9 @@ class FlaxModel(Model):
                 The loss value at which point you consider the model trained.
         flax_module : nn.Module
                 Flax module to use instead of building one from scratch here.
+        compute_accuracy : bool (default = False)
+                If true, an accuracy computation will be performed. Only valid for
+                classification tasks.
         """
         if layer_stack is not None:
             self.model = FundamentalModel(layer_stack)
@@ -118,6 +122,8 @@ class FlaxModel(Model):
         init_rng = jax.random.PRNGKey(onp.random.randint(0, 500))
         state = self._create_train_state(init_rng)
         self.model_state = state
+
+        self.compute_accuracy = compute_accuracy
 
     def compute_ntk(
         self,
@@ -148,7 +154,7 @@ class FlaxModel(Model):
         raise NotImplemented("Not yet available.")
 
     def _compute_metrics(
-        self, predictions: np.ndarray, targets: np.ndarray, accuracy: bool = False
+        self, predictions: np.ndarray, targets: np.ndarray
     ):
         """
         Compute the current metrics of the training.
@@ -159,8 +165,6 @@ class FlaxModel(Model):
                 Predictions made by the network.
         targets : np.ndarray
                 Targets from the training data.
-        accuracy : bool (default = False)
-                If true, an accuracy calculation is also performed.
 
         Returns
         -------
@@ -169,12 +173,11 @@ class FlaxModel(Model):
         """
         loss = self.loss_fn(predictions, targets)
 
-        if accuracy:
+        if self.compute_accuracy:
             acc = np.mean(np.argmax(predictions, -1) == targets)
+            metrics = {"loss": loss, "accuracy": acc}
         else:
-            acc = None
-
-        metrics = {"loss": loss, "accuracy": acc}
+            metrics = {"loss": loss}
 
         return metrics
 
@@ -365,12 +368,13 @@ class FlaxModel(Model):
                 state, train_ds, batch_size=batch_size
             )
             training_metrics.append(train_metrics)
-            test_loss = self._evaluate_model(state.params, test_ds)
-            test_losses.append(test_loss["loss"])
-            test_accuracy.append(test_loss["accuracy"])
+            metrics = self._evaluate_model(state.params, test_ds)
+            test_losses.append(metrics["loss"])
+            test_accuracy.append(metrics["accuracy"])
 
-            loading_bar.set_postfix(test_loss=test_loss["loss"])
-            loading_bar.set_postfix(accuracy=test_loss["accuracy"])
+            loading_bar.set_postfix(test_loss=metrics["loss"])
+            if self.compute_accuracy:
+                loading_bar.set_postfix(accuracy=metrics["accuracy"])
 
         # Update the final model state.
         self.model_state = state
@@ -400,9 +404,11 @@ class FlaxModel(Model):
                 state, train_metrics = self._train_epoch(
                     state, train_ds, batch_size=batch_size
                 )
-                test_loss = self._evaluate_model(state.params, test_ds)
+                metrics = self._evaluate_model(state.params, test_ds)
 
-                loading_bar.set_postfix(test_loss=test_loss)
+                loading_bar.set_postfix(test_loss=metrics["loss"])
+                if self.compute_accuracy:
+                    loading_bar.set_postfix(accuracy=metrics["accuracy"])
 
             # Update the final model state.
             self.model_state = state
@@ -410,7 +416,7 @@ class FlaxModel(Model):
             # Perform checks and update parameters
             counter += 1
             epochs = int(1.1 * epochs)
-            if test_loss["loss"] <= self.training_threshold:
+            if metrics["loss"] <= self.training_threshold:
                 condition = True
 
             # Re-initialize the network if it is simply not converging.
