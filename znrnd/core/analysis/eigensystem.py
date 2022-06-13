@@ -23,7 +23,7 @@ If you use this module please cite us with:
 
 Summary
 -------
-Module for the analysis of the eigensystem of a matrix.
+Module for the analysis of the eigen space of a matrix.
 """
 import jax.numpy as np
 import plotly.express as px
@@ -33,12 +33,12 @@ from znrnd.core.utils.matrix_utils import compute_eigensystem
 
 class EigenSpaceAnalysis:
     """
-    Analyse the Eigenspace of the matrix.
+    Analyse the Eigen space of the matrix.
     """
 
     def __init__(self, matrix: np.ndarray):
         """
-        Constructor for the Eigenspace class.
+        Constructor for the Eigen space class.
 
         Parameters
         ----------
@@ -56,7 +56,7 @@ class EigenSpaceAnalysis:
         reduce : bool (default = False)
                 If true, the result is divided by the zeroth axis size of the matrix.
                 Normalizing destroys this process anyway so it is defaulted to False
-                for the occasion in which you wish to compare unnormalized eigenvalues
+                for the occasion in which you wish to compare un-normalized eigenvalues
                 directly.
         normalize : bool
                 If true, apply the sum to one interpretation of the eigenvalues.

@@ -55,7 +55,7 @@ def compute_eigensystem(matrix: np.ndarray, reduce: bool = False):
     eigenvalues, eigenvectors = np.linalg.eig(matrix)
 
     if reduce:
-        eigenvalues /= matrix.shape[0]
+        eigenvalues /= np.log(matrix.shape[0])
 
     return eigenvalues[::-1].sort(), eigenvectors
 
