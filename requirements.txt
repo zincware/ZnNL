@@ -20,3 +20,4 @@ pandas
 neural-tangents
 tensorflow-datasets
 isort
+tensorflow
