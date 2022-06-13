@@ -39,7 +39,7 @@ from neural_tangents import stax
 
 import znrnd as rnd
 
-set_size = DS_SIZE
+set_size = 10
 
 data_generator = rnd.data.MNISTGenerator()
 
