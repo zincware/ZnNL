@@ -21,3 +21,4 @@ neural-tangents
 tensorflow-datasets
 isort
 tensorflow
+pyyaml
