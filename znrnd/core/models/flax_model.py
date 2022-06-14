@@ -215,6 +215,7 @@ class FlaxModel(Model):
         metrics : dict
                 Metrics for the current model.
         """
+
         def loss_fn(params):
             """
             helper loss computation
