@@ -65,9 +65,7 @@ class CrossEntropyDistance:
         """
         if self.apply_softmax:
             prediction = jax.nn.softmax(prediction)
-
         one_hot_labels = jax.nn.one_hot(target, num_classes=self.classes)
-
         return optax.softmax_cross_entropy(logits=prediction, labels=one_hot_labels)
 
 
