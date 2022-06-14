@@ -367,8 +367,9 @@ class NTModel(Model):
             loading_bar.set_postfix(test_loss=metrics["loss"])
             if self.compute_accuracy:
                 loading_bar.set_postfix(accuracy=metrics["accuracy"])
+                test_accuracy.append(metrics["accuracy"])
+
             test_losses.append(metrics["loss"])
-            test_accuracy.append(metrics["accuracy"])
 
         # Update the final model state.
         self.model_state = state
