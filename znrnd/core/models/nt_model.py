@@ -184,7 +184,6 @@ class NTModel(Model):
                 A dict of current training metrics, e.g. {"loss": ..., "accuracy": ...}
         """
         loss = self.loss_fn(predictions, targets)
-
         if self.compute_accuracy:
             accuracy = np.mean(np.argmax(predictions, -1) == targets)
             metrics = {"loss": loss, "accuracy": accuracy}
@@ -299,6 +298,7 @@ class NTModel(Model):
             batch_metrics = []
             for permutation in permutations:
                 batch = {k: v[permutation, ...] for k, v in train_ds.items()}
+                # print(batch)
                 state, metrics = self._train_step(state, batch)
                 batch_metrics.append(metrics)
 
@@ -367,8 +367,9 @@ class NTModel(Model):
             loading_bar.set_postfix(test_loss=metrics["loss"])
             if self.compute_accuracy:
                 loading_bar.set_postfix(accuracy=metrics["accuracy"])
+                test_accuracy.append(metrics["accuracy"])
+
             test_losses.append(metrics["loss"])
-            test_accuracy.append(metrics["accuracy"])
 
         # Update the final model state.
         self.model_state = state

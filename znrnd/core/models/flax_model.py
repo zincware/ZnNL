@@ -170,7 +170,6 @@ class FlaxModel(Model):
                 A dict of current training metrics, e.g. {"loss": ..., "accuracy": ...}
         """
         loss = self.loss_fn(predictions, targets)
-
         if self.compute_accuracy:
             acc = np.mean(np.argmax(predictions, -1) == targets)
             metrics = {"loss": loss, "accuracy": acc}
