@@ -44,6 +44,7 @@ class RND(Agent):
     stationary_iterations: int = 0
     metric_results = None
     metric_results_storage: list = []
+    target_size: int
 
     def __init__(
         self,
@@ -233,21 +234,25 @@ class RND(Agent):
         condition_met : bool
             Will end the search loop if criteria is met.
         """
-        if self.historical_length == 0:
-            pass
-        elif len(self.target_set) == self.historical_length:
-            if self.stationary_iterations >= self.tolerance:
-                return True  # loop timeout
-            else:
-                self.stationary_iterations += 1
-                return False  # update stationary
-        elif self.target_size is not None:
+        condition = False
+
+        # Check if the target set is the correct size
+        if self.target_size is not None:
             if len(self.target_set) >= self.target_size:
-                return True
-        # Stationary iteration handling
-        else:
-            self.stationary_iterations = 0  # reset stationary iterations
-            return False
+                condition = True
+
+        # Check if timeout condition is met
+        if self.historical_length > 0:
+            if len(self.target_set) == self.historical_length:
+                if self.stationary_iterations >= self.tolerance:
+                    condition = True
+                else:
+                    self.stationary_iterations += 1
+
+            else:
+                self.stationary_iterations = 0  # reset stationary iterations
+
+        return condition
 
     def update_visualization(self, data: np.ndarray = None, reference: bool = False):
         """

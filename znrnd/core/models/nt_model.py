@@ -57,6 +57,7 @@ class NTModel(Model):
         training_threshold: float,
         nt_module: serial = None,
         compute_accuracy: bool = False,
+        batch_size: int = 10,
     ):
         """
         Constructor for a Flax model.
@@ -75,6 +76,9 @@ class NTModel(Model):
         compute_accuracy : bool (default = False)
                 If true, an accuracy computation will be performed. Only valid for
                 classification tasks.
+        batch_size : int (default=10)
+                Batch size to use in the NTK computation.
+
 
         Notes
         -----
@@ -83,8 +87,11 @@ class NTModel(Model):
         """
         self.init_fn = nt_module[0]
         self.apply_fn = nt_module[1]
-        self.kernel_fn = nt.batch(nt_module[2], batch_size=5)
-        self.empirical_ntk = nt.batch(nt.empirical_ntk_fn(self.apply_fn), batch_size=5)
+        self.kernel_fn = nt.batch(nt_module[2], batch_size=batch_size)
+        self.empirical_ntk = nt.batch(
+            nt.empirical_ntk_fn(self.apply_fn), batch_size=batch_size
+        )
+        self.empirical_ntk_jit = jax.jit(self.empirical_ntk)
         self.loss_fn = loss_fn
         self.optimizer = optimizer
         self.input_shape = input_shape
@@ -124,8 +131,7 @@ class NTModel(Model):
         """
         if x_j is None:
             x_j = x_i
-
-        empirical_ntk = self.empirical_ntk(x_i, x_j, self.model_state.params)
+        empirical_ntk = self.empirical_ntk_jit(x_i, x_j, self.model_state.params)
 
         if infinite:
             infinite_ntk = self.kernel_fn(x_i, x_j, "ntk")
