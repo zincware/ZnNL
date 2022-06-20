@@ -192,9 +192,15 @@ class RND(Agent):
             dataset = {"inputs": domain, "targets": codomain}
             self.predictor.train_model_recursively(train_ds=dataset, test_ds=dataset)
 
-    def _seed_process(self):
+    def _seed_process(self, visualize: bool):
         """
         Seed an RND process.
+
+        Parameters
+        ----------
+        visualize : bool
+                if true, visualization is performed on the data. This parameter is
+                populated by the build_dataset method.
 
         Returns
         -------
@@ -210,7 +216,8 @@ class RND(Agent):
         self._update_target_set(np.array(seed_point))
         self._retrain_network()
         self.target_indices.append(seed_number)
-        self.update_visualization(reference=False)
+        if visualize:
+            self.update_visualization(reference=False)
 
     def _store_metrics(self):
         """
@@ -296,7 +303,7 @@ class RND(Agent):
         print(f"Seed points: {self.seed_point}\n")
 
     def build_dataset(
-        self, target_size: int = None, visualize: bool = False, report: bool = True
+        self, target_size: int = None, visualize: bool = False, report: bool = False
     ):
         """
         Run the random network distillation methods and build the target set.
@@ -318,10 +325,12 @@ class RND(Agent):
         # Allow for optional target_sizes.
         self.target_size = target_size
         start = time.time()
-        self._seed_process()
+        self._seed_process(visualize=visualize)
         criteria = False
-        self.update_visualization(reference=True)
-        self.update_visualization(reference=False)
+
+        if visualize:
+            self.update_visualization(reference=True)
+            self.update_visualization(reference=False)
 
         while not criteria:
             self._choose_points()
@@ -329,7 +338,8 @@ class RND(Agent):
             self._retrain_network()
 
             criteria = self._evaluate_agent()
-            self.update_visualization(reference=False)
+            if visualize:
+                self.update_visualization(reference=False)
             self.iterations += 1
 
         stop = time.time()
