@@ -35,6 +35,8 @@ import jax.random as random
 
 from znrnd.core.analysis.eigensystem import EigenSpaceAnalysis
 
+from jax.lib import xla_bridge
+
 
 class TestEigenspaceAnalysis:
     """
@@ -51,6 +53,9 @@ class TestEigenspaceAnalysis:
 
         """
         matrix = random.uniform(key=random.PRNGKey(1), shape=(500, 500))
+
+        # Print the device being used.
+        print(xla_bridge.get_backend().platform)
 
         cls.calculator = EigenSpaceAnalysis(matrix=matrix)
 

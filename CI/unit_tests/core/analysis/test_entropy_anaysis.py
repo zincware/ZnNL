@@ -25,6 +25,8 @@ Summary
 -------
 """
 import jax.numpy as np
+from jax.lib import xla_bridge
+
 import pytest
 
 from znrnd.core.analysis.entropy import EntropyAnalysis
@@ -34,6 +36,18 @@ class TestEntropyAnalysis:
     """
     Test suite for the entropy analysis module.
     """
+
+    @classmethod
+    def setup_class(cls):
+        """
+        Prepare the test.
+
+        Returns
+        -------
+
+        """
+        # Print the device being used.
+        print(xla_bridge.get_backend().platform)
 
     def test_von_neumann_entropy(self):
         """
