@@ -106,6 +106,10 @@ class FlaxModel(Model):
                 If true, an accuracy computation will be performed. Only valid for
                 classification tasks.
         """
+        logger.info(
+            "Flax models have occasionally experienced memory allocation issues on "
+            "GPU. This is an ongoing bug that we are striving to fix soon."
+        )
         if layer_stack is not None:
             self.model = FundamentalModel(layer_stack)
         if flax_module is not None:
@@ -117,6 +121,8 @@ class FlaxModel(Model):
         self.optimizer = optimizer
         self.input_shape = input_shape
         self.training_threshold = training_threshold
+
+        self.apply_fn = jax.jit(self.model.apply)
 
         # initialize the model state
         init_rng = jax.random.PRNGKey(onp.random.randint(0, 500))
@@ -194,7 +200,7 @@ class FlaxModel(Model):
         params = self.model.init(init_rng, np.ones(list(self.input_shape)))["params"]
 
         return train_state.TrainState.create(
-            apply_fn=self.model.apply, params=params, tx=self.optimizer
+            apply_fn=self.apply_fn, params=params, tx=self.optimizer
         )
 
     def _train_step(self, state: train_state.TrainState, batch: dict):
@@ -220,7 +226,7 @@ class FlaxModel(Model):
             """
             helper loss computation
             """
-            inner_predictions = self.model.apply({"params": params}, batch["inputs"])
+            inner_predictions = self.apply_fn({"params": params}, batch["inputs"])
             loss = self.loss_fn(inner_predictions, batch["targets"])
 
             return loss, inner_predictions
@@ -251,7 +257,7 @@ class FlaxModel(Model):
         metrics : dict
                 Metrics dict computed on test data.
         """
-        predictions = self.model.apply({"params": params}, batch["inputs"])
+        predictions = self.apply_fn({"params": params}, batch["inputs"])
 
         return self._compute_metrics(predictions, batch["targets"])
 
@@ -429,4 +435,4 @@ class FlaxModel(Model):
         """
         state = self.model_state
 
-        return self.model.apply({"params": state.params}, feature_vector)
+        return self.apply_fn({"params": state.params}, feature_vector)

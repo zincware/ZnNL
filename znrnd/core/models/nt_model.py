@@ -86,7 +86,7 @@ class NTModel(Model):
         This was selected to safely compute NTK on MNIST.
         """
         self.init_fn = nt_module[0]
-        self.apply_fn = nt_module[1]
+        self.apply_fn = jax.jit(nt_module[1])
         self.kernel_fn = nt.batch(nt_module[2], batch_size=batch_size)
         self.empirical_ntk = nt.batch(
             nt.empirical_ntk_fn(self.apply_fn), batch_size=batch_size

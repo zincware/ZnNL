@@ -32,6 +32,7 @@ to confirm that they are true but we need to add some return on the methods and 
 that the Wigner semi-circle rule and Wigner surmise are met for this data.
 """
 import jax.random as random
+from jax.lib import xla_bridge
 
 from znrnd.core.analysis.eigensystem import EigenSpaceAnalysis
 
@@ -51,6 +52,9 @@ class TestEigenspaceAnalysis:
 
         """
         matrix = random.uniform(key=random.PRNGKey(1), shape=(500, 500))
+
+        # Print the device being used.
+        print(xla_bridge.get_backend().platform)
 
         cls.calculator = EigenSpaceAnalysis(matrix=matrix)
 
