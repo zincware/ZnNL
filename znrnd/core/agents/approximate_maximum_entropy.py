@@ -41,9 +41,6 @@ class ApproximateMaximumEntropy(Agent):
     ----------
     """
 
-    target_set: np.ndarray
-    target_indices: list
-
     def __init__(
         self, target_network: Model, data_generator: DataGenerator, samples: int = 10
     ):
@@ -63,6 +60,9 @@ class ApproximateMaximumEntropy(Agent):
         self.target_network = target_network
         self.data_generator = data_generator
         self.samples = samples
+
+        self.target_set: np.ndarray
+        self.target_indices: list
 
     def _compute_entropy(self, dataset: np.ndarray):
         """

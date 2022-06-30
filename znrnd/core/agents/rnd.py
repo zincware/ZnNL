@@ -37,15 +37,6 @@ class RND(Agent):
             Target set to be built iteratively.
     """
 
-    historical_length: int = 0
-    target_set: list = []
-    target_indices: list = []
-    iterations: int = 0
-    stationary_iterations: int = 0
-    metric_results = None
-    metric_results_storage: list = []
-    target_size: int
-
     def __init__(
         self,
         data_generator: DataGenerator,
@@ -90,6 +81,15 @@ class RND(Agent):
         self.tolerance = tolerance
         self.seed_point = seed_point
         self.visualizer = visualizer
+
+        self.historical_length: int = 0
+        self.target_set: list = []
+        self.target_indices: list = []
+        self.iterations: int = 0
+        self.stationary_iterations: int = 0
+        self.metric_results = None
+        self.metric_results_storage: list = []
+        self.target_size: int = None
 
         # Run the class initialization
         self._set_defaults()

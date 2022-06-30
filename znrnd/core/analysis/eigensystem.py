@@ -23,7 +23,7 @@ If you use this module please cite us with:
 
 Summary
 -------
-Module for the analysis of the eigen space of a matrix.
+Module for the analysis of the eigenspace of a matrix.
 """
 import jax.numpy as np
 import plotly.express as px

@@ -52,7 +52,7 @@ def compute_eigensystem(matrix: np.ndarray, normalize: bool = False):
     TODO: Extend sorting such that when returned, the ith eigenvector belongs with the
           ith eigenvalue. Currently the sorting destroys this.
     """
-    eigenvalues, eigenvectors = np.linalg.eig(matrix)
+    eigenvalues, eigenvectors = np.linalg.eigh(matrix)
 
     if normalize:
         eigenvalues /= eigenvalues.sum()

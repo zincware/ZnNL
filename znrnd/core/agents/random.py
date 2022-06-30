@@ -38,14 +38,13 @@ class RandomAgent(Agent):
     Class for the random agent.
     """
 
-    target_set: np.ndarray
-    target_indices: list
-
     def __init__(self, data_generator: DataGenerator):
         """
         Constructor for the random agent.
         """
         self.data_generator = data_generator
+        self.target_set: np.ndarray
+        self.target_indices: list
 
     def _get_indices(self, n_points: int):
         """
