@@ -25,9 +25,8 @@ Summary
 -------
 """
 import jax.numpy as np
-from jax.lib import xla_bridge
-
 import pytest
+from jax.lib import xla_bridge
 
 from znrnd.core.analysis.entropy import EntropyAnalysis
 

@@ -106,6 +106,10 @@ class FlaxModel(Model):
                 If true, an accuracy computation will be performed. Only valid for
                 classification tasks.
         """
+        logger.info(
+            "Flax models have occasionally experienced memory allocation issues on "
+            "GPU. This is an ongoing bug that we are striving to fix soon."
+        )
         if layer_stack is not None:
             self.model = FundamentalModel(layer_stack)
         if flax_module is not None:

@@ -208,6 +208,7 @@ class RND(Agent):
         """
         if self.seed_point:
             seed_point = self.seed_point
+            # TODO get seed number
         else:
             # seed_point = self.fetch_data(1)
             seed_number = onp.random.randint(0, len(self.generator))
