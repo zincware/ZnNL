@@ -37,14 +37,6 @@ class RND(Agent):
             Target set to be built iteratively.
     """
 
-    historical_length: int = 0
-    target_set: list = []
-    target_indices: list = []
-    iterations: int = 0
-    stationary_iterations: int = 0
-    metric_results = None
-    metric_results_storage: list = []
-
     def __init__(
         self,
         data_generator: DataGenerator,
@@ -89,6 +81,15 @@ class RND(Agent):
         self.tolerance = tolerance
         self.seed_point = seed_point
         self.visualizer = visualizer
+
+        self.historical_length: int = 0
+        self.target_set: list = []
+        self.target_indices: list = []
+        self.iterations: int = 0
+        self.stationary_iterations: int = 0
+        self.metric_results = None
+        self.metric_results_storage: list = []
+        self.target_size: int = None
 
         # Run the class initialization
         self._set_defaults()
@@ -191,9 +192,15 @@ class RND(Agent):
             dataset = {"inputs": domain, "targets": codomain}
             self.predictor.train_model_recursively(train_ds=dataset, test_ds=dataset)
 
-    def _seed_process(self):
+    def _seed_process(self, visualize: bool):
         """
         Seed an RND process.
+
+        Parameters
+        ----------
+        visualize : bool
+                if true, visualization is performed on the data. This parameter is
+                populated by the build_dataset method.
 
         Returns
         -------
@@ -209,7 +216,8 @@ class RND(Agent):
         self._update_target_set(np.array(seed_point))
         self._retrain_network()
         self.target_indices.append(seed_number)
-        self.update_visualization(reference=False)
+        if visualize:
+            self.update_visualization(reference=False)
 
     def _store_metrics(self):
         """
@@ -233,21 +241,25 @@ class RND(Agent):
         condition_met : bool
             Will end the search loop if criteria is met.
         """
-        if self.historical_length == 0:
-            pass
-        elif len(self.target_set) == self.historical_length:
-            if self.stationary_iterations >= self.tolerance:
-                return True  # loop timeout
-            else:
-                self.stationary_iterations += 1
-                return False  # update stationary
-        elif self.target_size is not None:
+        condition = False
+
+        # Check if the target set is the correct size
+        if self.target_size is not None:
             if len(self.target_set) >= self.target_size:
-                return True
-        # Stationary iteration handling
-        else:
-            self.stationary_iterations = 0  # reset stationary iterations
-            return False
+                condition = True
+
+        # Check if timeout condition is met
+        if self.historical_length > 0:
+            if len(self.target_set) == self.historical_length:
+                if self.stationary_iterations >= self.tolerance:
+                    condition = True
+                else:
+                    self.stationary_iterations += 1
+
+            else:
+                self.stationary_iterations = 0  # reset stationary iterations
+
+        return condition
 
     def update_visualization(self, data: np.ndarray = None, reference: bool = False):
         """
@@ -291,7 +303,7 @@ class RND(Agent):
         print(f"Seed points: {self.seed_point}\n")
 
     def build_dataset(
-        self, target_size: int = None, visualize: bool = False, report: bool = True
+        self, target_size: int = None, visualize: bool = False, report: bool = False
     ):
         """
         Run the random network distillation methods and build the target set.
@@ -313,10 +325,12 @@ class RND(Agent):
         # Allow for optional target_sizes.
         self.target_size = target_size
         start = time.time()
-        self._seed_process()
+        self._seed_process(visualize=visualize)
         criteria = False
-        self.update_visualization(reference=True)
-        self.update_visualization(reference=False)
+
+        if visualize:
+            self.update_visualization(reference=True)
+            self.update_visualization(reference=False)
 
         while not criteria:
             self._choose_points()
@@ -324,7 +338,8 @@ class RND(Agent):
             self._retrain_network()
 
             criteria = self._evaluate_agent()
-            self.update_visualization(reference=False)
+            if visualize:
+                self.update_visualization(reference=False)
             self.iterations += 1
 
         stop = time.time()
