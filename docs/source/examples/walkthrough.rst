@@ -7,4 +7,8 @@ how it can be used.
    :maxdepth: 1
    :caption: Contents:
 
-   _notebooks/Simple_RND.ipynb
+   _notebooks/Simple-RND.ipynb
+   _notebooks/MNIST-Example.ipynb
+   _notebooks/CIFAR10.ipynb
+   _notebooks/Custom-Data-Generator.ipynb
+   _notebooks/Computing-Entropy.ipynb
