@@ -69,7 +69,7 @@ class TestEigenspaceAnalysis:
         -------
 
         """
-        self.calculator.compute_eigenvalue_density(nbins=500)
+        self.calculator.compute_eigenvalue_density(n_bins=500)
 
     def test_eigenvalue_spacing_distribution(self):
         """

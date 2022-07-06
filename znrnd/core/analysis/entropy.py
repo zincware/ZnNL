@@ -35,13 +35,12 @@ class EntropyAnalysis:
     Analyse the entropy of a matrix.
     """
 
-    eigenvalues: np.ndarray = None
-
     def __init__(self, matrix: np.ndarray):
         """
         Constructor for the entropy analysis class.
         """
         self.matrix = matrix
+        self.eigenvalues: np.ndarray
 
     def _compute_eigensystem(self, normalize: bool = True):
         """
@@ -49,8 +48,8 @@ class EntropyAnalysis:
 
         Returns
         -------
-        eigenvalues
-        eigenvectors
+        eigenvalues : np.ndarray
+                Populates the eigenvalues attribute of the class.
         """
         # Computes the reduced eigen-system
         self.eigenvalues, eigenvectors = compute_eigensystem(
@@ -59,7 +58,7 @@ class EntropyAnalysis:
 
     def compute_von_neumann_entropy(
         self, effective: bool = True, normalize_eig: bool = True
-    ):
+    ) -> float:
         """
         Compute the von-Neumann entropy of the matrix.
 
@@ -79,12 +78,12 @@ class EntropyAnalysis:
         # if self.eigenvalues is None:
         self._compute_eigensystem(normalize=normalize_eig)
 
-        log_vals = np.log(self.eigenvalues)
+        log_values = np.log(self.eigenvalues)
 
-        entropy = self.eigenvalues * log_vals
+        entropy = self.eigenvalues * log_values
 
         if effective:
-            max = np.log(len(self.eigenvalues))
-            entropy /= max
+            maximum_entropy = np.log(len(self.eigenvalues))
+            entropy /= maximum_entropy
 
         return -1 * entropy.sum()

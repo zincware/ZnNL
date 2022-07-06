@@ -47,7 +47,7 @@ class EigenSpaceAnalysis:
         """
         self.matrix = matrix
 
-    def compute_eigenvalues(self, normalize: bool = True):
+    def compute_eigenvalues(self, normalize: bool = True) -> np.ndarray:
         """
         Compute the eigenvalues of the matrix.
 
@@ -71,13 +71,13 @@ class EigenSpaceAnalysis:
 
         return eigenvalues
 
-    def compute_eigenvalue_density(self, nbins: int = 500):
+    def compute_eigenvalue_density(self, n_bins: int = 500):
         """
         Compute the eigenvalue density of the matrix.
 
         Parameters
         ----------
-        nbins : int
+        n_bins : int
                 Number of bins to use in the histogram.
 
         Returns
@@ -86,17 +86,17 @@ class EigenSpaceAnalysis:
         """
         eigenvalues = np.real(self.compute_eigenvalues())
 
-        fig = px.histogram(eigenvalues, nbins=nbins)
+        fig = px.histogram(eigenvalues, nbins=n_bins)
         fig.show()
 
-    def compute_eigenvalue_spacing_density(self, nbins: int = 500):
+    def compute_eigenvalue_spacing_density(self, n_bins: int = 500):
         """
         Compute the density of the spacing between the eigenvalues for comparison with
         the Wigner surmise.
 
         Parameters
         ----------
-        nbins : int
+        n_bins : int
                 Number of bins to use in the histogram.
 
         Returns
@@ -111,5 +111,5 @@ class EigenSpaceAnalysis:
 
         spacing = np.diff(eigenvalues)
 
-        fig = px.histogram(spacing, nbins=nbins)
+        fig = px.histogram(spacing, nbins=n_bins)
         fig.show()
