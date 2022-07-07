@@ -47,8 +47,6 @@ class NTModel(Model):
     Class for a neural tangents model.
     """
 
-    rng = jax.random.PRNGKey(onp.random.randint(0, 500))
-
     def __init__(
         self,
         loss_fn: Callable,
@@ -85,6 +83,7 @@ class NTModel(Model):
         Kernel operations are batched to a fixed size of 10, reduce if needed.
         This was selected to safely compute NTK on MNIST.
         """
+        self.rng = jax.random.PRNGKey(onp.random.randint(0, 500))
         self.init_fn = nt_module[0]
         self.apply_fn = jax.jit(nt_module[1])
         self.kernel_fn = nt.batch(nt_module[2], batch_size=batch_size)
