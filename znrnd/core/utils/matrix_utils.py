@@ -53,13 +53,13 @@ def compute_eigensystem(matrix: np.ndarray, normalize: bool = False, clip: bool 
 
     Notes
     -----
-    TODO: Extend sorting such that when returned, the ith eigenvector belongs with the
+    TODO: Extend sorting such that when returned, the ith eigen vector belongs with the
           ith eigenvalue. Currently the sorting destroys this.
     """
     eigenvalues, eigenvectors = np.linalg.eigh(matrix)
 
     if clip:
-        # TODO Add some loggin and an argument in the methods that call this function.
+        # TODO Add some logging and an argument in the methods that call this function.
         eigenvalues = np.clip(eigenvalues, 1e-14, None)
 
     if normalize:
