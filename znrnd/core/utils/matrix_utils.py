@@ -28,7 +28,7 @@ Module for helper functions related to matrices
 import jax.numpy as np
 
 
-def compute_eigensystem(matrix: np.ndarray, normalize: bool = False):
+def compute_eigensystem(matrix: np.ndarray, normalize: bool = False, clip: bool = True):
     """
     Compute the eigenspace of a matrix.
 
@@ -39,6 +39,10 @@ def compute_eigensystem(matrix: np.ndarray, normalize: bool = False):
     normalize : bool (default=False)
             If true, the eigenvalues are divided by the sum of the eigenvalues of the
             given matrix. This is equivalent to dividing by the size of the dataset.
+    clip : bool (default=True)
+            Clip the eigenvalues to a very small number to avoid negatives. This should
+            only be used if you are sure that negative numbers only arise due to some
+            numeric reason and that they should not exist.
 
     Returns
     -------
@@ -53,6 +57,10 @@ def compute_eigensystem(matrix: np.ndarray, normalize: bool = False):
           ith eigenvalue. Currently the sorting destroys this.
     """
     eigenvalues, eigenvectors = np.linalg.eigh(matrix)
+
+    if clip:
+        # TODO Add some loggin and an argument in the methods that call this function.
+        eigenvalues = np.clip(eigenvalues, 1e-14, None)
 
     if normalize:
         eigenvalues /= eigenvalues.sum()
