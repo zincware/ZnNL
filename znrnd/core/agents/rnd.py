@@ -76,7 +76,7 @@ class RND(Agent):
         self.target = target_network
         self.predictor = predictor_network
         self.metric = distance_metric
-        self.generator = data_generator
+        self.data_generator = data_generator
         self.point_selector = point_selector
         self.tolerance = tolerance
         self.seed_point = seed_point
@@ -146,7 +146,7 @@ class RND(Agent):
         points : np.ndarray
                 A tensor of data points.
         """
-        return self.generator.get_points(n_points)
+        return self.data_generator.get_points(n_points)
 
     def _choose_points(self):
         """
@@ -211,8 +211,8 @@ class RND(Agent):
             # TODO get seed number
         else:
             # seed_point = self.fetch_data(1)
-            seed_number = onp.random.randint(0, len(self.generator))
-            seed_point = self.generator.take_index(seed_number)
+            seed_number = onp.random.randint(0, len(self.data_generator))
+            seed_point = self.data_generator.take_index(seed_number)
 
         self._update_target_set(np.array(seed_point))
         self._retrain_network()
@@ -299,7 +299,7 @@ class RND(Agent):
         print("\nRND agent report")
         print("----------------")
         print(f"Run time: {time_elapsed / 60: 0.2f} m")
-        print(f"Size of point cloud: {len(self.generator)}")
+        print(f"Size of point cloud: {len(self.data_generator)}")
         print(f"Number of points chosen: {len(self.target_set)}")
         print(f"Seed points: {self.seed_point}\n")
 
