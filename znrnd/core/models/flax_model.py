@@ -184,7 +184,11 @@ class FlaxModel(Model):
 
         return metrics
 
-    def _create_train_state(self, init_rng: int):
+    def _create_train_state(self,
+                            init_rng: int,
+                            kernel_init: Callable = None,
+                            bias_init: Callable = None,
+                            ):
         """
         Create a training state of the model.
 
@@ -192,11 +196,20 @@ class FlaxModel(Model):
         ----------
         init_rng : int
                 Initial rng for train state that is immediately deleted.
+        kernel_init : Callable
+                Define the kernel initialization.
+        bias_init : Callable
+                Define the bias initialization.
 
         Returns
         -------
         initial state of model to then be trained.
         """
+        if kernel_init:
+            self.model.kernel_init = kernel_init
+        if bias_init:
+            self.model.bias_init = bias_init
+
         params = self.model.init(init_rng, np.ones(list(self.input_shape)))["params"]
 
         return train_state.TrainState.create(
