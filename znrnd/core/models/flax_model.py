@@ -205,11 +205,12 @@ class FlaxModel(Model):
 
         return metrics
 
-    def _create_train_state(self,
-                            init_rng: int,
-                            kernel_init: Callable = None,
-                            bias_init: Callable = None,
-                            ):
+    def _create_train_state(
+        self,
+        init_rng: int,
+        kernel_init: Callable = None,
+        bias_init: Callable = None,
+    ):
         """
         Create a training state of the model.
 
