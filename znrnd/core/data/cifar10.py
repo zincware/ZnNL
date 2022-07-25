@@ -26,7 +26,6 @@ Summary
 Data generator for the CIFAR 10 dataset.
 """
 import jax.numpy as np
-import numpy as np
 import plotly.graph_objects as go
 import tensorflow_datasets as tfds
 from plotly.subplots import make_subplots

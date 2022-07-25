@@ -50,4 +50,4 @@ class Agent:
         target_set : list
                 Returns the newly constructed target set.
         """
-        raise NotImplemented("Implemented in child classes.")
+        raise NotImplementedError("Implemented in child classes.")

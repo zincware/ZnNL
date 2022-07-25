@@ -44,7 +44,7 @@ class SimpleLoss(ABC):
         Constructor for the simple loss parent class.
         """
         super().__init__()
-        self.metric = None
+        self.metric: DistanceMetric = None
 
     def __call__(self, point_1: np.array, point_2: np.array) -> float:
         """

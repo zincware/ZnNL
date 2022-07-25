@@ -28,7 +28,4 @@ init function for the accuracy functions.
 from znrnd.core.accuracy_functions.accuracy_function import AccuracyFunction
 from znrnd.core.accuracy_functions.one_hot_accuracy import OneHotAccuracy
 
-__all__ = [
-    AccuracyFunction.__name__,
-    OneHotAccuracy.__name__
-]
+__all__ = [AccuracyFunction.__name__, OneHotAccuracy.__name__]

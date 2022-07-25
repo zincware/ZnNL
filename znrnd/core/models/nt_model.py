@@ -36,10 +36,10 @@ from flax.training import train_state
 from neural_tangents.stax import serial
 from tqdm import trange
 
+from znrnd.core.accuracy_functions.accuracy_function import AccuracyFunction
+from znrnd.core.loss_functions.simple_loss import SimpleLoss
 from znrnd.core.models.model import Model
 from znrnd.core.utils.matrix_utils import normalize_covariance_matrix
-from znrnd.core.loss_functions.simple_loss import SimpleLoss
-from znrnd.core.accuracy_functions.accuracy_function import AccuracyFunction
 
 logger = logging.getLogger(__name__)
 
@@ -338,9 +338,7 @@ class NTModel(Model):
 
         return summary
 
-    def validate_model(
-            self, dataset: dict, loss_fn: SimpleLoss
-    ):
+    def validate_model(self, dataset: dict, loss_fn: SimpleLoss):
         """
         Validate the model on some external data.
 

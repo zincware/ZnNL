@@ -26,6 +26,7 @@ Summary
 Compute the one hot accuracy between two points.
 """
 import jax.numpy as np
+
 from znrnd.core.accuracy_functions.accuracy_function import AccuracyFunction
 
 
@@ -33,6 +34,7 @@ class OneHotAccuracy(AccuracyFunction):
     """
     Compute the one hot accuracy between two points.
     """
+
     def __init__(self, num_class: int):
         """
         Constructor for the one hot accuracy.

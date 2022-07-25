@@ -5,12 +5,12 @@ import logging
 
 import znrnd
 from znrnd.core import (
+    accuracy_functions,
     agents,
     analysis,
     data,
     distance_metrics,
     loss_functions,
-    accuracy_functions,
     models,
     point_selection,
     similarity_measures,
