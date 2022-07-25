@@ -125,11 +125,13 @@ class NTModel(Model):
                 Define the bias initialization.
         """
         if kernel_init:
-            raise NotImplemented("Currently, there is no option customize the weight"
-                                 "initialization. ")
+            raise NotImplemented(
+                "Currently, there is no option customize the weightinitialization. "
+            )
         if bias_init:
-            raise NotImplemented("Currently, there is no option customize the bias"
-                                 "initialization. ")
+            raise NotImplemented(
+                "Currently, there is no option customize the biasinitialization. "
+            )
         if init_rng is None:
             init_rng = jax.random.PRNGKey(onp.random.randint(0, 500))
         self.model_state = self._create_train_state(init_rng)
