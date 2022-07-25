@@ -98,10 +98,40 @@ class NTModel(Model):
         self.training_threshold = training_threshold
 
         # initialize the model state
-        init_rng = jax.random.PRNGKey(onp.random.randint(0, 500))
-        self.model_state = self._create_train_state(init_rng)
+        self.model_state = None
+        self.init_model()
 
         self.compute_accuracy = compute_accuracy
+
+    def init_model(
+        self,
+        init_rng: int = None,
+        kernel_init: Callable = None,
+        bias_init: Callable = None,
+    ):
+        """
+        Initialize a model.
+
+        If no rng key is given, the key will be produced randomly.
+
+        Parameters
+        ----------
+        init_rng : int
+                Initial rng for train state that is immediately deleted.
+        kernel_init : Callable
+                Define the kernel initialization.
+        bias_init : Callable
+                Define the bias initialization.
+        """
+        if kernel_init:
+            raise NotImplemented("Currently, there is no option customize the weight"
+                                 "initialization. ")
+        if bias_init:
+            raise NotImplemented("Currently, there is no option customize the bias"
+                                 "initialization. ")
+        if init_rng is None:
+            init_rng = jax.random.PRNGKey(onp.random.randint(0, 500))
+        self.model_state = self._create_train_state(init_rng)
 
     def compute_ntk(
         self,
@@ -351,11 +381,9 @@ class NTModel(Model):
         See the parent class for a full doc-string.
         """
         if self.model_state is None:
-            init_rng = jax.random.PRNGKey(onp.random.randint(0, 500))
-            state = self._create_train_state(init_rng)
-            self.model_state = state
-        else:
-            state = self.model_state
+            self.init_model()
+
+        state = self.model_state
 
         loading_bar = trange(1, epochs + 1, ncols=100, unit="batch")
         test_losses = []
@@ -389,11 +417,8 @@ class NTModel(Model):
         Check parent class for full doc string.
         """
         if self.model_state is None:
-            init_rng = jax.random.PRNGKey(onp.random.randint(0, 500))
-            state = self._create_train_state(init_rng)
-            self.model_state = state
-        else:
-            state = self.model_state
+            self.init_model()
+        state = self.model_state
 
         condition = False
         counter = 0
@@ -421,9 +446,7 @@ class NTModel(Model):
             # Re-initialize the network if it is simply not converging.
             if counter % 10 == 0:
                 logger.info("Model training stagnating, re-initializing model.")
-                init_rng = jax.random.PRNGKey(onp.random.randint(0, 500))
-                state = self._create_train_state(init_rng)
-                self.model_state = state
+                self.init_model()
 
     def __call__(self, feature_vector: np.ndarray):
         """
