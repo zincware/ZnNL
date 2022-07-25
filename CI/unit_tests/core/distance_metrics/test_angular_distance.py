@@ -24,7 +24,7 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 import jax.numpy as np
-
+from numpy.testing import assert_array_equal
 from znrnd.core.distance_metrics.angular_distance import AngularDistance
 
 
@@ -47,12 +47,12 @@ class TestAngularDistance:
         # Test orthogonal vectors
         point_1 = np.array([[1, 0]])
         point_2 = np.array([[0, 1]])
-        metric(point_1, point_2) == [0.5]
+        assert_array_equal(metric(point_1, point_2), [0.5])
 
         # Test parallel vectors
         point_1 = np.array([[1, 0]])
         point_2 = np.array([[1, 1]])
-        metric(point_1, point_2) == [0.25]
+        assert_array_equal(metric(point_1, point_2), [0.25])
 
     def test_multiple_distances(self):
         """
@@ -68,4 +68,4 @@ class TestAngularDistance:
         # Test orthogonal vectors
         point_1 = np.array([[1, 0], [1, 0]])
         point_2 = np.array([[0, 1], [1, 1]])
-        metric(point_1, point_2) == [0.5, 0.25]
+        assert_array_equal(metric(point_1, point_2), [0.5, 0.25])

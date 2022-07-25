@@ -49,7 +49,7 @@ class TestOrderNDifference:
         # Test orthogonal vectors
         point_1 = np.array([[1.0, 7.0, 0.0, 0.0]])
         point_2 = np.array([[1.0, 1.0, 0.0, 0.0]])
-        metric(point_1, point_2) == [36.0]
+        assert_almost_equal(metric(point_1, point_2), [36.0], decimal=4)
 
     def test_order_3_distance(self):
         """
