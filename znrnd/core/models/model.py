@@ -8,10 +8,10 @@ Copyright Contributors to the Zincware Project.
 
 Description: Parent class for the models.
 """
-from typing import Callable, Union, Any
-from jax.random import PRNGKeyArray
+from typing import Any, Callable, Union
 
 import jax.numpy as np
+from jax.random import PRNGKeyArray
 
 
 class Model:

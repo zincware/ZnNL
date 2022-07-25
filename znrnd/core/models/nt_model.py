@@ -26,14 +26,14 @@ Summary
 Module for the neural tangents infinite width network models.
 """
 import logging
-from typing import Callable, Union, Any
+from typing import Any, Callable, Union
 
 import jax
 import jax.numpy as np
-from jax.random import PRNGKeyArray
 import neural_tangents as nt
 import numpy as onp
 from flax.training import train_state
+from jax.random import PRNGKeyArray
 from neural_tangents.stax import serial
 from tqdm import trange
 

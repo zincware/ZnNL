@@ -24,14 +24,14 @@ Summary
 Module for the use of a Flax model with ZnRND.
 """
 import logging
-from typing import Callable, List, Tuple, Union, Any
+from typing import Any, Callable, List, Tuple, Union
 
 import jax
 import jax.numpy as np
-from jax.random import PRNGKeyArray
 import numpy as onp
 from flax import linen as nn
 from flax.training import train_state
+from jax.random import PRNGKeyArray
 from tqdm import trange
 
 from znrnd.core.models.model import Model
