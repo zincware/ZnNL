@@ -48,16 +48,22 @@ class CIFAR10Generator(DataGenerator):
         ds_size : int
                 Size of the dataset to load.
         """
-        self.ds_train, self.ds_test = tfds.as_numpy(
+        self.train_ds, self.test_ds = tfds.as_numpy(
             tfds.load(
                 "cifar10:3.*.*",
                 split=["train[:%d]" % ds_size, "test[:%d]" % ds_size],
                 batch_size=-1,
             )
         )
-        self.ds_train["image"] = self.ds_train["image"] / 255.0
-        self.ds_test["image"] = self.ds_test["image"] / 255.0
-        self.data_pool = self.ds_train["image"].astype(float)
+        self.train_ds["inputs"] = self.train_ds["image"] / 255.0
+        self.test_ds["inputs"] = self.test_ds["image"] / 255.0
+        self.train_ds["targets"] = self.train_ds["label"]
+        self.test_ds["targets"] = self.test_ds["label"]
+        self.train_ds.pop("image")
+        self.train_ds.pop("label")
+        self.test_ds.pop("image")
+        self.test_ds.pop("label")
+        self.data_pool = self.train_ds["inputs"].astype(float)
 
     def plot_image(self, indices: list = None, data_list: list = None):
         """
@@ -72,7 +78,7 @@ class CIFAR10Generator(DataGenerator):
         """
         if indices is not None:
             data_length = len(indices)
-            data_source = self.ds_train["image"][indices]
+            data_source = self.train_ds["inputs"][indices]
         elif data_list is not None:
             data_length = len(data_list)
             data_source = data_list
@@ -92,7 +98,7 @@ class CIFAR10Generator(DataGenerator):
         for i in range(1, rows + 1):
             for j in range(1, columns + 1):
                 if indices is not None:
-                    data = self.ds_train["image"][img_counter] * 255.0
+                    data = self.train_ds["inputs"][img_counter] * 255.0
                 else:
                     data = data_list[img_counter] * 255.0
                 fig.add_trace(go.Image(z=data), row=i, col=j)
