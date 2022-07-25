@@ -60,4 +60,4 @@ class OneHotAccuracy(AccuracyFunction):
         accuracy : float
                 Accuracy of the points.
         """
-        np.mean(np.argmax(predictions, -1) == targets)
+        return np.mean(np.argmax(predictions, -1) == targets)
