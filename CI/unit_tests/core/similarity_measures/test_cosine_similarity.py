@@ -13,6 +13,7 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 import jax.numpy as np
+from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 from znrnd.core.similarity_measures.cosine_similarity import CosineSim
 
@@ -36,14 +37,14 @@ class TestCosineSimilarity:
         # Test orthogonal vectors
         point_1 = np.array([[1, 0, 0, 0]])
         point_2 = np.array([[0, 1, 0, 0]])
-        metric(point_1, point_2) == [0]
+        assert_array_equal(metric(point_1, point_2), [0])
 
         # Test parallel vectors
         point_1 = np.array([[1, 0, 0, 0]])
         point_2 = np.array([[1, 0, 0, 0]])
-        metric(point_1, point_2) == [1]
+        assert_array_equal(metric(point_1, point_2), [1])
 
         # Somewhere in between
         point_1 = np.array([[1.0, 0, 0, 0]])
         point_2 = np.array([[0.5, 1.0, 0, 3.0]])
-        metric(point_1, point_2) == [1 - 0.84382623]
+        assert_array_almost_equal(metric(point_1, point_2), [1 - 0.84382623], decimal=4)
