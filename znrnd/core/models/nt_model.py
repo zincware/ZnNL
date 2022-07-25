@@ -190,8 +190,8 @@ class NTModel(Model):
                 A dict of current training metrics, e.g. {"loss": ..., "accuracy": ...}
         """
         loss = self.loss_fn(predictions, targets)
-        if self.compute_accuracy:
-            accuracy = np.mean(np.argmax(predictions, -1) == targets)
+        if self.accuracy_fn is not None:
+            accuracy = self.accuracy_fn(predictions, targets)
             metrics = {"loss": loss, "accuracy": accuracy}
 
         else:
