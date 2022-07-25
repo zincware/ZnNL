@@ -26,10 +26,11 @@ Summary
 Module for the neural tangents infinite width network models.
 """
 import logging
-from typing import Callable
+from typing import Callable, Union, Any
 
 import jax
 import jax.numpy as np
+from jax.random import PRNGKeyArray
 import neural_tangents as nt
 import numpy as onp
 from flax.training import train_state
@@ -105,7 +106,7 @@ class NTModel(Model):
 
     def init_model(
         self,
-        init_rng: int = None,
+        init_rng: Union[Any, PRNGKeyArray] = None,
         kernel_init: Callable = None,
         bias_init: Callable = None,
     ):
@@ -116,7 +117,7 @@ class NTModel(Model):
 
         Parameters
         ----------
-        init_rng : int
+        init_rng : Union[Any, PRNGKeyArray]
                 Initial rng for train state that is immediately deleted.
         kernel_init : Callable
                 Define the kernel initialization.
@@ -175,13 +176,13 @@ class NTModel(Model):
 
         return {"empirical": empirical_ntk, "infinite": infinite_ntk}
 
-    def _create_train_state(self, init_rng: int):
+    def _create_train_state(self, init_rng: Union[Any, PRNGKeyArray]):
         """
         Create a training state of the model.
 
         Parameters
         ----------
-        init_rng : int
+        init_rng : Union[Any, PRNGKeyArray]
                 Initial rng for train state that is immediately deleted.
 
         Returns

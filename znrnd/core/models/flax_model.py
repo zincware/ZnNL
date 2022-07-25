@@ -24,10 +24,11 @@ Summary
 Module for the use of a Flax model with ZnRND.
 """
 import logging
-from typing import Callable, List, Tuple
+from typing import Callable, List, Tuple, Union, Any
 
 import jax
 import jax.numpy as np
+from jax.random import PRNGKeyArray
 import numpy as onp
 from flax import linen as nn
 from flax.training import train_state
@@ -125,14 +126,13 @@ class FlaxModel(Model):
         self.apply_fn = jax.jit(self.model.apply)
 
         # initialize the model state
-        init_rng = jax.random.PRNGKey(onp.random.randint(0, 500))
         self.init_model()
 
         self.compute_accuracy = compute_accuracy
 
     def init_model(
         self,
-        init_rng: int = None,
+        init_rng: Union[Any, PRNGKeyArray] = None,
         kernel_init: Callable = None,
         bias_init: Callable = None,
     ):
@@ -143,7 +143,7 @@ class FlaxModel(Model):
 
         Parameters
         ----------
-        init_rng : int
+        init_rng : Union[Any, PRNGKeyArray]
                 Initial rng for train state that is immediately deleted.
         kernel_init : Callable
                 Define the kernel initialization.
@@ -209,7 +209,7 @@ class FlaxModel(Model):
 
     def _create_train_state(
         self,
-        init_rng: int,
+        init_rng: Union[Any, PRNGKeyArray],
         kernel_init: Callable = None,
         bias_init: Callable = None,
     ):
@@ -218,7 +218,7 @@ class FlaxModel(Model):
 
         Parameters
         ----------
-        init_rng : int
+        init_rng : Union[Any, PRNGKeyArray]
                 Initial rng for train state that is immediately deleted.
         kernel_init : Callable
                 Define the kernel initialization.
