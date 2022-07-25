@@ -139,6 +139,8 @@ class FlaxModel(Model):
         """
         Initialize a model.
 
+        If no rng key is given, the key will be produced randomly.
+
         Parameters
         ----------
         init_rng : int
@@ -390,8 +392,8 @@ class FlaxModel(Model):
         """
         if self.model_state is None:
             self.init_model()
-        else:
-            state = self.model_state
+
+        state = self.model_state
 
         loading_bar = trange(1, epochs + 1, ncols=100, unit="batch")
         test_losses = []
@@ -425,8 +427,7 @@ class FlaxModel(Model):
         """
         if self.model_state is None:
             self.init_model()
-        else:
-            state = self.model_state
+        state = self.model_state
 
         condition = False
         counter = 0
