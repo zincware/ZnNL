@@ -25,7 +25,11 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 import jax.numpy as np
-from numpy.testing import assert_almost_equal, assert_array_almost_equal
+from numpy.testing import (
+    assert_almost_equal,
+    assert_array_almost_equal,
+    assert_array_equal,
+)
 
 from znrnd.core.distance_metrics.l_p_norm import LPNorm
 
@@ -50,7 +54,7 @@ class TestLPNorm:
         point_1 = np.array([[1.0, 7.0, 0.0, 0.0]])
         point_2 = np.array([[1.0, 1.0, 0.0, 0.0]])
 
-        metric(point_1, point_2) == [6.0]
+        assert_array_equal(metric(point_1, point_2), [6.0])
 
     def test_l_3_distance(self):
         """
