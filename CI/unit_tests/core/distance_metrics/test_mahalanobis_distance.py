@@ -31,7 +31,7 @@ import jax
 import jax.numpy as np
 import numpy as onp
 import scipy.spatial.distance
-from numpy.testing import assert_almost_equal, assert_array_equal
+from numpy.testing import assert_almost_equal, assert_array_almost_equal
 
 from znrnd.core.distance_metrics.mahalanobis_distance import MahalanobisDistance
 
@@ -92,7 +92,7 @@ class TestMahalanobisDistance:
 
         # Assert identity
         metric = MahalanobisDistance()
-        assert_array_equal(metric(point_1, point_2)[-1], 0)
+        assert_array_almost_equal(metric(point_1, point_2)[-1], 0)
 
     def test_symmetry(self):
         """
@@ -121,7 +121,9 @@ class TestMahalanobisDistance:
 
         # Assert identity
         metric = MahalanobisDistance()
-        assert_array_equal(metric(point_1, point_2)[-1], (metric(point_1, point_2)[-2]))
+        assert_array_almost_equal(
+            metric(point_1, point_2)[-1], (metric(point_1, point_2)[-2])
+        )
 
     @staticmethod
     def create_sample_set():
