@@ -89,7 +89,7 @@ class Model:
         batch_size : int
                 Size of the batch to use in training.
         """
-        raise NotImplemented("Implemented in child class.")
+        raise NotImplementedError("Implemented in child class.")
 
     def compute_ntk(
         self,
