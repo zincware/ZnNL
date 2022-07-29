@@ -122,6 +122,7 @@ class FlaxModel(Model):
         self.optimizer = optimizer
         self.input_shape = input_shape
         self.training_threshold = training_threshold
+        self.model_state = None
 
         self.apply_fn = jax.jit(self.model.apply)
 
