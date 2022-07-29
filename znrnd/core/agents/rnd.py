@@ -338,7 +338,11 @@ class RND(Agent):
         print(f"Seed points: {self.seed_point}\n")
 
     def build_dataset(
-        self, target_size: int = None, visualize: bool = False, report: bool = False
+        self, 
+        target_size: int = None,
+        visualize: bool = False, 
+        report: bool = False, 
+        store_metrics: bool = False
     ):
         """
         Run the random network distillation methods and build the target set.
@@ -351,6 +355,8 @@ class RND(Agent):
                 If true, a t-SNE visualization will be performed on the final models.
         report : bool (default=True)
                 If true, print a report about the RND performance.
+        store_metrics : bool (default=True)
+                If true, store the RND metrics.
 
         Returns
         -------
@@ -369,7 +375,8 @@ class RND(Agent):
 
         while not criteria:
             self._choose_points()
-            # self._store_metrics()
+            if store_metrics:
+                self._store_metrics()
             self._retrain_network()
 
             criteria = self._evaluate_agent()
