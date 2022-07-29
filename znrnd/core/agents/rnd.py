@@ -12,6 +12,7 @@ import time
 from typing import Union
 
 import jax.numpy as np
+from jax.random import PRNGKeyArray
 import numpy as onp
 
 import znrnd
@@ -117,7 +118,7 @@ class RND(Agent):
         init_predictor: bool = True,
         init_target: bool = True,
         predictor_rng: int = None,
-        target_rng: int = None,
+        target_rng: Union[Any, PRNGKeyArray] = None,
     ):
         """
         Re-initialize the RND models.
@@ -133,7 +134,7 @@ class RND(Agent):
                 re-initialize the target network
         predictor_rng : int
                 jax PRNG seed for the predictor initialization
-        target_rng
+        target_rng : Union[Any, PRNGKeyArray]
                 jax PRNG seed for the target initialization
         """
         if init_predictor is True:
