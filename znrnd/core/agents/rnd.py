@@ -9,7 +9,7 @@ Copyright Contributors to the Zincware Project.
 Description: Module for the implementation of random network distillation.
 """
 import time
-from typing import Union
+from typing import Any, Union
 
 import jax.numpy as np
 import numpy as onp
@@ -136,7 +136,7 @@ class RND(Agent):
                 jax PRNG seed for the predictor initialization
         target_rng : Union[Any, PRNGKeyArray]
                 jax PRNG seed for the target initialization
-                
+
         Returns
         -------
         Re-initializes the models.
@@ -338,11 +338,11 @@ class RND(Agent):
         print(f"Seed points: {self.seed_point}\n")
 
     def build_dataset(
-        self, 
+        self,
         target_size: int = None,
-        visualize: bool = False, 
-        report: bool = False, 
-        store_metrics: bool = False
+        visualize: bool = False,
+        report: bool = False,
+        store_metrics: bool = False,
     ):
         """
         Run the random network distillation methods and build the target set.
