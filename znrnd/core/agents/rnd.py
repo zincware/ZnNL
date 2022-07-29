@@ -136,6 +136,10 @@ class RND(Agent):
                 jax PRNG seed for the predictor initialization
         target_rng : Union[Any, PRNGKeyArray]
                 jax PRNG seed for the target initialization
+                
+        Returns
+        -------
+        Re-initializes the models.
         """
         if init_predictor is True:
             self.predictor.init_model(init_rng=predictor_rng)
