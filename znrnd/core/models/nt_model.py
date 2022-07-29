@@ -388,7 +388,7 @@ class NTModel(Model):
 
         state = self.model_state
 
-        loading_bar = trange(1, epochs + 1, ncols=100, unit="batch")
+        loading_bar = trange(1, epochs + 1, ncols=100, unit="batch", disable=True)
         test_losses = []
         test_accuracy = []
         training_metrics = []
@@ -426,7 +426,7 @@ class NTModel(Model):
         condition = False
         counter = 0
         while not condition:
-            loading_bar = trange(1, epochs + 1, ncols=100, unit="batch")
+            loading_bar = trange(1, epochs + 1, ncols=100, unit="batch", disable=True)
             for i in loading_bar:
                 loading_bar.set_description(f"Epoch: {i}")
 
