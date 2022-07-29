@@ -364,7 +364,7 @@ class RND(Agent):
 
         while not criteria:
             self._choose_points()
-            #self._store_metrics()
+            # self._store_metrics()
             self._retrain_network()
 
             criteria = self._evaluate_agent()
