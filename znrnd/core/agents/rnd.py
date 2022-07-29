@@ -12,8 +12,8 @@ import time
 from typing import Union
 
 import jax.numpy as np
-from jax.random import PRNGKeyArray
 import numpy as onp
+from jax.random import PRNGKeyArray
 
 import znrnd
 from znrnd.core.agents.agent import Agent
