@@ -54,6 +54,7 @@ class Model:
         test_ds: dict,
         epochs: int = 10,
         batch_size: int = 1,
+        disable_loading_bar: bool = False,
     ):
         """
         Train the model on data.
@@ -68,11 +69,18 @@ class Model:
                 Number of epochs to train over.
         batch_size : int
                 Size of the batch to use in training.
+        disable_loading_bar : bool
+                Disable the output visualization of the loading par.
         """
         raise NotImplemented("Implemented in child class.")
 
     def train_model_recursively(
-        self, train_ds: dict, test_ds: dict, epochs: int = 10, batch_size: int = 1
+        self,
+        train_ds: dict,
+        test_ds: dict,
+        epochs: int = 10,
+        batch_size: int = 1,
+        disable_loading_bar: bool = False,
     ):
         """
         Train a model recursively until a threshold is reached or the models fails
@@ -88,6 +96,8 @@ class Model:
                 Number of epochs to train over.
         batch_size : int
                 Size of the batch to use in training.
+        disable_loading_bar : bool
+                Disable the output visualization of the loading par.
         """
         raise NotImplementedError("Implemented in child class.")
 

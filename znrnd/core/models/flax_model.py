@@ -385,6 +385,7 @@ class FlaxModel(Model):
         test_ds: dict,
         epochs: int = 50,
         batch_size: int = 1,
+        disable_loading_bar: bool = False,
     ):
         """
         Train the model.
@@ -396,7 +397,9 @@ class FlaxModel(Model):
 
         state = self.model_state
 
-        loading_bar = trange(1, epochs + 1, ncols=100, unit="batch")
+        loading_bar = trange(
+            1, epochs + 1, ncols=100, unit="batch", disable=disable_loading_bar
+        )
         test_losses = []
         test_accuracy = []
         training_metrics = []
@@ -421,7 +424,12 @@ class FlaxModel(Model):
         return test_losses, test_accuracy, training_metrics
 
     def train_model_recursively(
-        self, train_ds: dict, test_ds: dict, epochs: int = 100, batch_size: int = 1
+        self,
+        train_ds: dict,
+        test_ds: dict,
+        epochs: int = 100,
+        batch_size: int = 1,
+        disable_loading_bar: bool = False,
     ):
         """
         Check parent class for full doc string.
@@ -433,7 +441,9 @@ class FlaxModel(Model):
         condition = False
         counter = 0
         while not condition:
-            loading_bar = trange(1, epochs + 1, ncols=100, unit="batch")
+            loading_bar = trange(
+                1, epochs + 1, ncols=100, unit="batch", disable=disable_loading_bar
+            )
             for i in loading_bar:
                 loading_bar.set_description(f"Epoch: {i}")
 
