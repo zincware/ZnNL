@@ -48,6 +48,7 @@ class RND(Agent):
         visualizer: TSNEVisualizer = None,
         tolerance: int = 100,
         seed_point: list = None,
+        disable_loading_bar: bool = False,
     ):
         """
         Constructor for the RND class.
@@ -72,6 +73,8 @@ class RND(Agent):
                 run.
         seed_point : list
                 Choose to start with an initial point as seed point
+        disable_loading_bar : bool
+                Disable the output visualization of the loading par.
         """
         # User defined attributes.
         self.target = target_network
@@ -82,6 +85,7 @@ class RND(Agent):
         self.tolerance = tolerance
         self.seed_point = seed_point
         self.visualizer = visualizer
+        self.disable_loading_bar = disable_loading_bar
 
         self.historical_length: int = 0
         self.target_set: list = []
@@ -224,7 +228,11 @@ class RND(Agent):
             domain = np.array(self.target_set)
             codomain = self.target(domain)
             dataset = {"inputs": domain, "targets": codomain}
-            self.predictor.train_model_recursively(train_ds=dataset, test_ds=dataset)
+            self.predictor.train_model_recursively(
+                train_ds=dataset,
+                test_ds=dataset,
+                disable_loading_bar=self.disable_loading_bar,
+            )
 
     def _seed_process(self, visualize: bool):
         """
