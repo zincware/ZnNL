@@ -48,7 +48,7 @@ class NTModel(Model):
     Class for a neural tangents model.
     """
 
-    rng = jax.random.PRNGKey(onp.random.randint(0, 500))
+    rng = jax.random.PRNGKey(onp.random.randint(0, 1000000))
 
     def __init__(
         self,
@@ -133,7 +133,7 @@ class NTModel(Model):
                 "Currently, there is no option customize the biasinitialization. "
             )
         if init_rng is None:
-            init_rng = jax.random.PRNGKey(onp.random.randint(0, 500))
+            init_rng = jax.random.PRNGKey(onp.random.randint(0, 1000000))
         self.model_state = self._create_train_state(init_rng)
 
     def compute_ntk(

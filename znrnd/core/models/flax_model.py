@@ -73,7 +73,7 @@ class FlaxModel(Model):
 
     model: nn.Module
     model_state: train_state.TrainState = None
-    rng = jax.random.PRNGKey(onp.random.randint(0, 500))
+    rng = jax.random.PRNGKey(onp.random.randint(0, 1000000))
 
     def __init__(
         self,
@@ -152,7 +152,7 @@ class FlaxModel(Model):
                 Define the bias initialization.
         """
         if init_rng is None:
-            init_rng = jax.random.PRNGKey(onp.random.randint(0, 500))
+            init_rng = jax.random.PRNGKey(onp.random.randint(0, 1000000))
         self.model_state = self._create_train_state(init_rng, kernel_init, bias_init)
 
     def compute_ntk(
