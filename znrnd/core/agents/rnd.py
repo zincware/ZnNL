@@ -121,7 +121,7 @@ class RND(Agent):
         self,
         init_predictor: bool = True,
         init_target: bool = True,
-        predictor_rng: int = None,
+        predictor_rng: Union[Any, PRNGKeyArray] = None,
         target_rng: Union[Any, PRNGKeyArray] = None,
     ):
         """
