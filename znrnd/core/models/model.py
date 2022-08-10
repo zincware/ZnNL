@@ -8,9 +8,10 @@ Copyright Contributors to the Zincware Project.
 
 Description: Parent class for the models.
 """
-from typing import Callable
+from typing import Any, Callable, Union
 
 import jax.numpy as np
+from jax.random import PRNGKeyArray
 
 
 class Model:
@@ -27,12 +28,33 @@ class Model:
 
     model: Callable
 
+    def init_model(
+        self,
+        init_rng: Union[Any, PRNGKeyArray] = None,
+        kernel_init: Callable = None,
+        bias_init: Callable = None,
+    ):
+        """
+        Initialize a model.
+
+        Parameters
+        ----------
+        init_rng : Union[Any, PRNGKeyArray]
+                Initial rng for train state that is immediately deleted.
+        kernel_init : Callable
+                Define the kernel initialization.
+        bias_init : Callable
+                Define the bias initialization.
+        """
+        raise NotImplemented("Implemented in child class.")
+
     def train_model(
         self,
         train_ds: dict,
         test_ds: dict,
         epochs: int = 10,
         batch_size: int = 1,
+        disable_loading_bar: bool = False,
     ):
         """
         Train the model on data.
@@ -47,11 +69,18 @@ class Model:
                 Number of epochs to train over.
         batch_size : int
                 Size of the batch to use in training.
+        disable_loading_bar : bool
+                Disable the output visualization of the loading par.
         """
         raise NotImplementedError("Implemented in child class.")
 
     def train_model_recursively(
-        self, train_ds: dict, test_ds: dict, epochs: int = 10, batch_size: int = 1
+        self,
+        train_ds: dict,
+        test_ds: dict,
+        epochs: int = 10,
+        batch_size: int = 1,
+        disable_loading_bar: bool = False,
     ):
         """
         Train a model recursively until a threshold is reached or the models fails
@@ -67,6 +96,8 @@ class Model:
                 Number of epochs to train over.
         batch_size : int
                 Size of the batch to use in training.
+        disable_loading_bar : bool
+                Disable the output visualization of the loading par.
         """
         raise NotImplementedError("Implemented in child class.")
 

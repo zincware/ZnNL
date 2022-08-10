@@ -26,13 +26,14 @@ Summary
 Module for the neural tangents infinite width network models.
 """
 import logging
-from typing import Callable
+from typing import Any, Callable, Union
 
 import jax
 import jax.numpy as np
 import neural_tangents as nt
 import numpy as onp
 from flax.training import train_state
+from jax.random import PRNGKeyArray
 from neural_tangents.stax import serial
 from tqdm import trange
 
@@ -98,10 +99,42 @@ class NTModel(Model):
         self.training_threshold = training_threshold
 
         # initialize the model state
-        init_rng = jax.random.PRNGKey(onp.random.randint(0, 500))
-        self.model_state = self._create_train_state(init_rng)
+        self.model_state = None
+        self.init_model()
 
         self.compute_accuracy = compute_accuracy
+
+    def init_model(
+        self,
+        init_rng: Union[Any, PRNGKeyArray] = None,
+        kernel_init: Callable = None,
+        bias_init: Callable = None,
+    ):
+        """
+        Initialize a model.
+
+        If no rng key is given, the key will be produced randomly.
+
+        Parameters
+        ----------
+        init_rng : Union[Any, PRNGKeyArray]
+                Initial rng for train state that is immediately deleted.
+        kernel_init : Callable
+                Define the kernel initialization.
+        bias_init : Callable
+                Define the bias initialization.
+        """
+        if kernel_init:
+            raise NotImplemented(
+                "Currently, there is no option customize the weightinitialization. "
+            )
+        if bias_init:
+            raise NotImplemented(
+                "Currently, there is no option customize the biasinitialization. "
+            )
+        if init_rng is None:
+            init_rng = jax.random.PRNGKey(onp.random.randint(0, 1000000))
+        self.model_state = self._create_train_state(init_rng)
 
     def compute_ntk(
         self,
@@ -145,13 +178,13 @@ class NTModel(Model):
 
         return {"empirical": empirical_ntk, "infinite": infinite_ntk}
 
-    def _create_train_state(self, init_rng: int):
+    def _create_train_state(self, init_rng: Union[Any, PRNGKeyArray]):
         """
         Create a training state of the model.
 
         Parameters
         ----------
-        init_rng : int
+        init_rng : Union[Any, PRNGKeyArray]
                 Initial rng for train state that is immediately deleted.
 
         Returns
@@ -374,6 +407,7 @@ class NTModel(Model):
         test_ds: dict,
         epochs: int = 50,
         batch_size: int = 1,
+        disable_loading_bar: bool = False,
     ):
         """
         Train the model.
@@ -381,13 +415,13 @@ class NTModel(Model):
         See the parent class for a full doc-string.
         """
         if self.model_state is None:
-            init_rng = jax.random.PRNGKey(onp.random.randint(0, 500))
-            state = self._create_train_state(init_rng)
-            self.model_state = state
-        else:
-            state = self.model_state
+            self.init_model()
 
-        loading_bar = trange(1, epochs + 1, ncols=100, unit="batch")
+        state = self.model_state
+
+        loading_bar = trange(
+            1, epochs + 1, ncols=100, unit="batch", disable=disable_loading_bar
+        )
         test_losses = []
         test_accuracy = []
         training_metrics = []
@@ -413,22 +447,26 @@ class NTModel(Model):
         return test_losses, test_accuracy, training_metrics
 
     def train_model_recursively(
-        self, train_ds: dict, test_ds: dict, epochs: int = 100, batch_size: int = 1
+        self,
+        train_ds: dict,
+        test_ds: dict,
+        epochs: int = 100,
+        batch_size: int = 1,
+        disable_loading_bar: bool = False,
     ):
         """
         Check parent class for full doc string.
         """
         if self.model_state is None:
-            init_rng = jax.random.PRNGKey(onp.random.randint(0, 500))
-            state = self._create_train_state(init_rng)
-            self.model_state = state
-        else:
-            state = self.model_state
+            self.init_model()
+        state = self.model_state
 
         condition = False
         counter = 0
         while not condition:
-            loading_bar = trange(1, epochs + 1, ncols=100, unit="batch")
+            loading_bar = trange(
+                1, epochs + 1, ncols=100, unit="batch", disable=disable_loading_bar
+            )
             for i in loading_bar:
                 loading_bar.set_description(f"Epoch: {i}")
 
@@ -451,9 +489,7 @@ class NTModel(Model):
             # Re-initialize the network if it is simply not converging.
             if counter % 10 == 0:
                 logger.info("Model training stagnating, re-initializing model.")
-                init_rng = jax.random.PRNGKey(onp.random.randint(0, 500))
-                state = self._create_train_state(init_rng)
-                self.model_state = state
+                self.init_model()
 
     def __call__(self, feature_vector: np.ndarray):
         """

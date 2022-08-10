@@ -24,13 +24,14 @@ Summary
 Module for the use of a Flax model with ZnRND.
 """
 import logging
-from typing import Callable, List, Tuple
+from typing import Any, Callable, List, Tuple, Union
 
 import jax
 import jax.numpy as np
 import numpy as onp
 from flax import linen as nn
 from flax.training import train_state
+from jax.random import PRNGKeyArray
 from tqdm import trange
 
 from znrnd.core.models.model import Model
@@ -72,7 +73,7 @@ class FlaxModel(Model):
 
     model: nn.Module
     model_state: train_state.TrainState = None
-    rng = jax.random.PRNGKey(onp.random.randint(0, 500))
+    rng = jax.random.PRNGKey(onp.random.randint(0, 1000000))
 
     def __init__(
         self,
@@ -121,15 +122,38 @@ class FlaxModel(Model):
         self.optimizer = optimizer
         self.input_shape = input_shape
         self.training_threshold = training_threshold
+        self.model_state = None
 
         self.apply_fn = jax.jit(self.model.apply)
 
         # initialize the model state
-        init_rng = jax.random.PRNGKey(onp.random.randint(0, 500))
-        state = self._create_train_state(init_rng)
-        self.model_state = state
+        self.init_model()
 
         self.compute_accuracy = compute_accuracy
+
+    def init_model(
+        self,
+        init_rng: Union[Any, PRNGKeyArray] = None,
+        kernel_init: Callable = None,
+        bias_init: Callable = None,
+    ):
+        """
+        Initialize a model.
+
+        If no rng key is given, the key will be produced randomly.
+
+        Parameters
+        ----------
+        init_rng : Union[Any, PRNGKeyArray]
+                Initial rng for train state that is immediately deleted.
+        kernel_init : Callable
+                Define the kernel initialization.
+        bias_init : Callable
+                Define the bias initialization.
+        """
+        if init_rng is None:
+            init_rng = jax.random.PRNGKey(onp.random.randint(0, 1000000))
+        self.model_state = self._create_train_state(init_rng, kernel_init, bias_init)
 
     def compute_ntk(
         self,
@@ -184,19 +208,33 @@ class FlaxModel(Model):
 
         return metrics
 
-    def _create_train_state(self, init_rng: int):
+    def _create_train_state(
+        self,
+        init_rng: Union[Any, PRNGKeyArray],
+        kernel_init: Callable = None,
+        bias_init: Callable = None,
+    ):
         """
         Create a training state of the model.
 
         Parameters
         ----------
-        init_rng : int
+        init_rng : Union[Any, PRNGKeyArray]
                 Initial rng for train state that is immediately deleted.
+        kernel_init : Callable
+                Define the kernel initialization.
+        bias_init : Callable
+                Define the bias initialization.
 
         Returns
         -------
         initial state of model to then be trained.
         """
+        if kernel_init:
+            self.model.kernel_init = kernel_init
+        if bias_init:
+            self.model.bias_init = bias_init
+
         params = self.model.init(init_rng, np.ones(list(self.input_shape)))["params"]
 
         return train_state.TrainState.create(
@@ -347,6 +385,7 @@ class FlaxModel(Model):
         test_ds: dict,
         epochs: int = 50,
         batch_size: int = 1,
+        disable_loading_bar: bool = False,
     ):
         """
         Train the model.
@@ -354,13 +393,13 @@ class FlaxModel(Model):
         See the parent class for a full doc-string.
         """
         if self.model_state is None:
-            init_rng = jax.random.PRNGKey(onp.random.randint(0, 500))
-            state = self._create_train_state(init_rng)
-            self.model_state = state
-        else:
-            state = self.model_state
+            self.init_model()
 
-        loading_bar = trange(1, epochs + 1, ncols=100, unit="batch")
+        state = self.model_state
+
+        loading_bar = trange(
+            1, epochs + 1, ncols=100, unit="batch", disable=disable_loading_bar
+        )
         test_losses = []
         test_accuracy = []
         training_metrics = []
@@ -385,22 +424,26 @@ class FlaxModel(Model):
         return test_losses, test_accuracy, training_metrics
 
     def train_model_recursively(
-        self, train_ds: dict, test_ds: dict, epochs: int = 100, batch_size: int = 1
+        self,
+        train_ds: dict,
+        test_ds: dict,
+        epochs: int = 100,
+        batch_size: int = 1,
+        disable_loading_bar: bool = False,
     ):
         """
         Check parent class for full doc string.
         """
         if self.model_state is None:
-            init_rng = jax.random.PRNGKey(onp.random.randint(0, 500))
-            state = self._create_train_state(init_rng)
-            self.model_state = state
-        else:
-            state = self.model_state
+            self.init_model()
+        state = self.model_state
 
         condition = False
         counter = 0
         while not condition:
-            loading_bar = trange(1, epochs + 1, ncols=100, unit="batch")
+            loading_bar = trange(
+                1, epochs + 1, ncols=100, unit="batch", disable=disable_loading_bar
+            )
             for i in loading_bar:
                 loading_bar.set_description(f"Epoch: {i}")
 
@@ -425,9 +468,7 @@ class FlaxModel(Model):
             # Re-initialize the network if it is simply not converging.
             if counter % 10 == 0:
                 logger.info("Model training stagnating, re-initializing model.")
-                init_rng = jax.random.PRNGKey(onp.random.randint(0, 500))
-                state = self._create_train_state(init_rng)
-                self.model_state = state
+                self.init_model()
 
     def __call__(self, feature_vector: np.ndarray):
         """

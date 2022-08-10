@@ -9,10 +9,11 @@ Copyright Contributors to the Zincware Project.
 Description: Module for the implementation of random network distillation.
 """
 import time
-from typing import Union
+from typing import Any, Union
 
 import jax.numpy as np
 import numpy as onp
+from jax.random import PRNGKeyArray
 
 import znrnd
 from znrnd.core.agents.agent import Agent
@@ -47,6 +48,7 @@ class RND(Agent):
         visualizer: TSNEVisualizer = None,
         tolerance: int = 100,
         seed_point: list = None,
+        disable_loading_bar: bool = False,
     ):
         """
         Constructor for the RND class.
@@ -71,6 +73,8 @@ class RND(Agent):
                 run.
         seed_point : list
                 Choose to start with an initial point as seed point
+        disable_loading_bar : bool
+                Disable the output visualization of the loading par.
         """
         # User defined attributes.
         self.target = target_network
@@ -81,6 +85,7 @@ class RND(Agent):
         self.tolerance = tolerance
         self.seed_point = seed_point
         self.visualizer = visualizer
+        self.disable_loading_bar = disable_loading_bar
 
         self.historical_length: int = 0
         self.target_set: list = []
@@ -111,6 +116,39 @@ class RND(Agent):
             self.metric = znrnd.similarity_measures.CosineSim()
         if self.visualizer is None:
             self.visualizer = TSNEVisualizer()
+
+    def re_init_models(
+        self,
+        init_predictor: bool = True,
+        init_target: bool = True,
+        predictor_rng: Union[Any, PRNGKeyArray] = None,
+        target_rng: Union[Any, PRNGKeyArray] = None,
+    ):
+        """
+        Re-initialize the RND models.
+
+        Networks can be excluded from initialization by setting the respective boolean
+        False and networks can be initialized using a key.
+
+        Parameters
+        ----------
+        init_predictor : bool
+                re-initialize the predictor network
+        init_target : bool
+                re-initialize the target network
+        predictor_rng : Union[Any, PRNGKeyArray]
+                jax PRNG seed for the predictor initialization
+        target_rng : Union[Any, PRNGKeyArray]
+                jax PRNG seed for the target initialization
+
+        Returns
+        -------
+        Re-initializes the models.
+        """
+        if init_predictor is True:
+            self.predictor.init_model(init_rng=predictor_rng)
+        if init_target is True:
+            self.target.init_model(init_rng=target_rng)
 
     def compute_distance(self, points: np.ndarray) -> np.ndarray:
         """
@@ -190,7 +228,11 @@ class RND(Agent):
             domain = np.array(self.target_set)
             codomain = self.target(domain)
             dataset = {"inputs": domain, "targets": codomain}
-            self.predictor.train_model_recursively(train_ds=dataset, test_ds=dataset)
+            self.predictor.train_model_recursively(
+                train_ds=dataset,
+                test_ds=dataset,
+                disable_loading_bar=self.disable_loading_bar,
+            )
 
     def _seed_process(self, visualize: bool):
         """
@@ -304,7 +346,11 @@ class RND(Agent):
         print(f"Seed points: {self.seed_point}\n")
 
     def build_dataset(
-        self, target_size: int = None, visualize: bool = False, report: bool = False
+        self,
+        target_size: int = None,
+        visualize: bool = False,
+        report: bool = False,
+        store_metrics: bool = False,
     ):
         """
         Run the random network distillation methods and build the target set.
@@ -317,6 +363,8 @@ class RND(Agent):
                 If true, a t-SNE visualization will be performed on the final models.
         report : bool (default=True)
                 If true, print a report about the RND performance.
+        store_metrics : bool (default=True)
+                If true, store the RND metrics.
 
         Returns
         -------
@@ -335,7 +383,8 @@ class RND(Agent):
 
         while not criteria:
             self._choose_points()
-            self._store_metrics()
+            if store_metrics:
+                self._store_metrics()
             self._retrain_network()
 
             criteria = self._evaluate_agent()
