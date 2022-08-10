@@ -15,7 +15,6 @@ jobs:
             python-version: "3.9"
         - name: Install dev requirements
           run: |
-            pip3 install -r dev-requirements.txt
             pip3 install nbmake
         - name: Install package
           run: |

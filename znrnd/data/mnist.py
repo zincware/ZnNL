@@ -30,7 +30,7 @@ import plotly.graph_objects as go
 import tensorflow_datasets as tfds
 from plotly.subplots import make_subplots
 
-from znrnd.data import DataGenerator
+from znrnd.data.data_generator import DataGenerator
 
 
 class MNISTGenerator(DataGenerator):

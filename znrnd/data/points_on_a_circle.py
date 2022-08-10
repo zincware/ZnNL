@@ -6,7 +6,7 @@ from abc import ABC
 import jax
 import jax.numpy as np
 
-from znrnd.data import DataGenerator
+from znrnd.data.data_generator import DataGenerator
 
 
 class PointsOnCircle(DataGenerator, ABC):

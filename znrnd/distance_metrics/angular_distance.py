@@ -23,7 +23,7 @@ circle.
 """
 import jax.numpy as np
 
-from znrnd.core.distance_metrics.distance_metric import DistanceMetric
+from znrnd.distance_metrics.distance_metric import DistanceMetric
 
 
 class AngularDistance(DistanceMetric):

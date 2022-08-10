@@ -22,9 +22,9 @@ Module for a distance that combines the properties of cosine and lp-norm distanc
 """
 import jax.numpy as np
 
-from znrnd.core.distance_metrics.cosine_distance import CosineDistance
-from znrnd.core.distance_metrics.distance_metric import DistanceMetric
-from znrnd.core.distance_metrics.l_p_norm import LPNorm
+from znrnd.distance_metrics.cosine_distance import CosineDistance
+from znrnd.distance_metrics.distance_metric import DistanceMetric
+from znrnd.distance_metrics.l_p_norm import LPNorm
 
 
 class HyperSphere(DistanceMetric):

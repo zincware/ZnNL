@@ -28,7 +28,7 @@ Implement a cross entropy loss function.
 import jax
 import optax
 
-from znrnd.core.loss_functions.simple_loss import SimpleLoss
+from znrnd.loss_functions.simple_loss import SimpleLoss
 
 
 class CrossEntropyDistance:

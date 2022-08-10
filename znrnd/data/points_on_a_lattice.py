@@ -29,7 +29,7 @@ from abc import ABC
 
 import numpy as onp
 
-from znrnd.data import DataGenerator
+from znrnd.data.data_generator import DataGenerator
 
 
 class PointsOnLattice(DataGenerator, ABC):

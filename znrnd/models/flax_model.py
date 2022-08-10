@@ -35,7 +35,7 @@ from jax.random import PRNGKeyArray
 from tqdm import trange
 
 from znrnd.accuracy_functions.accuracy_function import AccuracyFunction
-from znrnd.models import Model
+from znrnd.models.model import Model
 
 logger = logging.getLogger(__name__)
 

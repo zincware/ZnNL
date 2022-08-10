@@ -26,7 +26,7 @@ Module for the Mahalanobis distance.
 import jax.numpy as np
 import scipy.spatial.distance
 
-from znrnd.core.distance_metrics.distance_metric import DistanceMetric
+from znrnd.distance_metrics.distance_metric import DistanceMetric
 
 
 class MahalanobisDistance(DistanceMetric):

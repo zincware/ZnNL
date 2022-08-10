@@ -12,7 +12,7 @@ from abc import ABC
 
 import jax
 
-from znrnd.data import DataGenerator
+from znrnd.data.data_generator import DataGenerator
 
 
 class ConfinedParticles(DataGenerator, ABC):

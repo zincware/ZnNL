@@ -39,7 +39,7 @@ from tqdm import trange
 
 from znrnd.accuracy_functions.accuracy_function import AccuracyFunction
 from znrnd.loss_functions.simple_loss import SimpleLoss
-from znrnd.models import Model
+from znrnd.models.model import Model
 from znrnd.utils import normalize_covariance_matrix
 
 logger = logging.getLogger(__name__)
