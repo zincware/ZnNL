@@ -58,7 +58,6 @@ class NTModel(Model):
         training_threshold: float,
         nt_module: serial = None,
         accuracy_fn: AccuracyFunction = None,
-        compute_accuracy: bool = False,
         batch_size: int = 10,
     ):
         """
@@ -77,9 +76,6 @@ class NTModel(Model):
                 Shape of the NN input.
         training_threshold : float
                 The loss value at which point you consider the model trained.
-        compute_accuracy : bool (default = False)
-                If true, an accuracy computation will be performed. Only valid for
-                classification tasks.
         batch_size : int (default=10)
                 Batch size to use in the NTK computation.
 
@@ -123,12 +119,12 @@ class NTModel(Model):
                 Define the bias initialization.
         """
         if kernel_init:
-            raise NotImplemented(
-                "Currently, there is no option customize the weightinitialization. "
+            raise NotImplementedError(
+                "Currently, there is no option customize the weight initialization. "
             )
         if bias_init:
-            raise NotImplemented(
-                "Currently, there is no option customize the biasinitialization. "
+            raise NotImplementedError(
+                "Currently, there is no option customize the bias initialization. "
             )
         if init_rng is None:
             init_rng = jax.random.PRNGKey(onp.random.randint(0, 1000000))

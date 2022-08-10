@@ -3,6 +3,7 @@ main init file for the project.
 """
 import logging
 
+import znrnd
 from znrnd import (
     accuracy_functions,
     agents,

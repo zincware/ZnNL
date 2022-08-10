@@ -46,7 +46,7 @@ class Model:
         bias_init : Callable
                 Define the bias initialization.
         """
-        raise NotImplemented("Implemented in child class.")
+        raise NotImplementedError("Implemented in child class.")
 
     def train_model(
         self,
