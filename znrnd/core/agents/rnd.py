@@ -136,7 +136,7 @@ class RND(Agent):
                 re-initialize the predictor network
         init_target : bool
                 re-initialize the target network
-        predictor_rng : int
+        predictor_rng : Union[Any, PRNGKeyArray]
                 jax PRNG seed for the predictor initialization
         target_rng : Union[Any, PRNGKeyArray]
                 jax PRNG seed for the target initialization
