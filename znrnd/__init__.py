@@ -3,8 +3,7 @@ main init file for the project.
 """
 import logging
 
-import znrnd
-from znrnd.core import (
+from znrnd import (
     accuracy_functions,
     agents,
     analysis,
@@ -16,7 +15,7 @@ from znrnd.core import (
     similarity_measures,
     utils,
 )
-from znrnd.core.visualization import TSNEVisualizer
+from znrnd.visualization import TSNEVisualizer
 
 logging.getLogger(znrnd.__name__).addHandler(logging.NullHandler())
 
