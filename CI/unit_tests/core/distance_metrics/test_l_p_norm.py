@@ -50,7 +50,7 @@ class TestLPNorm:
         point_1 = np.array([[1.0, 7.0, 0.0, 0.0]])
         point_2 = np.array([[1.0, 1.0, 0.0, 0.0]])
 
-        metric(point_1, point_2) == [6.0]
+        assert_array_almost_equal(metric(point_1, point_2), [6.0])
 
     def test_l_3_distance(self):
         """
