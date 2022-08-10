@@ -43,4 +43,4 @@ class PointSelection:
         points : list
                 A set of points to be used by the RND class.
         """
-        raise NotImplemented("Implemented in child class.")
+        raise NotImplementedError("Implemented in child class.")

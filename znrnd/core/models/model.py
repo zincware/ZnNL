@@ -72,7 +72,7 @@ class Model:
         disable_loading_bar : bool
                 Disable the output visualization of the loading par.
         """
-        raise NotImplemented("Implemented in child class.")
+        raise NotImplementedError("Implemented in child class.")
 
     def train_model_recursively(
         self,
@@ -127,7 +127,7 @@ class Model:
         NTK : dict
                 The NTK matrix for both the empirical and infinite width computation.
         """
-        raise NotImplemented("Implemented in child class")
+        raise NotImplementedError("Implemented in child class")
 
     def __call__(self, feature_vector: np.ndarray):
         """

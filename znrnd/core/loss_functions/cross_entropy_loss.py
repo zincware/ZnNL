@@ -26,7 +26,6 @@ Summary
 Implement a cross entropy loss function.
 """
 import jax
-import jax.numpy as np
 import optax
 
 from znrnd.core.loss_functions.simple_loss import SimpleLoss
