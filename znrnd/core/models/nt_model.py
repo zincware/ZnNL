@@ -36,6 +36,8 @@ from flax.training import train_state
 from neural_tangents.stax import serial
 from tqdm import trange
 
+from znrnd.core.accuracy_functions.accuracy_function import AccuracyFunction
+from znrnd.core.loss_functions.simple_loss import SimpleLoss
 from znrnd.core.models.model import Model
 from znrnd.core.utils.matrix_utils import normalize_covariance_matrix
 
@@ -47,15 +49,14 @@ class NTModel(Model):
     Class for a neural tangents model.
     """
 
-    rng = jax.random.PRNGKey(onp.random.randint(0, 500))
-
     def __init__(
         self,
-        loss_fn: Callable,
+        loss_fn: SimpleLoss,
         optimizer: Callable,
         input_shape: tuple,
         training_threshold: float,
         nt_module: serial = None,
+        accuracy_fn: AccuracyFunction = None,
         compute_accuracy: bool = False,
         batch_size: int = 10,
     ):
@@ -64,8 +65,10 @@ class NTModel(Model):
 
         Parameters
         ----------
-        loss_fn : Callable
+        loss_fn : SimpleLoss
                 A function to use in the loss computation.
+        accuracy_fn : AccuracyFunction
+                Accuracy function to use for accuracy computation.
         optimizer : Callable
                 optimizer to use in the training. OpTax is used by default and
                 cross-compatibility is not assured.
@@ -79,12 +82,8 @@ class NTModel(Model):
         batch_size : int (default=10)
                 Batch size to use in the NTK computation.
 
-
-        Notes
-        -----
-        Kernel operations are batched to a fixed size of 10, reduce if needed.
-        This was selected to safely compute NTK on MNIST.
         """
+        self.rng = jax.random.PRNGKey(onp.random.randint(0, 500))
         self.init_fn = nt_module[0]
         self.apply_fn = jax.jit(nt_module[1])
         self.kernel_fn = nt.batch(nt_module[2], batch_size=batch_size)
@@ -93,6 +92,7 @@ class NTModel(Model):
         )
         self.empirical_ntk_jit = jax.jit(self.empirical_ntk)
         self.loss_fn = loss_fn
+        self.accuracy_fn = accuracy_fn
         self.optimizer = optimizer
         self.input_shape = input_shape
         self.training_threshold = training_threshold
@@ -190,8 +190,8 @@ class NTModel(Model):
                 A dict of current training metrics, e.g. {"loss": ..., "accuracy": ...}
         """
         loss = self.loss_fn(predictions, targets)
-        if self.compute_accuracy:
-            accuracy = np.mean(np.argmax(predictions, -1) == targets)
+        if self.accuracy_fn is not None:
+            accuracy = self.accuracy_fn(predictions, targets)
             metrics = {"loss": loss, "accuracy": accuracy}
 
         else:
@@ -337,6 +337,36 @@ class NTModel(Model):
         summary = jax.tree_map(lambda x: x.item(), metrics)
 
         return summary
+
+    def validate_model(self, dataset: dict, loss_fn: SimpleLoss):
+        """
+        Validate the model on some external data.
+
+        Parameters
+        ----------
+        loss_fn : SimpleLoss
+                Loss function to use in the computation.
+        dataset : dict
+                Dataset on which to validate the model.
+                {"inputs": np.ndarray, "targets": np.ndarray}.
+
+        Returns
+        -------
+        metrics : dict
+                Metrics computed in the validation. {"loss": [], "accuracy": []}.
+                Note, for ease of large scale experiments we always return both keywords
+                whether they are computed or not.
+        """
+        predictions = self.apply_fn(self.model_state.params, dataset["inputs"])
+
+        loss = loss_fn(predictions, dataset["targets"])
+
+        if self.accuracy_fn is not None:
+            accuracy = self.accuracy_fn(predictions, dataset["targets"])
+        else:
+            accuracy = None
+
+        return {"loss": loss, "accuracy": accuracy}
 
     def train_model(
         self,

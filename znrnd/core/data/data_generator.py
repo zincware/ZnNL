@@ -39,7 +39,11 @@ class DataGenerator(metaclass=abc.ABCMeta):
     Parent class for the data generator.
     """
 
-    data_pool: np.array
+    def __init__(self):
+        """
+        Constructor for the data pool.
+        """
+        self.data_pool = []
 
     def get_points(self, n_points: int, method: str = "first"):
         """
@@ -61,6 +65,7 @@ class DataGenerator(metaclass=abc.ABCMeta):
         dataset : list
                 List of selected data.
         """
+
         if n_points == -1:
             n_points = len(self.data_pool)
         if n_points > len(self.data_pool):

@@ -5,6 +5,7 @@ import logging
 
 import znrnd
 from znrnd.core import (
+    accuracy_functions,
     agents,
     analysis,
     data,
@@ -23,6 +24,7 @@ logging.getLogger(znrnd.__name__).addHandler(logging.NullHandler())
 __all__ = [
     distance_metrics.__name__,
     loss_functions.__name__,
+    accuracy_functions.__name__,
     models.__name__,
     point_selection.__name__,
     similarity_measures.__name__,

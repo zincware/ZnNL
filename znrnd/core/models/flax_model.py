@@ -157,7 +157,7 @@ class FlaxModel(Model):
         NTK : dict
                 The NTK matrix for both the empirical and infinite width computation.
         """
-        raise NotImplemented("Not yet available.")
+        raise NotImplementedError("Not yet available.")
 
     def _compute_metrics(self, predictions: np.ndarray, targets: np.ndarray):
         """

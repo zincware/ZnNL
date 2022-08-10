@@ -48,17 +48,15 @@ class TestCosineDistance:
         # Test orthogonal vectors
         point_1 = np.array([[1, 0, 0, 0]])
         point_2 = np.array([[0, 1, 0, 0]])
-        metric(point_1, point_2) == [1]
+        assert_array_almost_equal(metric(point_1, point_2), [1])
 
         # Test parallel vectors
-        point_1 = np.array([[1, 0, 0, 0]])
-        point_2 = np.array([[1, 0, 0, 0]])
-        metric(point_1, point_2) == [0]
+        assert_array_almost_equal(metric(point_1, point_1), [0])
 
         # Somewhere in between
         point_1 = np.array([[1.0, 0, 0, 0]])
         point_2 = np.array([[0.5, 1.0, 0, 3.0]])
-        metric(point_1, point_2) == [0.84382623]
+        assert_array_almost_equal(metric(point_1, point_2), [0.84382623])
 
     def test_multiple_distances(self):
         """
