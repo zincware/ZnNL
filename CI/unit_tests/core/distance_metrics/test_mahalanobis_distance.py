@@ -31,7 +31,7 @@ import jax
 import jax.numpy as np
 import numpy as onp
 import scipy.spatial.distance
-from numpy.testing import assert_almost_equal, assert_equal
+from numpy.testing import assert_almost_equal, assert_array_almost_equal
 
 from znrnd.core.distance_metrics.mahalanobis_distance import MahalanobisDistance
 
@@ -92,7 +92,7 @@ class TestMahalanobisDistance:
 
         # Assert identity
         metric = MahalanobisDistance()
-        assert_almost_equal(metric(point_1, point_2)[-1], 0, decimal=4)
+        assert_array_almost_equal(metric(point_1, point_2)[-1], 0)
 
     def test_symmetry(self):
         """
@@ -121,8 +121,8 @@ class TestMahalanobisDistance:
 
         # Assert identity
         metric = MahalanobisDistance()
-        assert_almost_equal(
-            metric(point_1, point_2)[-1], (metric(point_1, point_2)[-2]), decimal=4
+        assert_array_almost_equal(
+            metric(point_1, point_2)[-1], (metric(point_1, point_2)[-2])
         )
 
     @staticmethod
@@ -142,7 +142,9 @@ class TestMahalanobisDistance:
         return point_1, point_2
 
     @staticmethod
-    def calculate_numpy_mahalanobis_distance(point_1, point_2, result_list):
+    def calculate_numpy_mahalanobis_distance(
+        point_1: np.ndarray, point_2: np.ndarray, result_list: list
+    ):
         """
         Calculates the Mahalanobis distance based on a scipy integration.
 

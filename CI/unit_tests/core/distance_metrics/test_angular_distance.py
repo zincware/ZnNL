@@ -48,12 +48,12 @@ class TestAngularDistance:
         # Test orthogonal vectors
         point_1 = np.array([[1, 0]])
         point_2 = np.array([[0, 1]])
-        assert_array_almost_equal(metric(point_1, point_2), [0.5], decimal=4)
+        assert_array_almost_equal(metric(point_1, point_2), [0.5])
 
         # Test parallel vectors
         point_1 = np.array([[1, 0]])
         point_2 = np.array([[1, 1]])
-        assert_array_almost_equal(metric(point_1, point_2), [0.25], decimal=4)
+        assert_array_almost_equal(metric(point_1, point_2), [0.25])
 
     def test_multiple_distances(self):
         """
@@ -69,4 +69,4 @@ class TestAngularDistance:
         # Test orthogonal vectors
         point_1 = np.array([[1, 0], [1, 0]])
         point_2 = np.array([[0, 1], [1, 1]])
-        assert_array_almost_equal(metric(point_1, point_2), [0.5, 0.25], decimal=4)
+        assert_array_almost_equal(metric(point_1, point_2), [0.5, 0.25])
