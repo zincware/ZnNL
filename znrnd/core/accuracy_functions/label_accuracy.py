@@ -30,7 +30,7 @@ import jax.numpy as np
 from znrnd.core.accuracy_functions.accuracy_function import AccuracyFunction
 
 
-class OneHotAccuracy(AccuracyFunction):
+class LabelAccuracy(AccuracyFunction):
     """
     Compute the one hot accuracy between two points.
     """
