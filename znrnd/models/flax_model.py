@@ -433,12 +433,12 @@ class FlaxModel(Model):
         return test_losses, test_accuracy, train_losses, train_accuracy
 
     def train_model_recursively(
-        self,
-        train_ds: dict,
-        test_ds: dict,
-        epochs: int = 100,
-        batch_size: int = 1,
-        disable_loading_bar: bool = False,
+            self,
+            train_ds: dict,
+            test_ds: dict,
+            epochs: int = 100,
+            batch_size: int = 1,
+            disable_loading_bar: bool = False,
     ):
         """
         Check parent class for full doc string.
@@ -462,8 +462,6 @@ class FlaxModel(Model):
                 metrics = self._evaluate_model(state.params, test_ds)
 
                 loading_bar.set_postfix(test_loss=metrics["loss"])
-                if self.compute_accuracy:
-                    loading_bar.set_postfix(accuracy=metrics["accuracy"])
 
             # Update the final model state.
             self.model_state = state
