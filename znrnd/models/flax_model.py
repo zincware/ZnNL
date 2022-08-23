@@ -433,12 +433,12 @@ class FlaxModel(Model):
         return test_losses, test_accuracy, train_losses, train_accuracy
 
     def train_model_recursively(
-            self,
-            train_ds: dict,
-            test_ds: dict,
-            epochs: int = 100,
-            batch_size: int = 1,
-            disable_loading_bar: bool = False,
+        self,
+        train_ds: dict,
+        test_ds: dict,
+        epochs: int = 100,
+        batch_size: int = 1,
+        disable_loading_bar: bool = False,
     ):
         """
         Check parent class for full doc string.
