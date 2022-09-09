@@ -440,7 +440,12 @@ class NTModel(Model):
         # Update the final model state.
         self.model_state = state
 
-        return test_losses, test_accuracy, train_losses, train_accuracy
+        return {
+            "test_losses": test_losses,
+            "test_accuracy": test_accuracy,
+            "train_losses": train_losses,
+            "train_accuracy": train_accuracy
+        }
 
     def train_model_recursively(
         self,
