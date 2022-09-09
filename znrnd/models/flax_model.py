@@ -434,7 +434,7 @@ class FlaxModel(Model):
             "test_losses": test_losses,
             "test_accuracy": test_accuracy,
             "train_losses": train_losses,
-            "train_accuracy": train_accuracy
+            "train_accuracy": train_accuracy,
         }
 
     def train_model_recursively(
