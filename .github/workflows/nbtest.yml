@@ -1,0 +1,24 @@
+# Run the notebook tests
+name: NBTest
+
+on:
+  push:
+
+jobs:
+  nbtest:
+      runs-on: ubuntu-latest
+
+      steps:
+        - uses: actions/checkout@v2
+        - uses: actions/setup-python@v2
+          with:
+            python-version: "3.9"
+        - name: Install dev requirements
+          run: |
+            pip3 install nbmake
+        - name: Install package
+          run: |
+            pip3 install .
+        - name: Notebook test
+          run: |
+            pytest --nbmake ./examples --nbmake-timeout=7200
