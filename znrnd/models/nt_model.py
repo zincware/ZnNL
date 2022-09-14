@@ -324,8 +324,7 @@ class NTModel(Model):
         else:
             # Prepare the shuffle.
             permutations = jax.random.permutation(self.rng, train_ds_size)
-            permutations = permutations[: steps_per_epoch * batch_size]
-            permutations = permutations.reshape((steps_per_epoch, batch_size))
+            permutations = np.array_split(permutations, steps_per_epoch)
 
             # Step over items in batch.
             batch_metrics = []
