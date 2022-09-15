@@ -58,12 +58,8 @@ class PointsOnLattice(DataGenerator, ABC):
         -------
         Will call a method which updates the class state.
         """
-        x = onp.linspace(-x_points / 2, x_points / 2, x_points + 1, dtype=int).astype(
-            float
-        )
-        y = onp.linspace(-y_points / 2, y_points / 2, y_points + 1, dtype=int).astype(
-            float
-        )
+        x = onp.linspace(-1, 1, x_points + 1, dtype=float)
+        y = onp.linspace(- 1, 1, y_points + 1, dtype=float)
 
         grid = onp.stack(onp.meshgrid(x, y), axis=2)
         self.data_pool = grid.reshape(-1, grid.shape[-1])
