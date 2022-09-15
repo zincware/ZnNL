@@ -348,6 +348,7 @@ class RND(Agent):
     def build_dataset(
         self,
         target_size: int = None,
+        seed_randomly: bool = False,
         visualize: bool = False,
         report: bool = False,
         store_metrics: bool = False,
@@ -359,6 +360,9 @@ class RND(Agent):
         ----------
         target_size : int
                 Target size of the operation.
+        seed_randomly : bool:
+                If true, the RND process is seeded by a particular point.
+                If false, the RND process chooses the first point according to a metric.
         visualize : bool (default=False)
                 If true, a t-SNE visualization will be performed on the final models.
         report : bool (default=True)
@@ -374,7 +378,8 @@ class RND(Agent):
         # Allow for optional target_sizes.
         self.target_size = target_size
         start = time.time()
-        self._seed_process(visualize=visualize)
+        if seed_randomly:
+            self._seed_process(visualize=visualize)
         criteria = False
 
         if visualize:
