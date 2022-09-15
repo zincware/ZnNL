@@ -312,6 +312,10 @@ class NTModel(Model):
                 State of the model after the epoch.
         metrics : dict
                 Dict of metrics for current state.
+
+        Todo: make the numpy random key, which is used to shuffle the batch, a jax
+            random key that is recursively split. In this way one can control the
+            process from outside.
         """
         # Some housekeeping variables.
         train_ds_size = len(train_ds["inputs"])
@@ -323,7 +327,9 @@ class NTModel(Model):
 
         else:
             # Prepare the shuffle.
-            permutations = jax.random.permutation(self.rng, train_ds_size)
+            permutations = jax.random.permutation(
+                jax.random.PRNGKey(onp.random.randint(0, 1000000)), train_ds_size
+            )
             permutations = np.array_split(permutations, steps_per_epoch)
 
             # Step over items in batch.
