@@ -46,6 +46,7 @@ class RND(Agent):
         distance_metric: DistanceMetric = None,
         point_selector: PointSelection = None,
         visualizer: TSNEVisualizer = None,
+        epochs: int = 10,
         tolerance: int = 100,
         seed_point: list = None,
         disable_loading_bar: bool = False,
@@ -68,6 +69,8 @@ class RND(Agent):
                 Class to select points from the data pool.
         visualizer : TSNEVisualizer
                 Class for the representation visualization.
+        epochs: int
+                Number of epochs to train the model per recursion.
         tolerance : int
                 Number of stationary iterations to go through before ending the
                 run.
@@ -85,6 +88,7 @@ class RND(Agent):
         self.tolerance = tolerance
         self.seed_point = seed_point
         self.visualizer = visualizer
+        self.epochs = epochs
         self.disable_loading_bar = disable_loading_bar
 
         self.historical_length: int = 0
@@ -232,6 +236,7 @@ class RND(Agent):
                 train_ds=dataset,
                 test_ds=dataset,
                 disable_loading_bar=self.disable_loading_bar,
+                epochs=self.epochs,
             )
 
     def _seed_process(self, visualize: bool):
