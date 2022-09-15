@@ -451,12 +451,15 @@ class NTModel(Model):
         train_ds: dict,
         test_ds: dict,
         epochs: int = 100,
-        batch_size: int = 1,
+        batch_size: int = 50,
         disable_loading_bar: bool = False,
     ):
         """
         Check parent class for full doc string.
         """
+        if len(train_ds["inputs"]) < batch_size:
+            batch_size = len(train_ds["inputs"])
+
         if self.model_state is None:
             self.init_model()
         state = self.model_state
