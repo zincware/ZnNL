@@ -9,7 +9,7 @@ Copyright Contributors to the Zincware Project.
 Description: Module for the implementation of random network distillation.
 """
 import time
-from typing import Any, Union
+from typing import Any, Union, Callable
 
 import jax.numpy as np
 import numpy as onp
@@ -127,6 +127,8 @@ class RND(Agent):
         init_target: bool = True,
         predictor_rng: Union[Any, PRNGKeyArray] = None,
         target_rng: Union[Any, PRNGKeyArray] = None,
+        kernel_init: Callable = None,
+        bias_init: Callable = None,
     ):
         """
         Re-initialize the RND models.
@@ -144,15 +146,23 @@ class RND(Agent):
                 jax PRNG seed for the predictor initialization
         target_rng : Union[Any, PRNGKeyArray]
                 jax PRNG seed for the target initialization
+        kernel_init : Callable
+                Define the kernel initialization
+        bias_init : Callable
+                Define the bias initialization
 
         Returns
         -------
         Re-initializes the models.
         """
         if init_predictor is True:
-            self.predictor.init_model(init_rng=predictor_rng)
+            self.predictor.init_model(
+                init_rng=predictor_rng, kernel_init=kernel_init, bias_init=bias_init
+            )
         if init_target is True:
-            self.target.init_model(init_rng=target_rng)
+            self.target.init_model(
+                init_rng=target_rng, kernel_init=kernel_init, bias_init=bias_init
+            )
 
     def compute_distance(self, points: np.ndarray) -> np.ndarray:
         """
