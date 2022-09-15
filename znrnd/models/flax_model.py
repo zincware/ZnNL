@@ -333,10 +333,6 @@ class FlaxModel(Model):
                 State of the model after the epoch.
         metrics : dict
                 Dict of metrics for current state.
-
-        Todo: make the numpy random key, which is used to shuffle the batch, a jax
-            random key that is recursively split. In this way one can control the
-            process from outside.
         """
         # Some housekeeping variables.
         train_ds_size = len(train_ds["inputs"])
@@ -348,6 +344,9 @@ class FlaxModel(Model):
 
         else:
             # Prepare the shuffle.
+            # Todo: make the numpy random key, which is used to shuffle the batch, a jax
+            #  random key that is recursively split. In this way one can control the
+            #  process from outside.
             permutations = jax.random.permutation(
                 jax.random.PRNGKey(onp.random.randint(0, 1000000)), train_ds_size
             )
