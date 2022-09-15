@@ -55,11 +55,11 @@ class LabelAccuracy(AccuracyFunction):
         predictions : np.array
                 First set of points to be compared.
         targets : np.array
-                Second points to compare. Does not require one hot encoding.
+                Second points to compare.
 
         Returns
         -------
         accuracy : float
                 Accuracy of the points.
         """
-        return np.mean(np.argmax(predictions, -1) == targets)
+        return np.mean(np.argmax(predictions, -1) == np.argmax(targets, -1))
