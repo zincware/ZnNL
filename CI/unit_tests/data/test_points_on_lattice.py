@@ -50,21 +50,11 @@ class TestPointsOnLattice:
         """
         self.data_generator.build_pool()
 
-        assert True in [
-            np.allclose([0.0, 0.0], item) for item in self.data_generator.data_pool
-        ]
-        assert True in [
-            np.allclose([-0.6, -0.6], item) for item in self.data_generator.data_pool
-        ]
-        assert True in [
-            np.allclose([0.6, -0.8], item) for item in self.data_generator.data_pool
-        ]
-        assert True in [
-            np.allclose([-1.0, -1.0], item) for item in self.data_generator.data_pool
-        ]
-        assert True in [
-            np.allclose([0.0, -1.0], item) for item in self.data_generator.data_pool
-        ]
+        assert True in [all([0, 0] == item) for item in self.data_generator.data_pool]
+        assert True in [all([-5, -5] == item) for item in self.data_generator.data_pool]
+        assert True in [all([5, -4] == item) for item in self.data_generator.data_pool]
+        assert True in [all([-1, -1] == item) for item in self.data_generator.data_pool]
+        assert True in [all([0, -1] == item) for item in self.data_generator.data_pool]
 
     def test_lattice_build_non_default(self):
         """
