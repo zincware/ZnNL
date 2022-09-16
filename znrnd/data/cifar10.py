@@ -25,11 +25,11 @@ Summary
 -------
 Data generator for the CIFAR 10 dataset.
 """
+import jax.nn as nn
 import jax.numpy as np
 import plotly.graph_objects as go
 import tensorflow_datasets as tfds
 from plotly.subplots import make_subplots
-import jax.nn as nn
 
 from znrnd.data.data_generator import DataGenerator
 
