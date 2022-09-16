@@ -43,7 +43,7 @@ class PointsOnLattice(DataGenerator, ABC):
         """
         self.data_pool = None
 
-    def build_pool(self, x_points: int = 10, y_points: int = 10):
+    def build_pool(self, x_points: int = 10, y_points: int = 10, boundary: float = 1):
         """
         Build the data pool for points on a square lattice with spacing 1.
 
@@ -53,13 +53,16 @@ class PointsOnLattice(DataGenerator, ABC):
                 Number of points in the x direction.
         y_points : int
                 Number of points in the y direction.
+        boundary : float
+                Symmetric boundary of the lattice.
+                Defines the min and max value of the lattice.
 
         Returns
         -------
         Will call a method which updates the class state.
         """
-        x = onp.linspace(-1, 1, x_points + 1, dtype=float)
-        y = onp.linspace(-1, 1, y_points + 1, dtype=float)
+        x = onp.linspace(-boundary, boundary, x_points + 1, dtype=float)
+        y = onp.linspace(-boundary, boundary, y_points + 1, dtype=float)
 
         grid = onp.stack(onp.meshgrid(x, y), axis=2)
         self.data_pool = grid.reshape(-1, grid.shape[-1])

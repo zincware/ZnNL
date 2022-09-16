@@ -28,6 +28,7 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 from znrnd.data.points_on_a_lattice import PointsOnLattice
+import numpy as np
 
 
 class TestPointsOnLattice:
@@ -42,14 +43,46 @@ class TestPointsOnLattice:
         """
         cls.data_generator = PointsOnLattice()
 
-    def test_lattice_build(self):
+    def test_lattice_build_default(self):
         """
         Test that the lattice is constructed correctly.
         """
         self.data_generator.build_pool()
 
-        assert True in [all([0, 0] == item) for item in self.data_generator.data_pool]
-        assert True in [all([-5, -5] == item) for item in self.data_generator.data_pool]
-        assert True in [all([5, -4] == item) for item in self.data_generator.data_pool]
-        assert True in [all([-1, -1] == item) for item in self.data_generator.data_pool]
-        assert True in [all([0, -1] == item) for item in self.data_generator.data_pool]
+        assert True in [
+            np.allclose([0.0, 0.0], item) for item in self.data_generator.data_pool
+        ]
+        assert True in [
+            np.allclose([-0.6, -0.6], item) for item in self.data_generator.data_pool
+        ]
+        assert True in [
+            np.allclose([0.6, -0.8], item) for item in self.data_generator.data_pool
+        ]
+        assert True in [
+            np.allclose([-1.0, -1.0], item) for item in self.data_generator.data_pool
+        ]
+        assert True in [
+            np.allclose([0.0, -1.0], item) for item in self.data_generator.data_pool
+        ]
+
+    def test_lattice_build_non_default(self):
+        """
+        Test that the lattice is constructed correctly.
+        """
+        self.data_generator.build_pool(x_points=20, y_points=20, boundary=2.0)
+
+        assert True in [
+            np.allclose([0.0, 0.0], item) for item in self.data_generator.data_pool
+        ]
+        assert True in [
+            np.allclose([-1.2, -0.6], item) for item in self.data_generator.data_pool
+        ]
+        assert True in [
+            np.allclose([0.6, -0.8], item) for item in self.data_generator.data_pool
+        ]
+        assert True in [
+            np.allclose([-2.0, -2.0], item) for item in self.data_generator.data_pool
+        ]
+        assert True in [
+            np.allclose([0.0, -1.2], item) for item in self.data_generator.data_pool
+        ]
