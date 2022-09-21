@@ -76,12 +76,11 @@ class DataGenerator(metaclass=abc.ABCMeta):
             indices = np.linspace(0, len(self.data_pool) - 1, n_points, dtype=int)
         elif method == "random":
             key = jax.random.PRNGKey(3)
-            indices = jax.random.randint(
+            indices = jax.random.choice(
                 key=key,
+                a=len(self.data_pool) - 1,
                 shape=(n_points,),
-                minval=0,
-                maxval=len(self.data_pool) - 1,
-                dtype=int,
+                replace=False,
             )
         elif method == "first":
             indices = [i for i in range(n_points)]
