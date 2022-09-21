@@ -1,5 +1,5 @@
 """
-module for generating points on a circle
+Module for generating points on a circle.
 """
 from abc import ABC
 
@@ -10,20 +10,19 @@ from znrnd.data.data_generator import DataGenerator
 
 
 class PointsOnCircle(DataGenerator, ABC):
-    """
-    class to generate points on circles
-    """
+    """Class to generate points on circles."""
 
     def __init__(self, radius=np.array([1.0]), noise: float = 1e-3):
         """
         constructor for points on circles
+        Constructor for points on circles.
 
         Parameters
         ----------
         radius : np.ndarray
-                Euclidean distance from origin
+                Euclidean distance from origin.
         noise : float
-                maximum allowed deviation from the radius
+                Maximum allowed deviation from the radius.
         """
         self.radius = radius
         self.noise = noise
@@ -67,7 +66,7 @@ class PointsOnCircle(DataGenerator, ABC):
 
     def build_pool(self, n_points: int, noise: bool = False, method: str = "uniform"):
         """
-        Build the data pool for points on a circle
+        Build the data pool for points on a circle.
 
         Parameters
         ----------

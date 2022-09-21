@@ -34,12 +34,7 @@ from znrnd.models import Model
 
 
 class ApproximateMaximumEntropy(Agent):
-    """
-    Class for the approximate maximum entropy data selection agent.
-
-    Attributes
-    ----------
-    """
+    """Class for the approximate maximum entropy data selection agent."""
 
     def __init__(
         self, target_network: Model, data_generator: DataGenerator, samples: int = 10
