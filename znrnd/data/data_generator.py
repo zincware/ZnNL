@@ -45,7 +45,7 @@ class DataGenerator(metaclass=abc.ABCMeta):
         """
         self.data_pool = []
 
-    def get_points(self, n_points: int, method: str = "first"):
+    def get_points(self, n_points: int, method: str = "first", seed: int = None):
         """
         Fetch data from the data pool.
 
@@ -59,13 +59,14 @@ class DataGenerator(metaclass=abc.ABCMeta):
                     * first -- select the first N points
                     * uniform -- uniformly select N points starting from 0
                     * random -- randomly select N points
+        seed : int, default None
+                Random seed.
 
         Returns
         -------
         dataset : list
                 List of selected data.
         """
-
         if n_points == -1:
             n_points = len(self.data_pool)
         if n_points > len(self.data_pool):
@@ -75,7 +76,7 @@ class DataGenerator(metaclass=abc.ABCMeta):
         if method == "uniform":
             indices = np.linspace(0, len(self.data_pool) - 1, n_points, dtype=int)
         elif method == "random":
-            key = jax.random.PRNGKey(3)
+            key = jax.random.PRNGKey(seed)
             indices = jax.random.randint(
                 key=key,
                 shape=(n_points,),

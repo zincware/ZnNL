@@ -27,10 +27,10 @@ Module for the random agent.
 """
 import jax
 import jax.numpy as np
-import numpy as onp
 
 from znrnd.agents.agent import Agent
 from znrnd.data import DataGenerator
+from znrnd.utils.prng import PRNGKey
 
 
 class RandomAgent(Agent):
@@ -38,13 +38,21 @@ class RandomAgent(Agent):
     Class for the random agent.
     """
 
-    def __init__(self, data_generator: DataGenerator):
+    def __init__(self, data_generator: DataGenerator, seed: int = None):
         """
         Constructor for the random agent.
+
+        Parameters
+        ----------
+        data_generator : DataGenerator
+                Data generator object from which data should be picked.
+        seed : int, default None
+                Random seed for the RNG.
         """
         self.data_generator = data_generator
         self.target_set: np.ndarray
         self.target_indices: list
+        self.rng = PRNGKey(seed)
 
     def _get_indices(self, n_points: int):
         """
@@ -55,10 +63,8 @@ class RandomAgent(Agent):
         n_points : int
                 Number of points to generate.
         """
-        rng = jax.random.PRNGKey(onp.random.randint(1981))
-
         indices = jax.random.choice(
-            rng, len(self.data_generator) - 1, shape=(n_points,), replace=False
+            self.rng.key, len(self.data_generator) - 1, shape=(n_points,), replace=False
         )
 
         return indices

@@ -7,14 +7,14 @@ import jax
 import jax.numpy as np
 
 from znrnd.data.data_generator import DataGenerator
+from znrnd.utils.prng import PRNGKey
 
 
 class PointsOnCircle(DataGenerator, ABC):
     """Class to generate points on circles."""
 
-    def __init__(self, radius=np.array([1.0]), noise: float = 1e-3):
+    def __init__(self, radius=np.array([1.0]), noise: float = 1e-3, seed: int = None):
         """
-        constructor for points on circles
         Constructor for points on circles.
 
         Parameters
@@ -23,12 +23,14 @@ class PointsOnCircle(DataGenerator, ABC):
                 Euclidean distance from origin.
         noise : float
                 Maximum allowed deviation from the radius.
+        seed : int, default None
+                Random seed.
         """
         self.radius = radius
         self.noise = noise
         self.data_pool = None
 
-        self.key = jax.random.PRNGKey(0)
+        self.key = PRNGKey(seed)
 
     def uniform_sampling(self, n_points: int, noise: bool = False):
         """

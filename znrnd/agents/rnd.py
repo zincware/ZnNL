@@ -9,11 +9,11 @@ Copyright Contributors to the Zincware Project.
 Description: Module for the implementation of random network distillation.
 """
 import time
-from typing import Any, Union
+from typing import Union
 
 import jax.numpy as np
+import jax.random
 import numpy as onp
-from jax.random import PRNGKeyArray
 
 import znrnd
 from znrnd.agents.agent import Agent
@@ -121,8 +121,8 @@ class RND(Agent):
         self,
         init_predictor: bool = True,
         init_target: bool = True,
-        predictor_rng: Union[Any, PRNGKeyArray] = None,
-        target_rng: Union[Any, PRNGKeyArray] = None,
+        predictor_rng: jax.random.PRNGKeyArray = None,
+        target_rng: jax.random.PRNGKeyArray = None,
     ):
         """
         Re-initialize the RND models.
@@ -136,10 +136,10 @@ class RND(Agent):
                 re-initialize the predictor network
         init_target : bool
                 re-initialize the target network
-        predictor_rng : Union[Any, PRNGKeyArray]
-                jax PRNG seed for the predictor initialization
-        target_rng : Union[Any, PRNGKeyArray]
-                jax PRNG seed for the target initialization
+        predictor_rng : jax.random.PRNGKeyArray, default None
+                jax PRNGKeyArray for the predictor initialization
+        target_rng : jax.random.PRNGKeyArray, default None
+                jax PRNGKeyArray for the target initialization
 
         Returns
         -------
