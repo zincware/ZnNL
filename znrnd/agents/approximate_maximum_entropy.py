@@ -25,24 +25,23 @@ Module for the approximate maximum entropy agent.
 """
 import jax
 import jax.numpy as np
-import numpy as onp
 
 from znrnd.agents.agent import Agent
 from znrnd.analysis.entropy import EntropyAnalysis
 from znrnd.data import DataGenerator
 from znrnd.models import Model
+from znrnd.utils.prng import PRNGKey
 
 
 class ApproximateMaximumEntropy(Agent):
-    """
-    Class for the approximate maximum entropy data selection agent.
-
-    Attributes
-    ----------
-    """
+    """Class for the approximate maximum entropy data selection agent."""
 
     def __init__(
-        self, target_network: Model, data_generator: DataGenerator, samples: int = 10
+        self,
+        target_network: Model,
+        data_generator: DataGenerator,
+        samples: int = 10,
+        seed: int = None,
     ):
         """
         Constructor for the Approximate maximum entropy agent.
@@ -55,11 +54,13 @@ class ApproximateMaximumEntropy(Agent):
                 Number of samples to try to get the maximum entropy.
         data_generator : DataGenerator
                 Data generator from which samples are taken.
-
+        seed : int, default None
+                Random seed for the RNG.
         """
         self.target_network = target_network
         self.data_generator = data_generator
         self.samples = samples
+        self.rng = PRNGKey(seed)
 
         self.target_set: np.ndarray
         self.target_indices: list
@@ -117,9 +118,11 @@ class ApproximateMaximumEntropy(Agent):
         """
         max_index = int(len(self.data_generator) - 1)
 
-        rng = jax.random.PRNGKey(onp.random.randint(684518))
-        samples = jax.random.randint(
-            rng, shape=(self.samples, target_size), minval=0, maxval=max_index
+        samples = jax.random.choice(
+            key=self.rng(),
+            a=max_index,
+            shape=(self.samples, target_size),
+            replace=False,
         )
 
         entropy_array = np.zeros(self.samples)

@@ -8,10 +8,10 @@ Copyright Contributors to the Zincware Project.
 
 Description: Parent class for the models.
 """
-from typing import Any, Callable, Union
+from typing import Callable
 
 import jax.numpy as np
-from jax.random import PRNGKeyArray
+import jax.random
 
 
 class Model:
@@ -30,7 +30,7 @@ class Model:
 
     def init_model(
         self,
-        init_rng: Union[Any, PRNGKeyArray] = None,
+        init_rng: jax.random.PRNGKeyArray = None,
         kernel_init: Callable = None,
         bias_init: Callable = None,
     ):
@@ -39,7 +39,7 @@ class Model:
 
         Parameters
         ----------
-        init_rng : Union[Any, PRNGKeyArray]
+        init_rng : jax.random.PRNGKeyArray, default None
                 Initial rng for train state that is immediately deleted.
         kernel_init : Callable
                 Define the kernel initialization.

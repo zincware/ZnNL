@@ -13,6 +13,7 @@ from abc import ABC
 import jax
 
 from znrnd.data.data_generator import DataGenerator
+from znrnd.utils.prng import PRNGKey
 
 
 class ConfinedParticles(DataGenerator, ABC):
@@ -20,23 +21,25 @@ class ConfinedParticles(DataGenerator, ABC):
     A class to generate data for particles in a box.
     """
 
-    def __init__(self, box_length: float = 2.0, dimension: int = 2.0):
+    def __init__(self, box_length: float = 2.0, dimension: int = 2.0, seed: int = None):
         """
         Constructor for the ConfinedParticles data generator.
 
         Parameters
         ----------
         box_length : float
-                Side length of box
+                Side length of box.
         dimension : int
                 Number of dimensions to consider.
+        seed : int, default None
+                RNG seed.
         """
         self.box_length = box_length
         self.dimension = dimension
 
         self.data_pool = None
 
-        self.key = jax.random.PRNGKey(0)
+        self.rng = PRNGKey(seed)
 
     def build_pool(self, n_points: int = 100):
         """
@@ -46,11 +49,10 @@ class ConfinedParticles(DataGenerator, ABC):
         ----------
         n_points : int
                 Number of points to add to the pool.
-
-        Returns
-        -------
-
         """
         self.data_pool = jax.random.uniform(
-            self.key, (n_points, int(self.dimension)), minval=0, maxval=self.box_length
+            self.rng(),
+            (n_points, int(self.dimension)),
+            minval=0,
+            maxval=self.box_length,
         )
