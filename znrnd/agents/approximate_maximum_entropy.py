@@ -118,8 +118,11 @@ class ApproximateMaximumEntropy(Agent):
         """
         max_index = int(len(self.data_generator) - 1)
 
-        samples = jax.random.randint(
-            self.rng.key, shape=(self.samples, target_size), minval=0, maxval=max_index
+        samples = jax.random.choice(
+            key=self.rng.key,
+            a=max_index,
+            shape=(self.samples, target_size),
+            replace=False,
         )
 
         entropy_array = np.zeros(self.samples)
