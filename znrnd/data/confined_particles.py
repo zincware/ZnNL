@@ -51,7 +51,7 @@ class ConfinedParticles(DataGenerator, ABC):
                 Number of points to add to the pool.
         """
         self.data_pool = jax.random.uniform(
-            self.rng.key,
+            self.rng(),
             (n_points, int(self.dimension)),
             minval=0,
             maxval=self.box_length,

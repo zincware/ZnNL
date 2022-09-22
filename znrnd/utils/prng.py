@@ -44,8 +44,7 @@ class PRNGKey:
             seed = onp.random.randint(onp.iinfo(onp.int32).max)
         self._rng = jax.random.PRNGKey(seed)
 
-    @property
-    def key(self):
+    def __call__(self):
         """Generate and return a new subkey.
 
         For a given seed this will always produce the same deterministic sequence of

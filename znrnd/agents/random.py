@@ -64,7 +64,7 @@ class RandomAgent(Agent):
                 Number of points to generate.
         """
         indices = jax.random.choice(
-            key=self.rng.key,
+            key=self.rng(),
             a=len(self.data_generator) - 1,
             shape=(n_points,),
             replace=False,

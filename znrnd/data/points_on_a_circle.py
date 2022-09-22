@@ -52,7 +52,7 @@ class PointsOnCircle(DataGenerator, ABC):
         if noise:
             for radius in self.radius:
                 radial_values = jax.random.uniform(
-                    key=self.rng.key,
+                    key=self.rng(),
                     shape=(n_points,),
                     dtype=float,
                     minval=radius - self.noise,

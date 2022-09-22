@@ -80,7 +80,7 @@ class DataGenerator(metaclass=abc.ABCMeta):
         elif method == "random":
             rng = PRNGKey(seed)
             indices = jax.random.choice(
-                key=rng.key,
+                key=rng(),
                 a=len(self.data_pool) - 1,
                 shape=(n_points,),
                 replace=False,

@@ -154,7 +154,7 @@ class FlaxModel(Model):
                 Define the bias initialization.
         """
         if init_rng is None:
-            init_rng = self.rng.key
+            init_rng = self.rng()
         self.model_state = self._create_train_state(init_rng, kernel_init, bias_init)
 
     def compute_ntk(
@@ -345,7 +345,7 @@ class FlaxModel(Model):
 
         else:
             # Prepare the shuffle.
-            permutations = jax.random.permutation(self.rng.key, train_ds_size)
+            permutations = jax.random.permutation(self.rng(), train_ds_size)
             permutations = np.array_split(permutations, steps_per_epoch)
 
             # Step over items in batch.
