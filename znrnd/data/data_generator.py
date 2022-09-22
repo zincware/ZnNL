@@ -31,6 +31,8 @@ import logging
 import jax.numpy as np
 import jax.random
 
+from znrnd.utils.prng import PRNGKey
+
 logger = logging.getLogger(__name__)
 
 
@@ -76,9 +78,9 @@ class DataGenerator(metaclass=abc.ABCMeta):
         if method == "uniform":
             indices = np.linspace(0, len(self.data_pool) - 1, n_points, dtype=int)
         elif method == "random":
-            key = jax.random.PRNGKey(seed)
+            rng = PRNGKey(seed)
             indices = jax.random.choice(
-                key=key,
+                key=rng.key,
                 a=len(self.data_pool) - 1,
                 shape=(n_points,),
                 replace=False,

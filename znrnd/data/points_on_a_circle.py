@@ -30,7 +30,7 @@ class PointsOnCircle(DataGenerator, ABC):
         self.noise = noise
         self.data_pool = None
 
-        self.key = PRNGKey(seed)
+        self.rng = PRNGKey(seed)
 
     def uniform_sampling(self, n_points: int, noise: bool = False):
         """
@@ -52,7 +52,7 @@ class PointsOnCircle(DataGenerator, ABC):
         if noise:
             for radius in self.radius:
                 radial_values = jax.random.uniform(
-                    key=self.key,
+                    key=self.rng.key,
                     shape=(n_points,),
                     dtype=float,
                     minval=radius - self.noise,
