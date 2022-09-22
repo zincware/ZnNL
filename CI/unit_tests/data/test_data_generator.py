@@ -30,7 +30,7 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 import jax.numpy as np
-from numpy.testing import assert_array_equal
+from numpy.testing import assert_array_equal, assert_raises
 
 from znrnd.data import DataGenerator
 
@@ -67,9 +67,16 @@ class TestDataGenerator:
         """
         Test collection of 3 random points.
         """
-        dataset = self.data_generator.get_points(3, method="random")
-        # TODO: enforce seed and check value-wise
+        dataset = self.data_generator.get_points(3, method="random", seed=42)
         len(dataset) == 3
+
+        # Check that same seed gives same dataset
+        dataset_equal = self.data_generator.get_points(3, method="random", seed=42)
+        assert_array_equal(dataset, dataset_equal)
+
+        # Check that None gives (most likely a) different seed
+        dataset_other = self.data_generator.get_points(3, method="random")
+        assert_raises(AssertionError, assert_array_equal, dataset, dataset_other)
 
     def test_get_first(self):
         """

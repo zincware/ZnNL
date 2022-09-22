@@ -26,14 +26,13 @@ Summary
 Module for the neural tangents infinite width network models.
 """
 import logging
-from typing import Any, Callable, Union
+from typing import Callable
 
 import jax
 import jax.numpy as np
 import neural_tangents as nt
 import numpy as onp
 from flax.training import train_state
-from jax.random import PRNGKeyArray
 from neural_tangents.stax import serial
 from tqdm import trange
 
@@ -41,6 +40,7 @@ from znrnd.accuracy_functions.accuracy_function import AccuracyFunction
 from znrnd.loss_functions.simple_loss import SimpleLoss
 from znrnd.models.model import Model
 from znrnd.utils import normalize_covariance_matrix
+from znrnd.utils.prng import PRNGKey
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +59,7 @@ class NTModel(Model):
         nt_module: serial = None,
         accuracy_fn: AccuracyFunction = None,
         batch_size: int = 10,
+        seed: int = None,
     ):
         """
         Constructor for a Flax model.
@@ -76,11 +77,12 @@ class NTModel(Model):
                 Shape of the NN input.
         training_threshold : float
                 The loss value at which point you consider the model trained.
-        batch_size : int (default=10)
+        batch_size : int, default 10
                 Batch size to use in the NTK computation.
-
+        seed : int, default None
+                Random seed for the RNG. Uses a random int if not specified.
         """
-        self.rng = jax.random.PRNGKey(onp.random.randint(0, 500))
+        self.rng = PRNGKey(seed)
         self.init_fn = nt_module[0]
         self.apply_fn = jax.jit(nt_module[1])
         self.kernel_fn = nt.batch(nt_module[2], batch_size=batch_size)
@@ -100,7 +102,7 @@ class NTModel(Model):
 
     def init_model(
         self,
-        init_rng: Union[Any, PRNGKeyArray] = None,
+        init_rng: jax.random.PRNGKeyArray = None,
         kernel_init: Callable = None,
         bias_init: Callable = None,
     ):
@@ -111,7 +113,7 @@ class NTModel(Model):
 
         Parameters
         ----------
-        init_rng : Union[Any, PRNGKeyArray]
+        init_rng : jax.random.PRNGKeyArray, default None
                 Initial rng for train state that is immediately deleted.
         kernel_init : Callable
                 Define the kernel initialization.
@@ -127,7 +129,7 @@ class NTModel(Model):
                 "Currently, there is no option customize the bias initialization. "
             )
         if init_rng is None:
-            init_rng = jax.random.PRNGKey(onp.random.randint(0, 1000000))
+            init_rng = self.rng()
         self.model_state = self._create_train_state(init_rng)
 
     def compute_ntk(
@@ -172,13 +174,13 @@ class NTModel(Model):
 
         return {"empirical": empirical_ntk, "infinite": infinite_ntk}
 
-    def _create_train_state(self, init_rng: Union[Any, PRNGKeyArray]):
+    def _create_train_state(self, init_rng: jax.random.PRNGKeyArray):
         """
         Create a training state of the model.
 
         Parameters
         ----------
-        init_rng : Union[Any, PRNGKeyArray]
+        init_rng : jax.random.PRNGKeyArray
                 Initial rng for train state that is immediately deleted.
 
         Returns
@@ -323,7 +325,7 @@ class NTModel(Model):
 
         else:
             # Prepare the shuffle.
-            permutations = jax.random.permutation(self.rng, train_ds_size)
+            permutations = jax.random.permutation(self.rng(), train_ds_size)
             permutations = np.array_split(permutations, steps_per_epoch)
 
             # Step over items in batch.

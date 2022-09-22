@@ -1,5 +1,5 @@
 """
-module for generating points on a circle
+Module for generating points on a circle.
 """
 from abc import ABC
 
@@ -7,29 +7,30 @@ import jax
 import jax.numpy as np
 
 from znrnd.data.data_generator import DataGenerator
+from znrnd.utils.prng import PRNGKey
 
 
 class PointsOnCircle(DataGenerator, ABC):
-    """
-    class to generate points on circles
-    """
+    """Class to generate points on circles."""
 
-    def __init__(self, radius=np.array([1.0]), noise: float = 1e-3):
+    def __init__(self, radius=np.array([1.0]), noise: float = 1e-3, seed: int = None):
         """
-        constructor for points on circles
+        Constructor for points on circles.
 
         Parameters
         ----------
         radius : np.ndarray
-                Euclidean distance from origin
+                Euclidean distance from origin.
         noise : float
-                maximum allowed deviation from the radius
+                Maximum allowed deviation from the radius.
+        seed : int, default None
+                Random seed.
         """
         self.radius = radius
         self.noise = noise
         self.data_pool = None
 
-        self.key = jax.random.PRNGKey(0)
+        self.rng = PRNGKey(seed)
 
     def uniform_sampling(self, n_points: int, noise: bool = False):
         """
@@ -51,7 +52,7 @@ class PointsOnCircle(DataGenerator, ABC):
         if noise:
             for radius in self.radius:
                 radial_values = jax.random.uniform(
-                    key=self.key,
+                    key=self.rng(),
                     shape=(n_points,),
                     dtype=float,
                     minval=radius - self.noise,
@@ -67,7 +68,7 @@ class PointsOnCircle(DataGenerator, ABC):
 
     def build_pool(self, n_points: int, noise: bool = False, method: str = "uniform"):
         """
-        Build the data pool for points on a circle
+        Build the data pool for points on a circle.
 
         Parameters
         ----------
