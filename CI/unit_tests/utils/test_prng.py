@@ -54,7 +54,7 @@ class TestPRNG:
             random_list.append(jax.random.uniform(key=rng.key, shape=(10,)))
         # Assert that no equal sequences exist
         for array_1, array_2 in combinations(random_list, 2):
-            assert_raises(AssertionError, assert_array_equal(array_1, array_2))
+            assert_raises(AssertionError, assert_array_equal, array_1, array_2)
 
     def test_deterministic_split(self):
         """Test that a given seed also produces the same sequence after splitting."""
