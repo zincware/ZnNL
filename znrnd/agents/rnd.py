@@ -121,49 +121,6 @@ class RND(Agent):
         if self.visualizer is None:
             self.visualizer = TSNEVisualizer()
 
-    def re_init_models(
-        self,
-        init_predictor: bool = True,
-        init_target: bool = True,
-        predictor_rng: Union[Any, PRNGKeyArray] = None,
-        target_rng: Union[Any, PRNGKeyArray] = None,
-        kernel_init: Callable = None,
-        bias_init: Callable = None,
-    ):
-        """
-        Re-initialize the RND models.
-
-        Networks can be excluded from initialization by setting the respective boolean
-        False and networks can be initialized using a key.
-
-        Parameters
-        ----------
-        init_predictor : bool
-                re-initialize the predictor network
-        init_target : bool
-                re-initialize the target network
-        predictor_rng : Union[Any, PRNGKeyArray]
-                jax PRNG seed for the predictor initialization
-        target_rng : Union[Any, PRNGKeyArray]
-                jax PRNG seed for the target initialization
-        kernel_init : Callable
-                Define the kernel initialization
-        bias_init : Callable
-                Define the bias initialization
-
-        Returns
-        -------
-        Re-initializes the models.
-        """
-        if init_predictor is True:
-            self.predictor.init_model(
-                init_rng=predictor_rng, kernel_init=kernel_init, bias_init=bias_init
-            )
-        if init_target is True:
-            self.target.init_model(
-                init_rng=target_rng, kernel_init=kernel_init, bias_init=bias_init
-            )
-
     def compute_distance(self, points: np.ndarray) -> np.ndarray:
         """
         Compute the distance between neural network representations.
