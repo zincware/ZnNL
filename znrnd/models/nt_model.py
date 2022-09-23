@@ -59,6 +59,7 @@ class NTModel(Model):
         nt_module: serial = None,
         accuracy_fn: AccuracyFunction = None,
         batch_size: int = 10,
+        init_rng: Union[Any, PRNGKeyArray] = None,
     ):
         """
         Constructor for a Flax model.
@@ -78,7 +79,8 @@ class NTModel(Model):
                 The loss value at which point you consider the model trained.
         batch_size : int (default=10)
                 Batch size to use in the NTK computation.
-
+        init_rng : Union[Any, PRNGKeyArray]
+                Initial rng for train state that is immediately deleted.
         """
         self.rng = jax.random.PRNGKey(onp.random.randint(0, 500))
         self.init_fn = nt_module[0]
@@ -96,7 +98,7 @@ class NTModel(Model):
 
         # initialize the model state
         self.model_state = None
-        self.init_model()
+        self.init_model(init_rng=init_rng)
 
     def init_model(
         self,

@@ -85,6 +85,7 @@ class FlaxModel(Model):
         layer_stack: List[nn.Module] = None,
         flax_module: nn.Module = None,
         accuracy_fn: AccuracyFunction = None,
+        init_rng: Union[Any, PRNGKeyArray] = None,
     ):
         """
         Constructor for a Flax model.
@@ -107,6 +108,8 @@ class FlaxModel(Model):
         compute_accuracy : bool (default = False)
                 If true, an accuracy computation will be performed. Only valid for
                 classification tasks.
+        init_rng : Union[Any, PRNGKeyArray]
+                Initial rng for train state that is immediately deleted.
         """
         logger.info(
             "Flax models have occasionally experienced memory allocation issues on "
@@ -128,7 +131,7 @@ class FlaxModel(Model):
         self.apply_fn = jax.jit(self.model.apply)
 
         # initialize the model state
-        self.init_model()
+        self.init_model(init_rng)
 
         self.accuracy_fn = accuracy_fn
 
