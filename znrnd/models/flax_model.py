@@ -24,18 +24,18 @@ Summary
 Module for the use of a Flax model with ZnRND.
 """
 import logging
-from typing import Any, Callable, List, Tuple, Union
+from typing import Callable, List, Tuple
 
 import jax
 import jax.numpy as np
 import numpy as onp
 from flax import linen as nn
 from flax.training import train_state
-from jax.random import PRNGKeyArray
 from tqdm import trange
 
 from znrnd.accuracy_functions.accuracy_function import AccuracyFunction
 from znrnd.models.model import Model
+from znrnd.utils.prng import PRNGKey
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +74,6 @@ class FlaxModel(Model):
 
     model: nn.Module
     model_state: train_state.TrainState = None
-    rng = jax.random.PRNGKey(onp.random.randint(0, 1000000))
 
     def __init__(
         self,
@@ -85,7 +84,7 @@ class FlaxModel(Model):
         layer_stack: List[nn.Module] = None,
         flax_module: nn.Module = None,
         accuracy_fn: AccuracyFunction = None,
-        init_rng: Union[Any, PRNGKeyArray] = None,
+        seed: int = None,
     ):
         """
         Constructor for a Flax model.
@@ -105,11 +104,11 @@ class FlaxModel(Model):
                 The loss value at which point you consider the model trained.
         flax_module : nn.Module
                 Flax module to use instead of building one from scratch here.
-        compute_accuracy : bool (default = False)
+        compute_accuracy : bool, default False
                 If true, an accuracy computation will be performed. Only valid for
                 classification tasks.
-        init_rng : Union[Any, PRNGKeyArray]
-                Initial rng for train state that is immediately deleted.
+        seed : int, default None
+                Random seed for the RNG. Uses a random int if not specified.
         """
         logger.info(
             "Flax models have occasionally experienced memory allocation issues on "
@@ -122,6 +121,7 @@ class FlaxModel(Model):
         if layer_stack is None and flax_module is None:
             raise TypeError("Provide either a Flax nn.Module or a layer stack.")
 
+        self.rng = PRNGKey(seed)
         self.loss_fn = loss_fn
         self.optimizer = optimizer
         self.input_shape = input_shape
@@ -131,24 +131,22 @@ class FlaxModel(Model):
         self.apply_fn = jax.jit(self.model.apply)
 
         # initialize the model state
-        self.init_model(init_rng)
+        self.init_model()
 
         self.accuracy_fn = accuracy_fn
 
     def init_model(
         self,
-        init_rng: Union[Any, PRNGKeyArray] = None,
+        init_rng: jax.random.PRNGKeyArray = None,
         kernel_init: Callable = None,
         bias_init: Callable = None,
     ):
         """
         Initialize a model.
 
-        If no rng key is given, the key will be produced randomly.
-
         Parameters
         ----------
-        init_rng : Union[Any, PRNGKeyArray]
+        init_rng : jax.random.PRNGKeyArray
                 Initial rng for train state that is immediately deleted.
         kernel_init : Callable
                 Define the kernel initialization.
@@ -156,7 +154,7 @@ class FlaxModel(Model):
                 Define the bias initialization.
         """
         if init_rng is None:
-            init_rng = jax.random.PRNGKey(onp.random.randint(0, 1000000))
+            init_rng = self.rng()
         self.model_state = self._create_train_state(init_rng, kernel_init, bias_init)
 
     def compute_ntk(
@@ -219,7 +217,7 @@ class FlaxModel(Model):
 
     def _create_train_state(
         self,
-        init_rng: Union[Any, PRNGKeyArray],
+        init_rng: jax.random.PRNGKeyArray,
         kernel_init: Callable = None,
         bias_init: Callable = None,
     ):
@@ -228,7 +226,7 @@ class FlaxModel(Model):
 
         Parameters
         ----------
-        init_rng : Union[Any, PRNGKeyArray]
+        init_rng : jax.random.PRNGKeyArray
                 Initial rng for train state that is immediately deleted.
         kernel_init : Callable
                 Define the kernel initialization.
@@ -347,12 +345,7 @@ class FlaxModel(Model):
 
         else:
             # Prepare the shuffle.
-            # Todo: make the numpy random key, which is used to shuffle the batch, a jax
-            #  random key that is recursively split. In this way one can control the
-            #  process from outside.
-            permutations = jax.random.permutation(
-                jax.random.PRNGKey(onp.random.randint(0, 1000000)), train_ds_size
-            )
+            permutations = jax.random.permutation(self.rng(), train_ds_size)
             permutations = np.array_split(permutations, steps_per_epoch)
 
             # Step over items in batch.

@@ -9,11 +9,11 @@ Copyright Contributors to the Zincware Project.
 Description: Module for the implementation of random network distillation.
 """
 import time
-from typing import Any, Callable, Union
+from typing import Callable, Union
 
 import jax.numpy as np
+import jax.random
 import numpy as onp
-from jax.random import PRNGKeyArray
 
 import znrnd
 from znrnd.agents.agent import Agent
