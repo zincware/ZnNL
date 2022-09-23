@@ -137,7 +137,7 @@ class FlaxModel(Model):
 
     def init_model(
         self,
-        init_rng: jax.random.PRNGKeyArray = None,
+        seed: int = None,
         kernel_init: Callable = None,
         bias_init: Callable = None,
     ):
@@ -146,16 +146,15 @@ class FlaxModel(Model):
 
         Parameters
         ----------
-        init_rng : jax.random.PRNGKeyArray
-                Initial rng for train state that is immediately deleted.
+        seed : int, default None
+                Random seed for the RNG. Uses a random int if not specified.
         kernel_init : Callable
                 Define the kernel initialization.
         bias_init : Callable
                 Define the bias initialization.
         """
-        if init_rng is None:
-            init_rng = self.rng()
-        self.model_state = self._create_train_state(init_rng, kernel_init, bias_init)
+        self.rng = PRNGKey(seed)
+        self.model_state = self._create_train_state(kernel_init, bias_init)
 
     def compute_ntk(
         self,
@@ -217,7 +216,6 @@ class FlaxModel(Model):
 
     def _create_train_state(
         self,
-        init_rng: jax.random.PRNGKeyArray,
         kernel_init: Callable = None,
         bias_init: Callable = None,
     ):
@@ -226,8 +224,6 @@ class FlaxModel(Model):
 
         Parameters
         ----------
-        init_rng : jax.random.PRNGKeyArray
-                Initial rng for train state that is immediately deleted.
         kernel_init : Callable
                 Define the kernel initialization.
         bias_init : Callable
@@ -242,7 +238,7 @@ class FlaxModel(Model):
         if bias_init:
             self.model.bias_init = bias_init
 
-        params = self.model.init(init_rng, np.ones(list(self.input_shape)))["params"]
+        params = self.model.init(self.rng(), np.ones(list(self.input_shape)))["params"]
 
         return train_state.TrainState.create(
             apply_fn=self.apply_fn, params=params, tx=self.optimizer

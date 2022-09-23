@@ -102,19 +102,17 @@ class NTModel(Model):
 
     def init_model(
         self,
-        init_rng: jax.random.PRNGKeyArray = None,
+        seed: int = None,
         kernel_init: Callable = None,
         bias_init: Callable = None,
     ):
         """
         Initialize a model.
 
-        If no rng key is given, the key will be produced randomly.
-
         Parameters
         ----------
-        init_rng : jax.random.PRNGKeyArray, default None
-                Initial rng for train state that is immediately deleted.
+        seed : int, default None
+                Random seed for the RNG. Uses a random int if not specified.
         kernel_init : Callable
                 Define the kernel initialization.
         bias_init : Callable
@@ -128,9 +126,8 @@ class NTModel(Model):
             raise NotImplementedError(
                 "Currently, there is no option customize the bias initialization. "
             )
-        if init_rng is None:
-            init_rng = self.rng()
-        self.model_state = self._create_train_state(init_rng)
+        self.rng = PRNGKey(seed)
+        self.model_state = self._create_train_state()
 
     def compute_ntk(
         self,
@@ -174,14 +171,9 @@ class NTModel(Model):
 
         return {"empirical": empirical_ntk, "infinite": infinite_ntk}
 
-    def _create_train_state(self, init_rng: jax.random.PRNGKeyArray):
+    def _create_train_state(self):
         """
         Create a training state of the model.
-
-        Parameters
-        ----------
-        init_rng : jax.random.PRNGKeyArray
-                Initial rng for train state that is immediately deleted.
 
         Returns
         -------
@@ -192,7 +184,7 @@ class NTModel(Model):
         TODO: Make the TrainState class passable by the user as it can track custom
               model properties.
         """
-        _, params = self.init_fn(init_rng, self.input_shape)
+        _, params = self.init_fn(self.rng(), self.input_shape)
 
         return train_state.TrainState.create(
             apply_fn=self.apply_fn, params=params, tx=self.optimizer

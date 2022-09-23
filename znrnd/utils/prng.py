@@ -30,7 +30,11 @@ import numpy as onp
 
 
 class PRNGKey:
-    """Wrapper class for convenient subkey generation."""
+    """Wrapper class for convenient subkey generation.
+
+    Use rng.call() as key in jax.numpy.random methods in order to get random
+    sequences every time.
+    """
 
     def __init__(self, seed: int = None):
         """Initialize a new random number generator.
