@@ -121,7 +121,8 @@ class FlaxModel(Model):
         if layer_stack is None and flax_module is None:
             raise TypeError("Provide either a Flax nn.Module or a layer stack.")
 
-        self.rng = PRNGKey(seed)
+        # Initialized in self.init_model
+        self.rng = None
         self.loss_fn = loss_fn
         self.optimizer = optimizer
         self.input_shape = input_shape
@@ -131,7 +132,7 @@ class FlaxModel(Model):
         self.apply_fn = jax.jit(self.model.apply)
 
         # initialize the model state
-        self.init_model()
+        self.init_model(seed)
 
         self.accuracy_fn = accuracy_fn
 

@@ -82,7 +82,8 @@ class NTModel(Model):
         seed : int, default None
                 Random seed for the RNG. Uses a random int if not specified.
         """
-        self.rng = PRNGKey(seed)
+        # Initialized in self.init_model
+        self.rng = None
         self.init_fn = nt_module[0]
         self.apply_fn = jax.jit(nt_module[1])
         self.kernel_fn = nt.batch(nt_module[2], batch_size=batch_size)
@@ -98,7 +99,7 @@ class NTModel(Model):
 
         # initialize the model state
         self.model_state = None
-        self.init_model()
+        self.init_model(seed)
 
     def init_model(
         self,
