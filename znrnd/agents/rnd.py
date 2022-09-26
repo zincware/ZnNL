@@ -70,8 +70,10 @@ class RND(Agent):
                 Class to select points from the data pool.
         visualizer : TSNEVisualizer
                 Class for the representation visualization.
-        epochs: int
-                Number of epochs to train the model per recursion.
+        epochs_latest_data: int
+                Number of epochs to train the latest added data per recursion.
+        epochs_all_data: int
+                Number of epochs to train all data per recursion.
         tolerance : int
                 Number of stationary iterations to go through before ending the
                 run.
@@ -89,7 +91,8 @@ class RND(Agent):
         self.tolerance = tolerance
         self.seed_point = seed_point
         self.visualizer = visualizer
-        self.epochs = epochs
+        self.epochs_latest_data = epochs_latest_data
+        self.epochs_all_data = epochs_all_data
         self.disable_loading_bar = disable_loading_bar
 
         self.historical_length: int = 0
