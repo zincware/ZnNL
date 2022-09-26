@@ -452,7 +452,9 @@ class NTModel(Model):
         self,
         train_ds: dict,
         test_ds: dict,
-        epochs: int = 100,
+        epochs_latest_data: int = 0,
+        len_latest_data: int = 1,
+        epochs_all_data: int = 50,
         batch_size: int = 50,
         disable_loading_bar: bool = False,
     ):
@@ -470,13 +472,25 @@ class NTModel(Model):
         counter = 0
         while not condition:
             loading_bar = trange(
-                1, epochs + 1, ncols=100, unit="batch", disable=disable_loading_bar
+                1,
+                epochs_latest_data + epochs_all_data + 1,
+                ncols=100,
+                unit="batch",
+                disable=disable_loading_bar,
             )
             for i in loading_bar:
                 loading_bar.set_description(f"Epoch: {i}")
 
+                if i < epochs_latest_data + 1:
+                    train_data = {
+                        "inputs": train_ds["inputs"][-len_latest_data:],
+                        "targets": train_ds["targets"][-len_latest_data:],
+                    }
+                else:
+                    train_data = train_ds
+
                 state, train_metrics = self._train_epoch(
-                    state, train_ds, batch_size=batch_size
+                    state, train_data, batch_size=batch_size
                 )
                 metrics = self._evaluate_model(state.params, test_ds)
 
@@ -487,7 +501,8 @@ class NTModel(Model):
 
             # Perform checks and update parameters
             counter += 1
-            epochs = int(1.1 * epochs)
+            epochs_latest_data = int(1.1 * epochs_latest_data)
+            epochs_all_data = int(1.1 * epochs_all_data)
             if metrics["loss"] <= self.training_threshold:
                 condition = True
 

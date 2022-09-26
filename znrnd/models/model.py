@@ -78,7 +78,9 @@ class Model:
         self,
         train_ds: dict,
         test_ds: dict,
-        epochs: int = 10,
+        epochs_latest_data: int = 0,
+        len_latest_data: int = 1,
+        epochs_all_data: int = 50,
         batch_size: int = 1,
         disable_loading_bar: bool = False,
     ):
@@ -92,8 +94,14 @@ class Model:
                 Train dataset with inputs and targets.
         test_ds : dict
                 Test dataset with inputs and targets.
-        epochs : int
-                Number of epochs to train over.
+        epochs_latest_data: int
+                Number of epochs to train the latest added data per recursion.
+        len_latest_data : int
+                Defining the length of the latest added data.
+                The latest added data defines as the last n subjects in the target set,
+                where n == len_latest_data.
+        epochs_all_data: int
+                Number of epochs to train all data per recursion.
         batch_size : int
                 Size of the batch to use in training.
         disable_loading_bar : bool

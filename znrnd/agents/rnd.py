@@ -46,7 +46,8 @@ class RND(Agent):
         distance_metric: DistanceMetric = None,
         point_selector: PointSelection = None,
         visualizer: TSNEVisualizer = None,
-        epochs: int = 10,
+        epochs_latest_data: int = 0,
+        epochs_all_data: int = 50,
         tolerance: int = 100,
         seed_point: list = None,
         disable_loading_bar: bool = False,
@@ -203,7 +204,8 @@ class RND(Agent):
                 train_ds=dataset,
                 test_ds=dataset,
                 disable_loading_bar=self.disable_loading_bar,
-                epochs=self.epochs,
+                epochs_latest_data=self.epochs_latest_data,
+                epochs_all_data=self.epochs_all_data,
             )
 
     def _seed_process(self, visualize: bool):
