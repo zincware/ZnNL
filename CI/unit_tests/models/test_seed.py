@@ -45,7 +45,9 @@ class TestNTModelSeed:
     """
 
     def test_models(self):
-        """Creates two (identical) test models."""
+        """
+        Creates two (identical) test models.
+        """
         test_model = stax.serial(stax.Dense(5, b_std=0.5), stax.Relu(), stax.Dense(1))
 
         nt_model_1 = NTModel(
@@ -70,7 +72,9 @@ class TestNTModelSeed:
         return nt_model_1, nt_model_2
 
     def test_initialization(self):
-        """Tests that the two initialized models have identical parameters."""
+        """
+        Tests that the two initialized models have identical parameters.
+        """
         test_models = self.test_models()
         params_1, _ = ravel_pytree(test_models[0].model_state.params)
         params_2, _ = ravel_pytree(test_models[1].model_state.params)
@@ -78,7 +82,9 @@ class TestNTModelSeed:
         np.testing.assert_array_equal(params_1, params_2)
 
     def test_reinitalization(self):
-        """Tests that reinitialization produces the same model when seeding."""
+        """
+        Tests that reinitialization produces the same model when seeding.
+        """
         test_models = self.test_models()
         old_params, _ = ravel_pytree(test_models[0].model_state.params)
         test_models[0].train_model(
@@ -131,7 +137,9 @@ class TestFlaxModelSeed:
     """
 
     def test_models(self):
-        """Creates two (identical) test models."""
+        """
+        Creates two (identical) test models.
+        """
         flax_model_1 = FlaxModel(
             flax_module=Flax_test_model(),
             optimizer=optax.adam(learning_rate=0.001),
@@ -152,7 +160,9 @@ class TestFlaxModelSeed:
         return flax_model_1, flax_model_2
 
     def test_initialization(self):
-        """Tests that the two initialized models have identical parameters."""
+        """
+        Tests that the two initialized models have identical parameters.
+        """
         test_models = self.test_models()
         params_1, _ = ravel_pytree(test_models[0].model_state.params)
         params_2, _ = ravel_pytree(test_models[1].model_state.params)
@@ -160,7 +170,9 @@ class TestFlaxModelSeed:
         np.testing.assert_array_equal(params_1, params_2)
 
     def test_reinitalization(self):
-        """Tests that reinitialization produces the same model when seeding."""
+        """
+        Tests that reinitialization produces the same model when seeding.
+        """
         test_models = self.test_models()
         old_params, _ = ravel_pytree(test_models[0].model_state.params)
         test_models[0].train_model(
