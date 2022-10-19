@@ -12,7 +12,6 @@ import time
 from typing import Union
 
 import jax.numpy as np
-import jax.random
 import numpy as onp
 
 import znrnd
@@ -46,6 +45,8 @@ class RND(Agent):
         distance_metric: DistanceMetric = None,
         point_selector: PointSelection = None,
         visualizer: TSNEVisualizer = None,
+        epochs_latest_data: int = 0,
+        epochs_all_data: int = 50,
         tolerance: int = 100,
         seed_point: list = None,
         disable_loading_bar: bool = False,
@@ -68,6 +69,10 @@ class RND(Agent):
                 Class to select points from the data pool.
         visualizer : TSNEVisualizer
                 Class for the representation visualization.
+        epochs_latest_data: int
+                Number of epochs to train the latest added data per recursion.
+        epochs_all_data: int
+                Number of epochs to train all data per recursion.
         tolerance : int
                 Number of stationary iterations to go through before ending the
                 run.
@@ -85,6 +90,8 @@ class RND(Agent):
         self.tolerance = tolerance
         self.seed_point = seed_point
         self.visualizer = visualizer
+        self.epochs_latest_data = epochs_latest_data
+        self.epochs_all_data = epochs_all_data
         self.disable_loading_bar = disable_loading_bar
 
         self.historical_length: int = 0
@@ -116,39 +123,6 @@ class RND(Agent):
             self.metric = znrnd.similarity_measures.CosineSim()
         if self.visualizer is None:
             self.visualizer = TSNEVisualizer()
-
-    def re_init_models(
-        self,
-        init_predictor: bool = True,
-        init_target: bool = True,
-        predictor_rng: jax.random.PRNGKeyArray = None,
-        target_rng: jax.random.PRNGKeyArray = None,
-    ):
-        """
-        Re-initialize the RND models.
-
-        Networks can be excluded from initialization by setting the respective boolean
-        False and networks can be initialized using a key.
-
-        Parameters
-        ----------
-        init_predictor : bool
-                re-initialize the predictor network
-        init_target : bool
-                re-initialize the target network
-        predictor_rng : jax.random.PRNGKeyArray, default None
-                jax PRNGKeyArray for the predictor initialization
-        target_rng : jax.random.PRNGKeyArray, default None
-                jax PRNGKeyArray for the target initialization
-
-        Returns
-        -------
-        Re-initializes the models.
-        """
-        if init_predictor is True:
-            self.predictor.init_model(init_rng=predictor_rng)
-        if init_target is True:
-            self.target.init_model(init_rng=target_rng)
 
     def compute_distance(self, points: np.ndarray) -> np.ndarray:
         """
@@ -232,6 +206,8 @@ class RND(Agent):
                 train_ds=dataset,
                 test_ds=dataset,
                 disable_loading_bar=self.disable_loading_bar,
+                epochs_latest_data=self.epochs_latest_data,
+                epochs_all_data=self.epochs_all_data,
             )
 
     def _seed_process(self, visualize: bool):
@@ -348,6 +324,7 @@ class RND(Agent):
     def build_dataset(
         self,
         target_size: int = None,
+        seed_randomly: bool = False,
         visualize: bool = False,
         report: bool = False,
         store_metrics: bool = False,
@@ -359,6 +336,9 @@ class RND(Agent):
         ----------
         target_size : int
                 Target size of the operation.
+        seed_randomly : bool:
+                If true, the RND process is seeded by a particular point.
+                If false, the RND process chooses the first point according to a metric.
         visualize : bool (default=False)
                 If true, a t-SNE visualization will be performed on the final models.
         report : bool (default=True)
@@ -374,7 +354,8 @@ class RND(Agent):
         # Allow for optional target_sizes.
         self.target_size = target_size
         start = time.time()
-        self._seed_process(visualize=visualize)
+        if seed_randomly:
+            self._seed_process(visualize=visualize)
         criteria = False
 
         if visualize:

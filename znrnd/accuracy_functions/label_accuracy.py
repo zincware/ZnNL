@@ -35,16 +35,11 @@ class LabelAccuracy(AccuracyFunction):
     Compute the one hot accuracy between two points.
     """
 
-    def __init__(self, num_class: int):
+    def __init__(self):
         """
         Constructor for the one hot accuracy.
-
-        Parameters
-        ----------
-        num_class : int
-                Number of classes in the one hot encoding.
         """
-        self.num_classes = num_class
+        pass
 
     def __call__(self, predictions: np.array, targets: np.array) -> float:
         """
@@ -55,11 +50,11 @@ class LabelAccuracy(AccuracyFunction):
         predictions : np.array
                 First set of points to be compared.
         targets : np.array
-                Second points to compare. Does not require one hot encoding.
+                Second points to compare.
 
         Returns
         -------
         accuracy : float
                 Accuracy of the points.
         """
-        return np.mean(np.argmax(predictions, -1) == targets)
+        return np.mean(np.argmax(predictions, -1) == np.argmax(targets, -1))

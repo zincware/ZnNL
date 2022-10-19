@@ -25,6 +25,7 @@ Summary
 -------
 Data generator for the CIFAR 10 dataset.
 """
+import jax.nn as nn
 import jax.numpy as np
 import plotly.graph_objects as go
 import tensorflow_datasets as tfds
@@ -38,7 +39,7 @@ class CIFAR10Generator(DataGenerator):
     Data generator for MNIST datasets
     """
 
-    def __init__(self, ds_size: int = 500):
+    def __init__(self, ds_size: int = 500, one_hot_encoding: bool = True):
         """
         Constructor for the MNIST generator class.
 
@@ -46,6 +47,8 @@ class CIFAR10Generator(DataGenerator):
         ----------
         ds_size : int
                 Size of the dataset to load.
+        one_hot_encoding : bool (default = True)
+                If True, the targets will be one-hot encoded.
         """
         self.train_ds, self.test_ds = tfds.as_numpy(
             tfds.load(
@@ -63,6 +66,13 @@ class CIFAR10Generator(DataGenerator):
         self.test_ds.pop("image")
         self.test_ds.pop("label")
         self.data_pool = self.train_ds["inputs"].astype(float)
+        if one_hot_encoding:
+            self.train_ds["targets"] = nn.one_hot(
+                self.train_ds["targets"], num_classes=10
+            )
+            self.test_ds["targets"] = nn.one_hot(
+                self.test_ds["targets"], num_classes=10
+            )
 
     def plot_image(self, indices: list = None, data_list: list = None):
         """
