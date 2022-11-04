@@ -492,4 +492,4 @@ class Model:
         -------
         output of the model.
         """
-        self.apply(self.model_state.params, feature_vector)
+        return self.apply(self.model_state.params, feature_vector)
