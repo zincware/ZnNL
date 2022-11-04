@@ -26,13 +26,6 @@ logger = logging.getLogger(__name__)
 class Model:
     """
     Parent class for ZnRND Models.
-
-    Attributes
-    ----------
-    model : Callable
-            A callable class or function that takes a feature
-            vector and returns something from it. Typically this is a
-            neural network layer stack.
     """
 
     def __init__(
@@ -499,4 +492,4 @@ class Model:
         -------
         output of the model.
         """
-        self.model(feature_vector)
+        self.apply(self.model_state.params, feature_vector)
