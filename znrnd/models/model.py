@@ -9,7 +9,7 @@ Copyright Contributors to the Zincware Project.
 Description: Parent class for the models.
 """
 import logging
-from typing import Callable
+from typing import Callable, Tuple
 
 import jax.numpy as np
 import jax.random
@@ -155,7 +155,7 @@ class Model:
 
     def _train_epoch(
         self, state: TrainState, train_ds: dict, batch_size: int
-    ) -> tuple[TrainState, dict]:
+    ) -> Tuple[TrainState, dict]:
         """
         Train for a single epoch.
 
