@@ -29,7 +29,6 @@ from typing import Callable, List
 import jax
 import jax.numpy as np
 from flax import linen as nn
-from tqdm import trange
 
 from znrnd.accuracy_functions.accuracy_function import AccuracyFunction
 from znrnd.models.model import Model
@@ -150,49 +149,8 @@ class FlaxModel(Model):
 
         return params
 
-    def _evaluate_step(self, params: dict, batch: dict):
-        """
-        Evaluate the model on test data.
-
-        Parameters
-        ----------
-        params : dict
-                Current parameters of the neural network.
-        batch : dict
-                Batch of data to test on.
-
-        Returns
-        -------
-        metrics : dict
-                Metrics dict computed on test data.
-        """
-        predictions = self.apply(params, batch["inputs"])
-
-        return self._compute_metrics(predictions, batch["targets"])
-
-    def _evaluate_model(self, params: dict, test_ds: dict) -> dict:
-        """
-        Evaluate the model.
-
-        Parameters
-        ----------
-        params : dict
-                Current state of the model.
-        test_ds : dict
-                Dataset on which to evaluate.
-        Returns
-        -------
-        loss : dict
-                Loss of the model.
-        """
-        metrics = self._evaluate_step(params, test_ds)
-        metrics = jax.device_get(metrics)
-        summary = jax.tree_map(lambda x: x.item(), metrics)
-
-        return summary
-
     def apply(self, params: dict, inputs: np.ndarray):
-        """Apply the apply_fn to a feature vector.
+        """Apply the model to a feature vector.
 
         Parameters
         ----------
@@ -206,69 +164,6 @@ class FlaxModel(Model):
         Output of the model.
         """
         return self.apply_fn({"params": params}, inputs)
-
-    def train_model_recursively(
-        self,
-        train_ds: dict,
-        test_ds: dict,
-        epochs_latest_data: int = 0,
-        len_latest_data: int = 1,
-        epochs_all_data: int = 50,
-        batch_size: int = 50,
-        disable_loading_bar: bool = False,
-    ):
-        """
-        Check parent class for full doc string.
-        """
-        if len(train_ds["inputs"]) < batch_size:
-            batch_size = len(train_ds["inputs"])
-
-        if self.model_state is None:
-            self.init_model()
-        state = self.model_state
-
-        condition = False
-        counter = 0
-        while not condition:
-            loading_bar = trange(
-                1,
-                epochs_latest_data + epochs_all_data + 1,
-                ncols=100,
-                unit="batch",
-                disable=disable_loading_bar,
-            )
-            for i in loading_bar:
-                loading_bar.set_description(f"Epoch: {i}")
-
-                if i < epochs_latest_data + 1:
-                    train_data = {
-                        "inputs": train_ds["inputs"][-len_latest_data:],
-                        "targets": train_ds["targets"][-len_latest_data:],
-                    }
-                else:
-                    train_data = train_ds
-
-                state, train_metrics = self._train_epoch(
-                    state, train_data, batch_size=batch_size
-                )
-                metrics = self._evaluate_model(state.params, test_ds)
-
-                loading_bar.set_postfix(test_loss=metrics["loss"])
-
-            # Update the final model state.
-            self.model_state = state
-
-            # Perform checks and update parameters
-            counter += 1
-            epochs_latest_data = int(1.1 * epochs_latest_data)
-            epochs_all_data = int(1.1 * epochs_all_data)
-            if metrics["loss"] <= self.training_threshold:
-                condition = True
-
-            # Re-initialize the network if it is simply not converging.
-            if counter % 10 == 0:
-                logger.info("Model training stagnating, re-initializing model.")
-                self.init_model()
 
     def compute_ntk(
         self,
@@ -297,11 +192,3 @@ class FlaxModel(Model):
                 The NTK matrix for both the empirical and infinite width computation.
         """
         raise NotImplementedError("Not yet available.")
-
-    def __call__(self, feature_vector: np.ndarray):
-        """
-        See parent class for full doc string.
-        """
-        state = self.model_state
-
-        return self.apply(state.params, feature_vector)

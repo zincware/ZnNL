@@ -36,7 +36,6 @@ from neural_tangents.stax import serial
 from znrnd.accuracy_functions.accuracy_function import AccuracyFunction
 from znrnd.models.model import Model
 from znrnd.utils import normalize_covariance_matrix
-from znrnd.utils.prng import PRNGKey
 
 logger = logging.getLogger(__name__)
 
@@ -98,27 +97,6 @@ class NTModel(Model):
             seed,
         )
 
-    def init_model(
-        self,
-        seed: int = None,
-        kernel_init: Callable = None,
-        bias_init: Callable = None,
-    ):
-        """
-        Initialize a model.
-
-        Parameters
-        ----------
-        seed : int, default None
-                Random seed for the RNG. Uses a random int if not specified.
-        kernel_init : Callable
-                Define the kernel initialization.
-        bias_init : Callable
-                Define the bias initialization.
-        """
-        self.rng = PRNGKey(seed)
-        self.model_state = self._create_train_state(kernel_init, bias_init)
-
     def _init_params(self, kernel_init: Callable = None, bias_init: Callable = None):
         """Initialize a state for the model parameters.
 
@@ -146,49 +124,8 @@ class NTModel(Model):
 
         return params
 
-    def _evaluate_step(self, params: dict, batch: dict):
-        """
-        Evaluate the model on test data.
-
-        Parameters
-        ----------
-        params : dict
-                Parameters of the model.
-        batch : dict
-                Batch of data to test on.
-
-        Returns
-        -------
-        metrics : dict
-                Metrics dict computed on test data.
-        """
-        predictions = self.apply(params, batch["inputs"])
-
-        return self._compute_metrics(predictions, batch["targets"])
-
-    def _evaluate_model(self, params: dict, test_ds: dict) -> dict:
-        """
-        Evaluate the model.
-
-        Parameters
-        ----------
-        params : dict
-                Current state of the model.
-        test_ds : dict
-                Dataset on which to evaluate.
-        Returns
-        -------
-        metrics : dict
-                Loss of the model.
-        """
-        metrics = self._evaluate_step(params, test_ds)
-        metrics = jax.device_get(metrics)
-        summary = jax.tree_map(lambda x: x.item(), metrics)
-
-        return summary
-
     def apply(self, params: dict, inputs: np.ndarray):
-        """Apply the apply_fn to a feature vector.
+        """Apply the model to a feature vector.
 
         Parameters
         ----------
@@ -244,11 +181,3 @@ class NTModel(Model):
                 infinite_ntk = normalize_covariance_matrix(infinite_ntk)
 
         return {"empirical": empirical_ntk, "infinite": infinite_ntk}
-
-    def __call__(self, feature_vector: np.ndarray):
-        """
-        See parent class for full doc string.
-        """
-        state = self.model_state
-
-        return self.apply(state.params, feature_vector)

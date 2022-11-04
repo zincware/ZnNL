@@ -211,36 +211,6 @@ class Model:
 
         return state, epoch_metrics_np
 
-    def validate_model(self, dataset: dict, loss_fn: Callable):
-        """
-        Validate the model on some external data.
-
-        Parameters
-        ----------
-        loss_fn : Callable
-                Loss function to use in the computation.
-        dataset : dict
-                Dataset on which to validate the model.
-                {"inputs": np.ndarray, "targets": np.ndarray}.
-
-        Returns
-        -------
-        metrics : dict
-                Metrics computed in the validation. {"loss": [], "accuracy": []}.
-                Note, for ease of large scale experiments we always return both keywords
-                whether they are computed or not.
-        """
-        predictions = self.apply(self.model_state.params, dataset["inputs"])
-
-        loss = loss_fn(predictions, dataset["targets"])
-
-        if self.accuracy_fn is not None:
-            accuracy = self.accuracy_fn(predictions, dataset["targets"])
-        else:
-            accuracy = None
-
-        return {"loss": loss, "accuracy": accuracy}
-
     def _compute_metrics(
         self,
         predictions: np.ndarray,
@@ -270,6 +240,77 @@ class Model:
             metrics = {"loss": loss}
 
         return metrics
+
+    def _evaluate_step(self, params: dict, batch: dict):
+        """
+        Evaluate the model on test data.
+
+        Parameters
+        ----------
+        params : dict
+                Current parameters of the neural network.
+        batch : dict
+                Batch of data to test on.
+
+        Returns
+        -------
+        metrics : dict
+                Metrics dict computed on test data.
+        """
+        predictions = self.apply(params, batch["inputs"])
+
+        return self._compute_metrics(predictions, batch["targets"])
+
+    def _evaluate_model(self, params: dict, test_ds: dict) -> dict:
+        """
+        Evaluate the model.
+
+        Parameters
+        ----------
+        params : dict
+                Current state of the model.
+        test_ds : dict
+                Dataset on which to evaluate.
+        Returns
+        -------
+        metrics : dict
+                Loss of the model.
+        """
+        metrics = self._evaluate_step(params, test_ds)
+        metrics = jax.device_get(metrics)
+        summary = jax.tree_map(lambda x: x.item(), metrics)
+
+        return summary
+
+    def validate_model(self, dataset: dict, loss_fn: Callable):
+        """
+        Validate the model on some external data.
+
+        Parameters
+        ----------
+        loss_fn : Callable
+                Loss function to use in the computation.
+        dataset : dict
+                Dataset on which to validate the model.
+                {"inputs": np.ndarray, "targets": np.ndarray}.
+
+        Returns
+        -------
+        metrics : dict
+                Metrics computed in the validation. {"loss": [], "accuracy": []}.
+                Note, for ease of large scale experiments we always return both keywords
+                whether they are computed or not.
+        """
+        predictions = self.apply(self.model_state.params, dataset["inputs"])
+
+        loss = loss_fn(predictions, dataset["targets"])
+
+        if self.accuracy_fn is not None:
+            accuracy = self.accuracy_fn(predictions, dataset["targets"])
+        else:
+            accuracy = None
+
+        return {"loss": loss, "accuracy": accuracy}
 
     def train_model(
         self,
