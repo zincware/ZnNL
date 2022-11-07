@@ -31,28 +31,23 @@ from typing import Callable
 import jax
 import jax.numpy as np
 import neural_tangents as nt
-import numpy as onp
-from flax.training import train_state
 from neural_tangents.stax import serial
-from tqdm import trange
 
 from znrnd.accuracy_functions.accuracy_function import AccuracyFunction
-from znrnd.loss_functions.simple_loss import SimpleLoss
-from znrnd.models.model import Model
+from znrnd.models.jax_model import JaxModel
 from znrnd.utils import normalize_covariance_matrix
-from znrnd.utils.prng import PRNGKey
 
 logger = logging.getLogger(__name__)
 
 
-class NTModel(Model):
+class NTModel(JaxModel):
     """
     Class for a neural tangents model.
     """
 
     def __init__(
         self,
-        loss_fn: SimpleLoss,
+        loss_fn: Callable,
         optimizer: Callable,
         input_shape: tuple,
         training_threshold: float,
@@ -66,10 +61,8 @@ class NTModel(Model):
 
         Parameters
         ----------
-        loss_fn : SimpleLoss
+        loss_fn : Callable
                 A function to use in the loss computation.
-        accuracy_fn : AccuracyFunction
-                Accuracy function to use for accuracy computation.
         optimizer : Callable
                 optimizer to use in the training. OpTax is used by default and
                 cross-compatibility is not assured.
@@ -77,13 +70,15 @@ class NTModel(Model):
                 Shape of the NN input.
         training_threshold : float
                 The loss value at which point you consider the model trained.
+        nt_module : serial
+                NT model used.
+        accuracy_fn : AccuracyFunction
+                Accuracy function to use for accuracy computation.
         batch_size : int, default 10
                 Batch size to use in the NTK computation.
         seed : int, default None
                 Random seed for the RNG. Uses a random int if not specified.
         """
-        # Initialized in self.init_model
-        self.rng = None
         self.init_fn = nt_module[0]
         self.apply_fn = jax.jit(nt_module[1])
         self.kernel_fn = nt.batch(nt_module[2], batch_size=batch_size)
@@ -91,44 +86,59 @@ class NTModel(Model):
             nt.empirical_ntk_fn(self.apply_fn), batch_size=batch_size
         )
         self.empirical_ntk_jit = jax.jit(self.empirical_ntk)
-        self.loss_fn = loss_fn
-        self.accuracy_fn = accuracy_fn
-        self.optimizer = optimizer
-        self.input_shape = input_shape
-        self.training_threshold = training_threshold
 
-        # initialize the model state
-        self.model_state = None
-        self.init_model(seed)
+        # Save input parameters, call self.init_model
+        super().__init__(
+            loss_fn,
+            optimizer,
+            input_shape,
+            training_threshold,
+            accuracy_fn,
+            seed,
+        )
 
-    def init_model(
-        self,
-        seed: int = None,
-        kernel_init: Callable = None,
-        bias_init: Callable = None,
-    ):
-        """
-        Initialize a model.
+    def _init_params(self, kernel_init: Callable = None, bias_init: Callable = None):
+        """Initialize a state for the model parameters.
 
         Parameters
         ----------
-        seed : int, default None
-                Random seed for the RNG. Uses a random int if not specified.
         kernel_init : Callable
                 Define the kernel initialization.
         bias_init : Callable
                 Define the bias initialization.
+
+        Returns
+        -------
+        Initial state for the model parameters.
         """
-        if kernel_init:
+        if kernel_init is not None:
             raise NotImplementedError(
                 "Currently, there is no option customize the weight initialization. "
             )
-        if bias_init:
+        if bias_init is not None:
             raise NotImplementedError(
                 "Currently, there is no option customize the bias initialization. "
             )
-        self.rng = PRNGKey(seed)
-        self.model_state = self._create_train_state()
+
+        _, params = self.init_fn(self.rng(), self.input_shape)
+
+        return params
+
+    def apply(self, params: dict, inputs: np.ndarray):
+        """Apply the model to a feature vector.
+
+        Parameters
+        ----------
+        params: dict
+                Contains the model parameters to use for the model computation.
+        inputs : np.ndarray
+                Feature vector on which to apply the model.
+
+        Returns
+        -------
+        Output of the model.
+        """
+        return self.apply_fn(params, inputs)
 
     def compute_ntk(
         self,
@@ -171,343 +181,3 @@ class NTModel(Model):
                 infinite_ntk = normalize_covariance_matrix(infinite_ntk)
 
         return {"empirical": empirical_ntk, "infinite": infinite_ntk}
-
-    def _create_train_state(self):
-        """
-        Create a training state of the model.
-
-        Returns
-        -------
-        initial state of model to then be trained.
-
-        Notes
-        -----
-        TODO: Make the TrainState class passable by the user as it can track custom
-              model properties.
-        """
-        _, params = self.init_fn(self.rng(), self.input_shape)
-
-        return train_state.TrainState.create(
-            apply_fn=self.apply_fn, params=params, tx=self.optimizer
-        )
-
-    def _compute_metrics(
-        self,
-        predictions: np.ndarray,
-        targets: np.ndarray,
-    ):
-        """
-        Compute the current metrics of the training.
-
-        Parameters
-        ----------
-        predictions : np.ndarray
-                Predictions made by the network.
-        targets : np.ndarray
-                Targets from the training data.
-
-        Returns
-        -------
-        metrics : dict
-                A dict of current training metrics, e.g. {"loss": ..., "accuracy": ...}
-        """
-        loss = self.loss_fn(predictions, targets)
-        if self.accuracy_fn is not None:
-            accuracy = self.accuracy_fn(predictions, targets)
-            metrics = {"loss": loss, "accuracy": accuracy}
-
-        else:
-            metrics = {"loss": loss}
-
-        return metrics
-
-    def _train_step(self, state: train_state.TrainState, batch: dict):
-        """
-        Train a single step.
-
-        Parameters
-        ----------
-        state : TrainState
-                Current state of the neural network.
-        batch : dict
-                Batch of data to train on.
-
-        Returns
-        -------
-        state : dict
-                Updated state of the neural network.
-        metrics : dict
-                Metrics for the current model.
-        """
-
-        def loss_fn(params):
-            """
-            helper loss computation
-            """
-            inner_predictions = self.apply_fn(params, batch["inputs"])
-            loss = self.loss_fn(inner_predictions, batch["targets"])
-            return loss, inner_predictions
-
-        grad_fn = jax.value_and_grad(loss_fn, has_aux=True)
-
-        (_, predictions), grads = grad_fn(state.params)
-
-        state = state.apply_gradients(grads=grads)  # in place state update.
-        metrics = self._compute_metrics(
-            predictions=predictions, targets=batch["targets"]
-        )
-
-        return state, metrics
-
-    def _evaluate_step(self, params: dict, batch: dict):
-        """
-        Evaluate the model on test data.
-
-        Parameters
-        ----------
-        params : dict
-                Parameters of the model.
-        batch : dict
-                Batch of data to test on.
-
-        Returns
-        -------
-        metrics : dict
-                Metrics dict computed on test data.
-        """
-        predictions = self.apply_fn(params, batch["inputs"])
-
-        return self._compute_metrics(predictions, batch["targets"])
-
-    def _train_epoch(
-        self, state: train_state.TrainState, train_ds: dict, batch_size: int
-    ):
-        """
-        Train for a single epoch.
-
-        Performs the following steps:
-
-        * Shuffles the data
-        * Runs an optimization step on each batch
-        * Computes the metrics for the batch
-        * Return an updated optimizer, state, and metrics dictionary.
-
-        Parameters
-        ----------
-        state : TrainState
-                Current state of the model.
-        train_ds : dict
-                Dataset on which to train.
-        batch_size : int
-                Size of each batch.
-
-        Returns
-        -------
-        state : TrainState
-                State of the model after the epoch.
-        metrics : dict
-                Dict of metrics for current state.
-        """
-        # Some housekeeping variables.
-        train_ds_size = len(train_ds["inputs"])
-        steps_per_epoch = train_ds_size // batch_size
-
-        if train_ds_size == 1:
-            state, metrics = self._train_step(state, train_ds)
-            batch_metrics = [metrics]
-
-        else:
-            # Prepare the shuffle.
-            permutations = jax.random.permutation(self.rng(), train_ds_size)
-            permutations = np.array_split(permutations, steps_per_epoch)
-
-            # Step over items in batch.
-            batch_metrics = []
-            for permutation in permutations:
-                batch = {k: v[permutation, ...] for k, v in train_ds.items()}
-                # print(batch)
-                state, metrics = self._train_step(state, batch)
-                batch_metrics.append(metrics)
-
-        # Get the metrics off device for printing.
-        batch_metrics_np = jax.device_get(batch_metrics)
-        epoch_metrics_np = {
-            k: onp.mean([metrics[k] for metrics in batch_metrics_np])
-            for k in batch_metrics_np[0]
-        }
-
-        return state, epoch_metrics_np
-
-    def _evaluate_model(self, params: dict, test_ds: dict) -> dict:
-        """
-        Evaluate the model.
-
-        Parameters
-        ----------
-        params : dict
-                Current state of the model.
-        test_ds : dict
-                Dataset on which to evaluate.
-        Returns
-        -------
-        metrics : dict
-                Loss of the model.
-        """
-        metrics = self._evaluate_step(params, test_ds)
-        metrics = jax.device_get(metrics)
-        summary = jax.tree_map(lambda x: x.item(), metrics)
-
-        return summary
-
-    def validate_model(self, dataset: dict, loss_fn: SimpleLoss):
-        """
-        Validate the model on some external data.
-
-        Parameters
-        ----------
-        loss_fn : SimpleLoss
-                Loss function to use in the computation.
-        dataset : dict
-                Dataset on which to validate the model.
-                {"inputs": np.ndarray, "targets": np.ndarray}.
-
-        Returns
-        -------
-        metrics : dict
-                Metrics computed in the validation. {"loss": [], "accuracy": []}.
-                Note, for ease of large scale experiments we always return both keywords
-                whether they are computed or not.
-        """
-        predictions = self.apply_fn(self.model_state.params, dataset["inputs"])
-
-        loss = loss_fn(predictions, dataset["targets"])
-
-        if self.accuracy_fn is not None:
-            accuracy = self.accuracy_fn(predictions, dataset["targets"])
-        else:
-            accuracy = None
-
-        return {"loss": loss, "accuracy": accuracy}
-
-    def train_model(
-        self,
-        train_ds: dict,
-        test_ds: dict,
-        epochs: int = 50,
-        batch_size: int = 1,
-        disable_loading_bar: bool = False,
-    ):
-        """
-        Train the model.
-
-        See the parent class for a full doc-string.
-        """
-        if self.model_state is None:
-            self.init_model()
-
-        state = self.model_state
-
-        loading_bar = trange(
-            1, epochs + 1, ncols=100, unit="batch", disable=disable_loading_bar
-        )
-        test_losses = []
-        test_accuracy = []
-        train_losses = []
-        train_accuracy = []
-        for i in loading_bar:
-            loading_bar.set_description(f"Epoch: {i}")
-
-            state, train_metrics = self._train_epoch(
-                state, train_ds, batch_size=batch_size
-            )
-            metrics = self._evaluate_model(state.params, test_ds)
-
-            loading_bar.set_postfix(test_loss=metrics["loss"])
-            if self.accuracy_fn is not None:
-                loading_bar.set_postfix(accuracy=metrics["accuracy"])
-                test_accuracy.append(metrics["accuracy"])
-                train_accuracy.append(train_metrics["accuracy"])
-
-            test_losses.append(metrics["loss"])
-            train_losses.append(train_metrics["loss"])
-
-        # Update the final model state.
-        self.model_state = state
-
-        return {
-            "test_losses": test_losses,
-            "test_accuracy": test_accuracy,
-            "train_losses": train_losses,
-            "train_accuracy": train_accuracy,
-        }
-
-    def train_model_recursively(
-        self,
-        train_ds: dict,
-        test_ds: dict,
-        epochs_latest_data: int = 0,
-        len_latest_data: int = 1,
-        epochs_all_data: int = 50,
-        batch_size: int = 50,
-        disable_loading_bar: bool = False,
-    ):
-        """
-        Check parent class for full doc string.
-        """
-        if len(train_ds["inputs"]) < batch_size:
-            batch_size = len(train_ds["inputs"])
-
-        if self.model_state is None:
-            self.init_model()
-        state = self.model_state
-
-        condition = False
-        counter = 0
-        while not condition:
-            loading_bar = trange(
-                1,
-                epochs_latest_data + epochs_all_data + 1,
-                ncols=100,
-                unit="batch",
-                disable=disable_loading_bar,
-            )
-            for i in loading_bar:
-                loading_bar.set_description(f"Epoch: {i}")
-
-                if i < epochs_latest_data + 1:
-                    train_data = {
-                        "inputs": train_ds["inputs"][-len_latest_data:],
-                        "targets": train_ds["targets"][-len_latest_data:],
-                    }
-                else:
-                    train_data = train_ds
-
-                state, train_metrics = self._train_epoch(
-                    state, train_data, batch_size=batch_size
-                )
-                metrics = self._evaluate_model(state.params, test_ds)
-
-                loading_bar.set_postfix(test_loss=metrics["loss"])
-
-            # Update the final model state.
-            self.model_state = state
-
-            # Perform checks and update parameters
-            counter += 1
-            epochs_latest_data = int(1.1 * epochs_latest_data)
-            epochs_all_data = int(1.1 * epochs_all_data)
-            if metrics["loss"] <= self.training_threshold:
-                condition = True
-
-            # Re-initialize the network if it is simply not converging.
-            if counter % 10 == 0:
-                logger.info("Model training stagnating, re-initializing model.")
-                self.init_model()
-
-    def __call__(self, feature_vector: np.ndarray):
-        """
-        See parent class for full doc string.
-        """
-        state = self.model_state
-
-        return self.apply_fn(state.params, feature_vector)
