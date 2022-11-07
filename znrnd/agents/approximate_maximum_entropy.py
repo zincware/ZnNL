@@ -29,7 +29,7 @@ import jax.numpy as np
 from znrnd.agents.agent import Agent
 from znrnd.analysis.entropy import EntropyAnalysis
 from znrnd.data import DataGenerator
-from znrnd.models import Model
+from znrnd.models import Jax_Model
 from znrnd.utils.prng import PRNGKey
 
 
@@ -38,7 +38,7 @@ class ApproximateMaximumEntropy(Agent):
 
     def __init__(
         self,
-        target_network: Model,
+        target_network: Jax_Model,
         data_generator: DataGenerator,
         samples: int = 10,
         seed: int = None,
@@ -48,7 +48,7 @@ class ApproximateMaximumEntropy(Agent):
 
         Parameters
         ----------
-        target_network : Model
+        target_network : Jax_Model
                 Model of the target network.
         samples : int (default=10)
                 Number of samples to try to get the maximum entropy.

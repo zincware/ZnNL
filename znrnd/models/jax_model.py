@@ -6,7 +6,7 @@ SPDX-License-Identifier: EPL-2.0
 
 Copyright Contributors to the Zincware Project.
 
-Description: Parent class for the models.
+Description: Parent class for the Jax-based models.
 """
 import logging
 from typing import Callable, Tuple
@@ -23,9 +23,9 @@ from znrnd.utils.prng import PRNGKey
 logger = logging.getLogger(__name__)
 
 
-class Model:
+class Jax_Model:
     """
-    Parent class for ZnRND Models.
+    Parent class for Jax-based models.
     """
 
     def __init__(
