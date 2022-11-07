@@ -1,13 +1,19 @@
-isort:
-  runs-on: ubuntu-latest
-  steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
-      with:
-        python-version: '3.8'
-    - name: Install isort
-      run: |
-        pip install isort==5.10.1
-    - name: run isort
-      run: |
-        isort --check-only --quiet .
+name: Run isort
+
+on:
+  push:
+
+jobs:
+  isort:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      - name: Install isort
+        run: |
+          pip install isort==5.10.1
+      - name: run isort
+        run: |
+          isort --check-only --quiet .
