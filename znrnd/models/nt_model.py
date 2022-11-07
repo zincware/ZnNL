@@ -34,13 +34,13 @@ import neural_tangents as nt
 from neural_tangents.stax import serial
 
 from znrnd.accuracy_functions.accuracy_function import AccuracyFunction
-from znrnd.models.jax_model import Jax_Model
+from znrnd.models.jax_model import JaxModel
 from znrnd.utils import normalize_covariance_matrix
 
 logger = logging.getLogger(__name__)
 
 
-class NTModel(Jax_Model):
+class NTModel(JaxModel):
     """
     Class for a neural tangents model.
     """

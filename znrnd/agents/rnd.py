@@ -18,7 +18,7 @@ import znrnd
 from znrnd.agents.agent import Agent
 from znrnd.data import DataGenerator
 from znrnd.distance_metrics.distance_metric import DistanceMetric
-from znrnd.models import Jax_Model
+from znrnd.models import JaxModel
 from znrnd.point_selection import PointSelection
 from znrnd.visualization.tsne_visualizer import TSNEVisualizer
 
@@ -40,8 +40,8 @@ class RND(Agent):
     def __init__(
         self,
         data_generator: DataGenerator,
-        target_network: Jax_Model = None,
-        predictor_network: Jax_Model = None,
+        target_network: JaxModel = None,
+        predictor_network: JaxModel = None,
         distance_metric: DistanceMetric = None,
         point_selector: PointSelection = None,
         visualizer: TSNEVisualizer = None,

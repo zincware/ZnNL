@@ -31,7 +31,7 @@ import jax.numpy as np
 from flax import linen as nn
 
 from znrnd.accuracy_functions.accuracy_function import AccuracyFunction
-from znrnd.models.jax_model import Jax_Model
+from znrnd.models.jax_model import JaxModel
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ class FundamentalModel(nn.Module):
         return feature_vector
 
 
-class FlaxModel(Jax_Model):
+class FlaxModel(JaxModel):
     """
     Class for the Flax model in ZnRND.
     """

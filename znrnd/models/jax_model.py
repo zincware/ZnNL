@@ -23,7 +23,7 @@ from znrnd.utils.prng import PRNGKey
 logger = logging.getLogger(__name__)
 
 
-class Jax_Model:
+class JaxModel:
     """
     Parent class for Jax-based models.
     """
