@@ -50,7 +50,7 @@ class NTModel(JaxModel):
         loss_fn: Callable,
         optimizer: Callable,
         input_shape: tuple,
-        training_threshold: float,
+        training_threshold: float = 0.01,
         nt_module: serial = None,
         accuracy_fn: AccuracyFunction = None,
         batch_size: int = 10,

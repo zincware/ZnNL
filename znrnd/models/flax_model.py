@@ -73,7 +73,7 @@ class FlaxModel(JaxModel):
         loss_fn: Callable,
         optimizer: Callable,
         input_shape: tuple,
-        training_threshold: float,
+        training_threshold: float = 0.01,
         layer_stack: List[nn.Module] = None,
         flax_module: nn.Module = None,
         accuracy_fn: AccuracyFunction = None,
