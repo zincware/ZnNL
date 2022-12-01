@@ -26,7 +26,7 @@ Summary
 Module for the neural tangents infinite width network models.
 """
 import logging
-from typing import Callable
+from typing import Callable, Sequence, Union
 
 import jax
 import jax.numpy as np
@@ -54,6 +54,7 @@ class NTModel(JaxModel):
         nt_module: serial = None,
         accuracy_fn: AccuracyFunction = None,
         batch_size: int = 10,
+        trace_axes: Union[int, Sequence[int]] = (-1,),
         seed: int = None,
     ):
         """
@@ -76,6 +77,11 @@ class NTModel(JaxModel):
                 Accuracy function to use for accuracy computation.
         batch_size : int, default 10
                 Batch size to use in the NTK computation.
+        trace_axes : Union[int, Sequence[int]]
+                Tracing over axes of the NTK.
+                The default value is trace_axes(-1,), which reduces the NTK to a tensor
+                of rank 2.
+                For a full NTK set trace_axes=().
         seed : int, default None
                 Random seed for the RNG. Uses a random int if not specified.
         """
@@ -83,7 +89,8 @@ class NTModel(JaxModel):
         self.apply_fn = jax.jit(nt_module[1])
         self.kernel_fn = nt.batch(nt_module[2], batch_size=batch_size)
         self.empirical_ntk = nt.batch(
-            nt.empirical_ntk_fn(self.apply_fn), batch_size=batch_size
+            nt.empirical_ntk_fn(f=self.apply_fn, trace_axes=trace_axes),
+            batch_size=batch_size,
         )
         self.empirical_ntk_jit = jax.jit(self.empirical_ntk)
 
