@@ -30,8 +30,8 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 import optax
-from neural_tangents import stax
 from jax import random
+from neural_tangents import stax
 
 from znrnd.loss_functions import MeanPowerLoss
 from znrnd.models import NTModel
@@ -52,7 +52,7 @@ class TestNTKShape:
             stax.Relu(),
             stax.Dense(5, b_std=0.5),
             stax.Relu(),
-            stax.Dense(5)
+            stax.Dense(5),
         )
 
         key1, key2 = random.split(random.PRNGKey(1), 2)
@@ -76,7 +76,7 @@ class TestNTKShape:
             training_threshold=0.1,
             batch_size=1,
             seed=17,
-            trace_axes=()
+            trace_axes=(),
         )
 
         ntk_1 = nt_model_1.compute_ntk(x1, normalize=False)["empirical"]
