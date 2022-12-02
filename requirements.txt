@@ -10,7 +10,7 @@ sphinx_rtd_theme
 nbsphinx
 tensorflow_probability
 scipy
-sklearn
+scikit-learn
 jaxlib
 jax
 plotly
