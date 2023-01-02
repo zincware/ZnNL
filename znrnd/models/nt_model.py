@@ -35,6 +35,7 @@ from neural_tangents.stax import serial
 
 from znrnd.accuracy_functions.accuracy_function import AccuracyFunction
 from znrnd.models.jax_model import JaxModel
+from znrnd.optimizers.trace_optimizer import TraceOptimizer
 from znrnd.utils import normalize_covariance_matrix
 
 logger = logging.getLogger(__name__)
@@ -48,7 +49,7 @@ class NTModel(JaxModel):
     def __init__(
         self,
         loss_fn: Callable,
-        optimizer: Callable,
+        optimizer: Union[Callable, TraceOptimizer],
         input_shape: tuple,
         training_threshold: float = 0.01,
         nt_module: serial = None,
