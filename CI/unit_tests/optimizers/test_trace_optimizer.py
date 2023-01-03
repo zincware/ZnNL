@@ -55,10 +55,6 @@ class TestTraceOptimizer:
     def test_apply_operation(self):
         """
         Test the apply operation of the optimizer.
-
-        Returns
-        -------
-
         """
         # Set parameters.
         scale_factor = 10
