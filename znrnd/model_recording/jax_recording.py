@@ -26,6 +26,13 @@ Module for recording jax training.
 from dataclasses import dataclass
 
 import numpy as np
+import jax.numpy as jnp
+
+from znrnd.models.jax_model import JaxModel
+from znrnd.analysis.entropy import EntropyAnalysis
+from znrnd.analysis.eigensystem import EigenSpaceAnalysis
+
+from rich import print
 
 
 @dataclass
@@ -40,6 +47,18 @@ class JaxRecorder:
 
     Attributes
     ----------
+    loss : bool (default=True)
+            If true, loss will be recorded.
+    accuracy : bool (default=False)
+            If true, accuracy will be recorded.
+    ntk : bool (default=False)
+            If true, the ntk will be recorded. Warning, large overhead.
+    entropy : bool (default=False)
+            If true, entropy will be recorded. Warning, large overhead.
+    eigenvalues : bool (default=False)
+            If true, eigenvalues will be recorded. Warning, large overhead.
+    update_rate : int (default=1)
+            How often the values are updated.
 
     Notes
     -----
@@ -68,27 +87,16 @@ class JaxRecorder:
     _eigenvalues_array: np.ndarray = None
 
     # Class helpers
+    update_rate: int = 1
     _selected_properties: list = None
+    _model: JaxModel = None
+    _data_set: dict = None
+    _compute_ntk: bool = False  # Helps to know so we can compute it once and share.
+    _index_count: int = 0  # Helps to avoid problems with non-1 update rates.
 
-    def instantiate_recorder(
-        self, data_length: int, data_shape: tuple = None, overwrite: bool = False
-    ):
+    def _read_selected_attributes(self):
         """
-        Prepare the recorder for training.
-
-        Parameters
-        ----------
-        data_length : int
-                Length of time series to store currently.
-        data_shape : tuple (default=None)
-                If the NTK is being recorded, the shape of the data should be provided.
-        overwrite : bool (default=False)
-                If true and there is data already in the array, this will be removed and
-                a new array created.
-
-        Returns
-        -------
-        Populates the array attributes of the dataclass.
+        Helper function to read selected attributes.
         """
         # populate the class attribute
         self._selected_properties = [
@@ -97,6 +105,47 @@ class JaxRecorder:
             if value[0] != "_" and vars(self)[value] is True
         ]
 
+    def instantiate_recorder(
+            self,
+            model: JaxModel,
+            data_length: int,
+            data_set: dict,
+            overwrite: bool = False
+    ):
+        """
+        Prepare the recorder for training.
+
+        Parameters
+        ----------
+        model : JaxModel
+                Model to monitor and record.
+        data_length : int
+                Length of time series to store currently.
+        data_set : dict (default=None)
+                Data to record during training.
+        overwrite : bool (default=False)
+                If true and there is data already in the array, this will be removed and
+                a new array created.
+
+        Returns
+        -------
+        Populates the array attributes of the dataclass.
+
+        Notes
+        -----
+        * TODO: Add check for previous array and extend
+        """
+        # Update simple attributes
+        self._model = model
+        self._data_set = data_set
+
+        # Update involved attributes
+        data_shape = data_set["inputs"].shape
+
+        # populate the class attribute
+        self._read_selected_attributes()
+
+        # Instantiate arrays
         all_attributes = self.__dict__
         for item in self._selected_properties:
             if item == "ntk":
@@ -106,15 +155,55 @@ class JaxRecorder:
             else:
                 all_attributes[f"_{item}_array"] = np.zeros((data_length,))
 
-    def update_recorder(self):
+        # Check if we need an NTK computation and update the class accordingly
+        test_array = np.array([
+            "ntk" in self._selected_properties,
+            "entropy" in self._selected_properties,
+            "eigenvalues" in self._selected_properties
+        ])
+        if test_array.sum() > 0:
+            self._compute_ntk = True
+
+    def update_recorder(self, epoch: int):
         """
         Update the values stored in the recorder.
 
         Returns
         -------
-
+        Updates the chosen class attributes depending on the user requirements.
         """
-        pass
+        # Check if we need to record and if so, record
+        if epoch % self.update_rate == 0:
+            parsed_data = {}
+
+            # Add epoch to the parsed data
+            parsed_data["epoch"] = self._index_count
+            # Compute representations here to avoid repeated computation.
+            predictions = self._model(self._data_set["inputs"])
+            parsed_data["predictions"] = predictions
+
+            # Compute ntk here to avoid repeated computation.
+            if self._compute_ntk:
+                try:
+                    ntk = self._model.compute_ntk(self._data_set["inputs"], normalize=False)
+                    parsed_data["ntk"] = ntk
+                except NotImplementedError:
+                    print(
+                        "NTK calculation is not yet available for this model. Removing "
+                        "it from this recorder."
+                    )
+                    self.ntk = False
+                    self.entropy = False
+                    self.eigenvalues = False
+                    self._read_selected_attributes()
+
+            for item in self._selected_properties:
+                call_fn = getattr(self, f"_update_{item}")  # get the callable function
+                call_fn(parsed_data)  # call the function and update the property
+
+            self._index_count +=  1  # Update the index count.
+        else:
+            pass
 
     def dump_records(self):
         """
@@ -135,3 +224,76 @@ class JaxRecorder:
 
         """
         raise NotImplementedError("Not yet available in ZnRND.")
+
+    def _update_loss(self, parsed_data: dict):
+        """
+        Update the loss array.
+
+        Parameters
+        ----------
+        parsed_data : dict
+                Data computed before the update to prevent repeated calculations.
+        """
+        self._loss_array[parsed_data["epoch"]] = self._model.loss_fn(
+            parsed_data["predictions"], self._data_set["targets"]
+        )
+
+    def _update_accuracy(self, parsed_data: dict):
+        """
+        Update the accuracy array.
+
+        Parameters
+        ----------
+        parsed_data : dict
+                Data computed before the update to prevent repeated calculations.
+        """
+        try:
+            self._accuracy_array[parsed_data["epoch"]] = self._model.accuracy_fn(
+                parsed_data["predictions"], self._data_set["targets"]
+            )
+        except AttributeError:
+            print(
+                "There is no accuracy function in the model class, switching this "
+                "recording option off."
+            )
+            self.accuracy = False
+            self._read_selected_attributes()
+
+    def _update_ntk(self, parsed_data: dict):
+        """
+        Update the ntk array.
+
+        Parameters
+        ----------
+        parsed_data : dict
+                Data computed before the update to prevent repeated calculations.
+        """
+        self._ntk_array[parsed_data["epoch"]] = parsed_data["ntk"]
+
+    def _update_entropy(self, parsed_data: dict):
+        """
+        Update the entropy array.
+
+        Parameters
+        ----------
+        parsed_data : dict
+                Data computed before the update to prevent repeated calculations.
+        """
+        calculator = EntropyAnalysis(matrix=ntk)
+        entropy = calculator.compute_von_neumann_entropy(
+            effective=False, normalize_eig=True
+        )
+        self._entropy_array[parsed_data["epoch"]] = entropy
+
+    def _update_eigenvalues(self, parsed_data: dict):
+        """
+        Update the eigenvalue array.
+
+        Parameters
+        ----------
+        parsed_data : dict
+                Data computed before the update to prevent repeated calculations.
+        """
+        calculator = EigenSpaceAnalysis(matrix=ntk)
+        eigenvalues = calculator.compute_eigenvalues(normalize=False)
+        self._eigenvalues_array[parsed_data["epoch"]] = eigenvalues

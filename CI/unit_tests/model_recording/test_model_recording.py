@@ -25,6 +25,8 @@ Test for the model recording module.
 """
 from znrnd.model_recording import JaxRecorder
 
+import numpy as np
+
 
 class TestModelRecording:
     """
@@ -35,17 +37,25 @@ class TestModelRecording:
         """
         Test the instantiation of the recorder.
         """
+        dummy_data = np.random.uniform(size=(5, 2, 3))
+        dummy_data_set = {"inputs": dummy_data, "targets": dummy_data}
         recorder = JaxRecorder(
             loss=True, accuracy=True, ntk=True, entropy=True, eigenvalues=True
         )
-        recorder.instantiate_recorder(data_length=10, data_shape=(5, 2, 3))
+        recorder.instantiate_recorder(
+            model=None,
+            data_length=10,
+            data_set=dummy_data_set
+        )
 
         for key, val in vars(recorder).items():
-            if key[0] != "_":
+            if key[0] != "_" and key != "update_rate":
                 assert val is True
+            if key == "update_rate":
+                assert val == 1
             elif key == "_ntk_array":
                 assert val.shape == (10, 5, 5)
+            elif key.split("_")[-1] == "array:":
+                assert val.shape == (10,)
             elif key == "_selected_properties":
                 pass
-            else:
-                assert val.shape == (10,)
