@@ -40,6 +40,11 @@ class JaxRecorder:
 
     Attributes
     ----------
+
+    Notes
+    -----
+    Currently the options are hard-coded. In the future, we will work towards allowing
+    for arbitrary computations to be added, for example, two losses.
     """
     # Model Loss
     loss: bool = True
@@ -61,15 +66,42 @@ class JaxRecorder:
     eigenvalues: bool = False
     _eigenvalues_array: np.ndarray = None
 
-    def instantiate_recorder(self):
+    # Class helpers
+    _selected_properties: list = None
+
+    def instantiate_recorder(
+            self, data_length: int, data_shape: tuple = None, overwrite: bool = False
+    ):
         """
         Prepare the recorder for training.
 
+        Parameters
+        ----------
+        data_length : int
+                Length of time series to store currently.
+        data_shape : tuple (default=None)
+                If the NTK is being recorded, the shape of the data should be provided.
+        overwrite : bool (default=False)
+                If true and there is data already in the array, this will be removed and
+                a new array created.
+
         Returns
         -------
-
+        Populates the array attributes of the dataclass.
         """
-        pass
+        # populate the class attribute
+        self._selected_properties = [
+            value for value in list(vars(self)) if value[0] != "_" and vars(self)[value] is True
+        ]
+
+        all_attributes = self.__dict__
+        for item in self._selected_properties:
+            if item is "ntk":
+                all_attributes[f"_{item}_array"] = np.zeros(
+                    (data_length, data_shape[0], data_shape[0])
+                )
+            else:
+                all_attributes[f"_{item}_array"] = np.zeros((data_length,))
 
     def update_recorder(self):
         """
@@ -89,7 +121,7 @@ class JaxRecorder:
         -------
 
         """
-        pass
+        raise NotImplementedError("Not yet available in ZnRND.")
 
     def visualize_recorder(self):
         """
@@ -99,4 +131,4 @@ class JaxRecorder:
         -------
 
         """
-        pass
+        raise NotImplementedError("Not yet available in ZnRND.")

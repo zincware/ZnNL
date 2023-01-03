@@ -23,3 +23,7 @@ Summary
 -------
 Init for model recording package
 """
+from znrnd.model_recording.jax_recording import JaxRecorder
+
+
+__all__ = [JaxRecorder.__name__]
