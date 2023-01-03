@@ -315,11 +315,11 @@ class JaxRecorder:
                 A dataclass of only the data recorder during the training.
         """
         DataSet = make_dataclass(
-            "DataSet",
-            [(item, np.ndarray) for item in self._selected_properties]
+            "DataSet", [(item, np.ndarray) for item in self._selected_properties]
         )
         selected_data = {
-            item: vars(self)[f"_{item}_array"][:self._index_count] for item in self._selected_properties
+            item: vars(self)[f"_{item}_array"][: self._index_count]
+            for item in self._selected_properties
         }
 
         return DataSet(**selected_data)
