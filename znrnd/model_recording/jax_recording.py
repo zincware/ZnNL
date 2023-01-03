@@ -46,6 +46,7 @@ class JaxRecorder:
     Currently the options are hard-coded. In the future, we will work towards allowing
     for arbitrary computations to be added, for example, two losses.
     """
+
     # Model Loss
     loss: bool = True
     _loss_array: np.ndarray = None
@@ -70,7 +71,7 @@ class JaxRecorder:
     _selected_properties: list = None
 
     def instantiate_recorder(
-            self, data_length: int, data_shape: tuple = None, overwrite: bool = False
+        self, data_length: int, data_shape: tuple = None, overwrite: bool = False
     ):
         """
         Prepare the recorder for training.
@@ -91,12 +92,14 @@ class JaxRecorder:
         """
         # populate the class attribute
         self._selected_properties = [
-            value for value in list(vars(self)) if value[0] != "_" and vars(self)[value] is True
+            value
+            for value in list(vars(self))
+            if value[0] != "_" and vars(self)[value] is True
         ]
 
         all_attributes = self.__dict__
         for item in self._selected_properties:
-            if item is "ntk":
+            if item == "ntk":
                 all_attributes[f"_{item}_array"] = np.zeros(
                     (data_length, data_shape[0], data_shape[0])
                 )

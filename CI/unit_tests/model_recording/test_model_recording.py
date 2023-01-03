@@ -30,25 +30,22 @@ class TestModelRecording:
     """
     Unit test suite for the model recording.
     """
+
     def test_instantiation(self):
         """
         Test the instantiation of the recorder.
         """
         recorder = JaxRecorder(
-            loss=True,
-            accuracy=True,
-            ntk=True,
-            entropy=True,
-            eigenvalues=True
+            loss=True, accuracy=True, ntk=True, entropy=True, eigenvalues=True
         )
         recorder.instantiate_recorder(data_length=10, data_shape=(5, 2, 3))
 
         for key, val in vars(recorder).items():
-            if key[0] is not "_":
-                assert val == True
-            elif key is "_ntk_array":
+            if key[0] != "_":
+                assert val is True
+            elif key == "_ntk_array":
                 assert val.shape == (10, 5, 5)
-            elif key is "_selected_properties":
+            elif key == "_selected_properties":
                 pass
             else:
                 assert val.shape == (10,)
