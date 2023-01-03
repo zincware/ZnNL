@@ -11,6 +11,7 @@ from znrnd import (
     data,
     distance_metrics,
     loss_functions,
+    model_recording,
     models,
     point_selection,
     similarity_measures,
@@ -33,4 +34,5 @@ __all__ = [
     agents.__name__,
     analysis.__name__,
     utils.__name__,
+    model_recording.__name__,
 ]

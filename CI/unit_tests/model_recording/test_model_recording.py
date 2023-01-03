@@ -23,9 +23,9 @@ Summary
 -------
 Test for the model recording module.
 """
-from znrnd.model_recording import JaxRecorder
-
 import numpy as np
+
+from znrnd.model_recording import JaxRecorder
 
 
 class TestModelRecording:
@@ -42,11 +42,7 @@ class TestModelRecording:
         recorder = JaxRecorder(
             loss=True, accuracy=True, ntk=True, entropy=True, eigenvalues=True
         )
-        recorder.instantiate_recorder(
-            model=None,
-            data_length=10,
-            data_set=dummy_data_set
-        )
+        recorder.instantiate_recorder(data_length=10, data_set=dummy_data_set)
 
         for key, val in vars(recorder).items():
             if key[0] != "_" and key != "update_rate":

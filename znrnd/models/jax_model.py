@@ -9,7 +9,7 @@ Copyright Contributors to the Zincware Project.
 Description: Parent class for the Jax-based models.
 """
 import logging
-from typing import Callable, Tuple, Union
+from typing import TYPE_CHECKING, Callable, List, Tuple, Union
 
 import jax.numpy as np
 import jax.random
@@ -21,6 +21,9 @@ from tqdm import trange
 from znrnd.accuracy_functions.accuracy_function import AccuracyFunction
 from znrnd.optimizers.trace_optimizer import TraceOptimizer
 from znrnd.utils.prng import PRNGKey
+
+if TYPE_CHECKING:
+    from znrnd.model_recording.jax_recording import JaxRecorder
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +64,7 @@ class JaxModel:
         self.optimizer = optimizer
         self.input_shape = input_shape
         self.training_threshold = training_threshold
+        self.recorders = []
 
         # Initialized in self.init_model
         self.rng = None
@@ -318,6 +322,7 @@ class JaxModel:
         test_ds: dict,
         epochs: int = 50,
         batch_size: int = 1,
+        recorders: List["JaxRecorder"] = None,
         disable_loading_bar: bool = False,
     ):
         """
@@ -331,10 +336,21 @@ class JaxModel:
                 Test dataset with inputs and targets.
         epochs : int
                 Number of epochs to train over.
+        recorders : List[JaxRecorder]
+                A list of recorders to monitor model training.
         batch_size : int
                 Size of the batch to use in training.
         disable_loading_bar : bool
                 Disable the output visualization of the loading par.
+
+        Returns
+        -------
+        in_training_metrics : dict
+            Whilst the recorders can return all useful metrics, the model still returns
+            the loss and accuracy that is measured during the training. These can differ
+            as the loss and accuracy during training can be done batch-wise in between
+            model updates whereas the recorder will store the results on a single set
+            of parameters.
         """
         if self.model_state is None:
             self.init_model()
@@ -344,11 +360,14 @@ class JaxModel:
         loading_bar = trange(
             1, epochs + 1, ncols=100, unit="batch", disable=disable_loading_bar
         )
-        test_losses = []
-        test_accuracy = []
+
         train_losses = []
         train_accuracy = []
         for i in loading_bar:
+            # Update the recorder properties
+            for item in recorders:
+                item.update_recorder(epoch=i, model=self)
+
             loading_bar.set_description(f"Epoch: {i}")
 
             if isinstance(self.optimizer, TraceOptimizer):
@@ -363,22 +382,20 @@ class JaxModel:
                 state, train_ds, batch_size=batch_size
             )
             metrics = self._evaluate_model(state.params, test_ds)
-
-            loading_bar.set_postfix(test_loss=metrics["loss"])
-            if self.accuracy_fn is not None:
-                loading_bar.set_postfix(accuracy=metrics["accuracy"])
-                test_accuracy.append(metrics["accuracy"])
-                train_accuracy.append(train_metrics["accuracy"])
-
-            test_losses.append(metrics["loss"])
             train_losses.append(train_metrics["loss"])
 
-        # Update the final model state.
-        self.model_state = state
+            # Update the loading bar
+            loading_bar.set_postfix(test_loss=metrics["loss"])
+            try:
+                loading_bar.set_postfix(accuracy=metrics["accuracy"])
+                train_accuracy.append(train_metrics["accuracy"])
+            except KeyError:
+                pass
+
+            # Update the class model state.
+            self.model_state = state
 
         return {
-            "test_losses": test_losses,
-            "test_accuracy": test_accuracy,
             "train_losses": train_losses,
             "train_accuracy": train_accuracy,
         }

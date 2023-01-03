@@ -26,13 +26,11 @@ Module for recording jax training.
 from dataclasses import dataclass
 
 import numpy as np
-import jax.numpy as jnp
-
-from znrnd.models.jax_model import JaxModel
-from znrnd.analysis.entropy import EntropyAnalysis
-from znrnd.analysis.eigensystem import EigenSpaceAnalysis
-
 from rich import print
+
+from znrnd.analysis.eigensystem import EigenSpaceAnalysis
+from znrnd.analysis.entropy import EntropyAnalysis
+from znrnd.models.jax_model import JaxModel
 
 
 @dataclass
@@ -106,11 +104,7 @@ class JaxRecorder:
         ]
 
     def instantiate_recorder(
-            self,
-            model: JaxModel,
-            data_length: int,
-            data_set: dict,
-            overwrite: bool = False
+        self, data_length: int, data_set: dict, overwrite: bool = False
     ):
         """
         Prepare the recorder for training.
@@ -136,7 +130,6 @@ class JaxRecorder:
         * TODO: Add check for previous array and extend
         """
         # Update simple attributes
-        self._model = model
         self._data_set = data_set
 
         # Update involved attributes
@@ -156,17 +149,26 @@ class JaxRecorder:
                 all_attributes[f"_{item}_array"] = np.zeros((data_length,))
 
         # Check if we need an NTK computation and update the class accordingly
-        test_array = np.array([
-            "ntk" in self._selected_properties,
-            "entropy" in self._selected_properties,
-            "eigenvalues" in self._selected_properties
-        ])
+        test_array = np.array(
+            [
+                "ntk" in self._selected_properties,
+                "entropy" in self._selected_properties,
+                "eigenvalues" in self._selected_properties,
+            ]
+        )
         if test_array.sum() > 0:
             self._compute_ntk = True
 
-    def update_recorder(self, epoch: int):
+    def update_recorder(self, epoch: int, model: JaxModel):
         """
         Update the values stored in the recorder.
+
+        Parameters
+        ----------
+        epoch : int
+                Current epoch of the model.
+        model : JaxModel
+                Model to use in the update.
 
         Returns
         -------
@@ -174,6 +176,9 @@ class JaxRecorder:
         """
         # Check if we need to record and if so, record
         if epoch % self.update_rate == 0:
+            # Update here to expose to other methods.
+            self._model = model
+
             parsed_data = {}
 
             # Add epoch to the parsed data
@@ -185,7 +190,9 @@ class JaxRecorder:
             # Compute ntk here to avoid repeated computation.
             if self._compute_ntk:
                 try:
-                    ntk = self._model.compute_ntk(self._data_set["inputs"], normalize=False)
+                    ntk = self._model.compute_ntk(
+                        self._data_set["inputs"], normalize=False
+                    )
                     parsed_data["ntk"] = ntk
                 except NotImplementedError:
                     print(
@@ -201,7 +208,7 @@ class JaxRecorder:
                 call_fn = getattr(self, f"_update_{item}")  # get the callable function
                 call_fn(parsed_data)  # call the function and update the property
 
-            self._index_count +=  1  # Update the index count.
+            self._index_count += 1  # Update the index count.
         else:
             pass
 
@@ -279,7 +286,7 @@ class JaxRecorder:
         parsed_data : dict
                 Data computed before the update to prevent repeated calculations.
         """
-        calculator = EntropyAnalysis(matrix=ntk)
+        calculator = EntropyAnalysis(matrix=parsed_data["ntk"])
         entropy = calculator.compute_von_neumann_entropy(
             effective=False, normalize_eig=True
         )
@@ -294,6 +301,6 @@ class JaxRecorder:
         parsed_data : dict
                 Data computed before the update to prevent repeated calculations.
         """
-        calculator = EigenSpaceAnalysis(matrix=ntk)
+        calculator = EigenSpaceAnalysis(matrix=parsed_data["ntk"])
         eigenvalues = calculator.compute_eigenvalues(normalize=False)
         self._eigenvalues_array[parsed_data["epoch"]] = eigenvalues
