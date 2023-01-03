@@ -23,7 +23,7 @@ Summary
 -------
 Module for recording jax training.
 """
-from dataclasses import dataclass
+from dataclasses import dataclass, make_dataclass
 
 import numpy as np
 from rich import print
@@ -304,3 +304,22 @@ class JaxRecorder:
         calculator = EigenSpaceAnalysis(matrix=parsed_data["ntk"])
         eigenvalues = calculator.compute_eigenvalues(normalize=False)
         self._eigenvalues_array[parsed_data["epoch"]] = eigenvalues
+
+    def export_dataset(self):
+        """
+        Export a dataclass of used properties.
+
+        Returns
+        -------
+        dataset : object
+                A dataclass of only the data recorder during the training.
+        """
+        DataSet = make_dataclass(
+            "DataSet",
+            [(item, np.ndarray) for item in self._selected_properties]
+        )
+        selected_data = {
+            item: vars(self)[f"_{item}_array"][:self._index_count] for item in self._selected_properties
+        }
+
+        return DataSet(**selected_data)
