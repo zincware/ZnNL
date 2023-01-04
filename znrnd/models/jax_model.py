@@ -9,15 +9,17 @@ Copyright Contributors to the Zincware Project.
 Description: Parent class for the Jax-based models.
 """
 import logging
-from typing import Callable, Tuple
+from typing import Callable, Tuple, Union
 
 import jax.numpy as np
 import jax.random
 import numpy as onp
+import optax
 from flax.training.train_state import TrainState
 from tqdm import trange
 
 from znrnd.accuracy_functions.accuracy_function import AccuracyFunction
+from znrnd.optimizers.trace_optimizer import TraceOptimizer
 from znrnd.utils.prng import PRNGKey
 
 logger = logging.getLogger(__name__)
@@ -31,13 +33,14 @@ class JaxModel:
     def __init__(
         self,
         loss_fn: Callable,
-        optimizer: Callable,
+        optimizer: Union[Callable, TraceOptimizer],
         input_shape: tuple,
         training_threshold: float,
         accuracy_fn: AccuracyFunction = None,
         seed: int = None,
     ):
-        """Construct a znrnd model.
+        """
+        Construct a znrnd model.
 
         Parameters
         ----------
@@ -104,9 +107,13 @@ class JaxModel:
         """
         params = self._init_params(kernel_init, bias_init)
 
-        return TrainState.create(
-            apply_fn=self.apply_fn, params=params, tx=self.optimizer
-        )
+        # Set dummy optimizer for case of trace optimizer.
+        if isinstance(self.optimizer, TraceOptimizer):
+            optimizer = optax.sgd(1.0)
+        else:
+            optimizer = self.optimizer
+
+        return TrainState.create(apply_fn=self.apply_fn, params=params, tx=optimizer)
 
     def _train_step(self, state: TrainState, batch: dict):
         """
@@ -343,6 +350,14 @@ class JaxModel:
         train_accuracy = []
         for i in loading_bar:
             loading_bar.set_description(f"Epoch: {i}")
+
+            if isinstance(self.optimizer, TraceOptimizer):
+                state = self.optimizer.apply_optimizer(
+                    model_state=state,
+                    data_set=train_ds["inputs"],
+                    ntk_fn=self.compute_ntk,
+                    epoch=i,
+                )
 
             state, train_metrics = self._train_epoch(
                 state, train_ds, batch_size=batch_size
