@@ -149,15 +149,13 @@ class JaxRecorder:
                 all_attributes[f"_{item}_array"] = np.zeros((data_length,))
 
         # Check if we need an NTK computation and update the class accordingly
-        test_array = np.array(
+        if any(
             [
                 "ntk" in self._selected_properties,
                 "entropy" in self._selected_properties,
                 "eigenvalues" in self._selected_properties,
-            ]
-        )
-        if test_array.sum() > 0:
-            self._compute_ntk = True
+            ]):
+                self._compute_ntk = True
 
     def update_recorder(self, epoch: int, model: JaxModel):
         """
