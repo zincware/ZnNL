@@ -79,6 +79,7 @@ class TraceOptimizer:
         new_state : TrainState
                 New state of the model
         """
+        eps = 1e-8
         # Check if the update should be performed.
         if epoch % self.rescale_interval == 0:
             # Compute the ntk trace.
@@ -86,7 +87,7 @@ class TraceOptimizer:
             trace = np.trace(ntk)
 
             # Create the new optimizer.
-            new_optimizer = self.optimizer(self.scale_factor / trace)
+            new_optimizer = self.optimizer(self.scale_factor / (trace + eps))
 
             # Create the new state
             new_state = TrainState.create(
