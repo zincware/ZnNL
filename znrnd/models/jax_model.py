@@ -365,8 +365,9 @@ class JaxModel:
         train_accuracy = []
         for i in loading_bar:
             # Update the recorder properties
-            for item in recorders:
-                item.update_recorder(epoch=i, model=self)
+            if recorders is not None:
+                for item in recorders:
+                    item.update_recorder(epoch=i, model=self)
 
             loading_bar.set_description(f"Epoch: {i}")
 
