@@ -23,7 +23,7 @@ Summary
 -------
 Module for testing the trace optimizer
 """
-import jax.numpy as jnp
+import jax.numpy as np
 from neural_tangents import stax
 
 from znrnd.accuracy_functions import LabelAccuracy
@@ -85,7 +85,7 @@ class TestTraceOptimizer:
 
         # Get theoretical values
         ntk = model.compute_ntk(data.train_ds["inputs"], normalize=False)["empirical"]
-        expected_lr = scale_factor / jnp.trace(ntk)
+        expected_lr = scale_factor / np.trace(ntk)
 
         # Compute actual values
         actual_lr = optimizer.apply_optimizer(
