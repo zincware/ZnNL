@@ -28,7 +28,7 @@ Module for the trace optimizer.
 from dataclasses import dataclass
 from typing import Callable
 
-import jax.numpy as jnp
+import jax.numpy as np
 import optax
 from flax.training.train_state import TrainState
 
@@ -56,7 +56,7 @@ class TraceOptimizer:
     def apply_optimizer(
         self,
         model_state: TrainState,
-        data_set: jnp.ndarray,
+        data_set: np.ndarray,
         ntk_fn: Callable,
         epoch: int,
     ):
@@ -79,14 +79,15 @@ class TraceOptimizer:
         new_state : TrainState
                 New state of the model
         """
+        eps = 1e-8
         # Check if the update should be performed.
         if epoch % self.rescale_interval == 0:
             # Compute the ntk trace.
             ntk = ntk_fn(data_set, normalize=False)["empirical"]
-            trace = jnp.trace(ntk)
+            trace = np.trace(ntk)
 
             # Create the new optimizer.
-            new_optimizer = self.optimizer(self.scale_factor / trace)
+            new_optimizer = self.optimizer(self.scale_factor / (trace + eps))
 
             # Create the new state
             new_state = TrainState.create(
