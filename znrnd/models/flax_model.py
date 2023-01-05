@@ -24,14 +24,16 @@ Summary
 Module for the use of a Flax model with ZnRND.
 """
 import logging
-from typing import Callable, List
+from typing import Callable, List, Sequence, Union
 
 import jax
 import jax.numpy as np
+import neural_tangents as nt
 from flax import linen as nn
 
 from znrnd.accuracy_functions.accuracy_function import AccuracyFunction
 from znrnd.models.jax_model import JaxModel
+from znrnd.utils import normalize_covariance_matrix
 
 logger = logging.getLogger(__name__)
 
@@ -74,8 +76,10 @@ class FlaxModel(JaxModel):
         optimizer: Callable,
         input_shape: tuple,
         training_threshold: float = 0.01,
+        batch_size: int = 10,
         layer_stack: List[nn.Module] = None,
         flax_module: nn.Module = None,
+        trace_axes: Union[int, Sequence[int]] = (-1,),
         accuracy_fn: AccuracyFunction = None,
         seed: int = None,
     ):
@@ -95,11 +99,12 @@ class FlaxModel(JaxModel):
                 Shape of the NN input.
         training_threshold : float
                 The loss value at which point you consider the model trained.
+        batch_size : int
+                Size of batch to use in the NTk calculation.
         flax_module : nn.Module
                 Flax module to use instead of building one from scratch here.
-        compute_accuracy : bool, default False
-                If true, an accuracy computation will be performed. Only valid for
-                classification tasks.
+        accuracy_fn : Callable
+                Ann accuracy function to use in the model analysis.
         seed : int, default None
                 Random seed for the RNG. Uses a random int if not specified.
         """
@@ -116,6 +121,17 @@ class FlaxModel(JaxModel):
 
         self.apply_fn = jax.jit(self.model.apply)
 
+        self.empirical_ntk = nt.batch(
+            nt.empirical_ntk_fn(
+                f=self._ntk_apply_fn,
+                trace_axes=trace_axes,
+                vmap_axes=0,
+                implementation=nt.NtkImplementation.AUTO,
+            ),
+            batch_size=batch_size,
+        )
+        self.empirical_ntk_jit = jax.jit(self.empirical_ntk)
+
         # Save input parameters, call self.init_model
         super().__init__(
             loss_fn,
@@ -125,6 +141,24 @@ class FlaxModel(JaxModel):
             accuracy_fn,
             seed,
         )
+
+    def _ntk_apply_fn(self, params, x: np.ndarray):
+        """
+        Return an NTK capable apply function.
+
+        Parameters
+        ----------
+        params : dict
+                Network parameters to use in the calculation.
+        x : np.ndarray
+                Data on which to apply the network
+
+        Returns
+        -------
+        Acts on the data with the model architecture and parameter set.
+        """
+        # train=False
+        return self.model.apply({"params": params}, x, mutable=["batch_stats"])[0]
 
     def _init_params(self, kernel_init: Callable = None, bias_init: Callable = None):
         """Initialize a state for the model parameters.
@@ -191,4 +225,18 @@ class FlaxModel(JaxModel):
         NTK : dict
                 The NTK matrix for both the empirical and infinite width computation.
         """
-        raise NotImplementedError("Not yet available.")
+        if x_j is None:
+            x_j = x_i
+        empirical_ntk = self.empirical_ntk_jit(x_i, x_j, self.model_state.params)
+
+        if infinite:
+            raise NotImplementedError("Infinite NTK is not available for Flax models.")
+        else:
+            infinite_ntk = None
+
+        if normalize:
+            empirical_ntk = normalize_covariance_matrix(empirical_ntk)
+            if infinite:
+                infinite_ntk = None
+
+        return {"empirical": empirical_ntk, "infinite": infinite_ntk}

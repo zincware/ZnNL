@@ -23,7 +23,7 @@ If you use this module please cite us with:
 
 Summary
 -------
-Test that reinitialization of a model with a seed produces the same configuration.
+Unit tests for the neural tangents model.
 """
 import os
 
@@ -37,9 +37,9 @@ from znrnd.loss_functions import MeanPowerLoss
 from znrnd.models import NTModel
 
 
-class TestNTKShape:
+class TestNTModule:
     """
-    Class to test the shape of the Neural Tangent Kernel
+    Test suite for the neural tangents module.
     """
 
     def test_ntk_shape(self):
