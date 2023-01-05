@@ -29,6 +29,8 @@ import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
+import copy
+
 import numpy as np
 import optax
 from neural_tangents import stax
@@ -51,7 +53,7 @@ class TestRecorderDeployment:
         Prepare the class for running.
         """
         # Data Generator
-        data_generator = rnd.data.MNISTGenerator(ds_size=10)
+        cls.data_generator = rnd.data.MNISTGenerator(ds_size=10)
 
         # Make a network
         network = stax.serial(
@@ -63,11 +65,11 @@ class TestRecorderDeployment:
             loss=True, accuracy=True, update_rate=1
         )
         cls.test_recorder = rnd.model_recording.JaxRecorder(
-            loss=True, accuracy=True, update_rate=5
+            loss=True, accuracy=True, ntk=True, update_rate=5
         )
 
         # Define the model
-        production_model = rnd.models.NTModel(
+        cls.production_model = rnd.models.NTModel(
             nt_module=network,
             optimizer=optax.adam(learning_rate=0.01),
             loss_fn=rnd.loss_functions.CrossEntropyLoss(),
@@ -75,17 +77,13 @@ class TestRecorderDeployment:
             accuracy_fn=rnd.accuracy_functions.LabelAccuracy(),
         )
 
-        cls.train_recorder.instantiate_recorder(
-            data_length=10, data_set=data_generator.train_ds
-        )
-        cls.test_recorder.instantiate_recorder(
-            data_length=10, data_set=data_generator.test_ds
-        )
+        cls.train_recorder.instantiate_recorder(data_set=cls.data_generator.train_ds)
+        cls.test_recorder.instantiate_recorder(data_set=cls.data_generator.test_ds)
 
         # Train the model with the recorders
-        cls.batch_wise_metrics = production_model.train_model(
-            train_ds=data_generator.train_ds,
-            test_ds=data_generator.test_ds,
+        cls.batch_wise_metrics = cls.production_model.train_model(
+            train_ds=cls.data_generator.train_ds,
+            test_ds=cls.data_generator.test_ds,
             batch_size=5,
             recorders=[cls.train_recorder, cls.test_recorder],
             epochs=10,
@@ -104,13 +102,13 @@ class TestRecorderDeployment:
         """
         Test that the recorder internally holds the correct values.
         """
-        assert len(self.train_recorder._loss_array) == 10
+        assert len(self.train_recorder._loss_array) == 100
         assert np.sum(self.train_recorder._loss_array) > 0
-        assert len(self.train_recorder._accuracy_array) == 10
+        assert len(self.train_recorder._accuracy_array) == 100
         assert np.sum(self.train_recorder._accuracy_array) > 0
 
-        assert len(self.test_recorder._loss_array) == 10
-        assert len(self.test_recorder._accuracy_array) == 10
+        assert len(self.test_recorder._loss_array) == 100
+        assert len(self.test_recorder._accuracy_array) == 100
         assert np.sum(self.test_recorder._loss_array) > 0
         assert np.sum(self.test_recorder._accuracy_array) > 0
 
@@ -134,3 +132,26 @@ class TestRecorderDeployment:
         assert np.sum(test_report.loss) > 0
         assert len(test_report.accuracy) == 2
         assert np.sum(test_report.accuracy) > 0
+
+    def test_dynamic_resizing(self):
+        """
+        Test to see if the arrays are resized automatically during training.
+        """
+        # Deep copy to avoid overwriting the classes and messing up other tests.
+        model = copy.deepcopy(self.production_model)
+        recorder = copy.deepcopy(self.train_recorder)
+        # Reinstantiate the recorder
+        recorder.instantiate_recorder(self.data_generator.train_ds, overwrite=True)
+
+        model.train_model(
+            train_ds=self.data_generator.train_ds,
+            test_ds=self.data_generator.test_ds,
+            batch_size=5,
+            recorders=[recorder],
+            epochs=101,
+        )
+
+        assert recorder._loss_array.shape == (200,)
+        print(recorder._loss_array)
+        assert recorder._loss_array[101:].sum() == 0.0
+        assert recorder._loss_array[:101].sum() != 0.0

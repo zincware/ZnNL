@@ -25,7 +25,7 @@ Module for recording jax training.
 """
 from dataclasses import dataclass, make_dataclass
 
-import numpy as np
+import numpy as onp
 from rich import print
 
 from znrnd.analysis.eigensystem import EigenSpaceAnalysis
@@ -66,23 +66,23 @@ class JaxRecorder:
 
     # Model Loss
     loss: bool = True
-    _loss_array: np.ndarray = None
+    _loss_array: onp.ndarray = None
 
     # Model accuracy
     accuracy: bool = False
-    _accuracy_array: np.ndarray = None
+    _accuracy_array: onp.ndarray = None
 
     # NTK Matrix
     ntk: bool = False
-    _ntk_array: np.ndarray = None
+    _ntk_array: onp.ndarray = None
 
     # Entropy of the model
     entropy: bool = False
-    _entropy_array: np.ndarray = None
+    _entropy_array: onp.ndarray = None
 
     # Model eigenvalues
     eigenvalues: bool = False
-    _eigenvalues_array: np.ndarray = None
+    _eigenvalues_array: onp.ndarray = None
 
     # Class helpers
     update_rate: int = 1
@@ -103,18 +103,47 @@ class JaxRecorder:
             if value[0] != "_" and vars(self)[value] is True
         ]
 
-    def instantiate_recorder(
-        self, data_length: int, data_set: dict, overwrite: bool = False
-    ):
+    def _build_or_resize_array(self, name: str, shape: tuple, overwrite: bool):
+        """
+        Build or resize an array.
+
+        Parameters
+        ----------
+        name : str
+                Name of array. Needed to check for resizing.
+        shape : tuple
+                Shape of the array. Needed only when constructing the array.
+        overwrite : bool
+                If True, arrays will no be resized but overwritten.
+
+        Returns
+        -------
+        A np zeros array or a resized array padded with zeros.
+        """
+        _buffer_length = 100  # amount of  data to add / instantiate with.
+        _buffer_array = onp.zeros((_buffer_length,) + shape)
+        # Check if array exists
+        data = getattr(self, name)
+
+        # Create array if none or if overwrite is set true
+        if data is None or overwrite:
+            data = _buffer_array
+        else:
+            if len(shape) == 0:
+                stack_op = onp.hstack
+            else:
+                stack_op = onp.vstack
+
+            data = stack_op((data, _buffer_array))
+
+        return data
+
+    def instantiate_recorder(self, data_set: dict, overwrite: bool = False):
         """
         Prepare the recorder for training.
 
         Parameters
         ----------
-        model : JaxModel
-                Model to monitor and record.
-        data_length : int
-                Length of time series to store currently.
         data_set : dict (default=None)
                 Data to record during training.
         overwrite : bool (default=False)
@@ -124,10 +153,6 @@ class JaxRecorder:
         Returns
         -------
         Populates the array attributes of the dataclass.
-
-        Notes
-        -----
-        * TODO: Add check for previous array and extend
         """
         # Update simple attributes
         self._data_set = data_set
@@ -142,11 +167,17 @@ class JaxRecorder:
         all_attributes = self.__dict__
         for item in self._selected_properties:
             if item == "ntk":
-                all_attributes[f"_{item}_array"] = np.zeros(
-                    (data_length, data_shape[0], data_shape[0])
+                all_attributes[f"_{item}_array"] = self._build_or_resize_array(
+                    f"_{item}_array", (data_shape[0], data_shape[0]), overwrite
                 )
             else:
-                all_attributes[f"_{item}_array"] = np.zeros((data_length,))
+                all_attributes[f"_{item}_array"] = self._build_or_resize_array(
+                    f"_{item}_array", (), overwrite
+                )
+
+        # If over-writing, reset the index count
+        if overwrite:
+            self._index_count = 0
 
         # Check if we need an NTK computation and update the class accordingly
         if any(
@@ -154,8 +185,9 @@ class JaxRecorder:
                 "ntk" in self._selected_properties,
                 "entropy" in self._selected_properties,
                 "eigenvalues" in self._selected_properties,
-            ]):
-                self._compute_ntk = True
+            ]
+        ):
+            self._compute_ntk = True
 
     def update_recorder(self, epoch: int, model: JaxModel):
         """
@@ -177,10 +209,9 @@ class JaxRecorder:
             # Update here to expose to other methods.
             self._model = model
 
-            parsed_data = {}
+            parsed_data = {"epoch": self._index_count}
 
             # Add epoch to the parsed data
-            parsed_data["epoch"] = self._index_count
             # Compute representations here to avoid repeated computation.
             predictions = self._model(self._data_set["inputs"])
             parsed_data["predictions"] = predictions
@@ -189,9 +220,9 @@ class JaxRecorder:
             if self._compute_ntk:
                 try:
                     ntk = self._model.compute_ntk(
-                        self._data_set["inputs"], normalize=False
+                        self._data_set["inputs"], normalize=False, infinite=False
                     )
-                    parsed_data["ntk"] = ntk
+                    parsed_data["ntk"] = ntk["empirical"]
                 except NotImplementedError:
                     print(
                         "NTK calculation is not yet available for this model. Removing "
@@ -204,7 +235,17 @@ class JaxRecorder:
 
             for item in self._selected_properties:
                 call_fn = getattr(self, f"_update_{item}")  # get the callable function
-                call_fn(parsed_data)  # call the function and update the property
+
+                # Try to add data and resize if necessary.
+                try:
+                    call_fn(parsed_data)  # call the function and update the property
+                except IndexError:
+                    data_shape = getattr(self, f"_{item}_array").shape
+                    # Resize the array.
+                    self.__dict__[f"_{item}_array"] = self._build_or_resize_array(
+                        f"_{item}_array", data_shape[1:], overwrite=False
+                    )
+                    call_fn(parsed_data)  # Recall the function and try again.
 
             self._index_count += 1  # Update the index count.
         else:
@@ -313,7 +354,7 @@ class JaxRecorder:
                 A dataclass of only the data recorder during the training.
         """
         DataSet = make_dataclass(
-            "DataSet", [(item, np.ndarray) for item in self._selected_properties]
+            "DataSet", [(item, onp.ndarray) for item in self._selected_properties]
         )
         selected_data = {
             item: vars(self)[f"_{item}_array"][: self._index_count]
