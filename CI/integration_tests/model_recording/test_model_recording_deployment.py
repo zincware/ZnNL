@@ -31,7 +31,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 import copy
 
-import numpy as np
+import numpy as onp
 import optax
 from neural_tangents import stax
 
@@ -93,9 +93,9 @@ class TestRecorderDeployment:
         """
         Test that the batch_wise_metrics are returned correctly.
         """
-        assert np.sum(self.batch_wise_metrics["train_accuracy"]) > 0
+        assert onp.sum(self.batch_wise_metrics["train_accuracy"]) > 0
         assert len(self.batch_wise_metrics["train_accuracy"]) == 10
-        assert np.sum(self.batch_wise_metrics["train_losses"]) > 0
+        assert onp.sum(self.batch_wise_metrics["train_losses"]) > 0
         assert len(self.batch_wise_metrics["train_losses"]) == 10
 
     def test_private_arrays(self):
@@ -103,17 +103,17 @@ class TestRecorderDeployment:
         Test that the recorder internally holds the correct values.
         """
         assert len(self.train_recorder._loss_array) == 100
-        assert np.sum(self.train_recorder._loss_array) > 0
+        assert onp.sum(self.train_recorder._loss_array) > 0
         assert len(self.train_recorder._accuracy_array) == 100
-        assert np.sum(self.train_recorder._accuracy_array) > 0
+        assert onp.sum(self.train_recorder._accuracy_array) > 0
 
         assert len(self.test_recorder._loss_array) == 100
         assert len(self.test_recorder._accuracy_array) == 100
-        assert np.sum(self.test_recorder._loss_array) > 0
-        assert np.sum(self.test_recorder._accuracy_array) > 0
+        assert onp.sum(self.test_recorder._loss_array) > 0
+        assert onp.sum(self.test_recorder._accuracy_array) > 0
 
         # Test that the sample rate is correct
-        assert np.sum(self.test_recorder._accuracy_array[2:]) == 0.0
+        assert onp.sum(self.test_recorder._accuracy_array[2:]) == 0.0
 
     def test_export_function(self):
         """
@@ -123,15 +123,15 @@ class TestRecorderDeployment:
         test_report = self.test_recorder.export_dataset()
 
         assert len(train_report.loss) == 10
-        assert np.sum(train_report.loss) > 0
+        assert onp.sum(train_report.loss) > 0
         assert len(train_report.accuracy) == 10
-        assert np.sum(train_report.accuracy) > 0
+        assert onp.sum(train_report.accuracy) > 0
 
         # Arrays should be resized now.
         assert len(test_report.loss) == 2
-        assert np.sum(test_report.loss) > 0
+        assert onp.sum(test_report.loss) > 0
         assert len(test_report.accuracy) == 2
-        assert np.sum(test_report.accuracy) > 0
+        assert onp.sum(test_report.accuracy) > 0
 
     def test_dynamic_resizing(self):
         """

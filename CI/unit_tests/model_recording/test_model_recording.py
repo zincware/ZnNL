@@ -23,7 +23,7 @@ Summary
 -------
 Test for the model recording module.
 """
-import numpy as np
+import numpy as onp
 
 from znrnd.model_recording import JaxRecorder
 
@@ -38,7 +38,7 @@ class TestModelRecording:
         """
         Prepare the test suite.
         """
-        dummy_data = np.random.uniform(size=(5, 2, 3))
+        dummy_data = onp.random.uniform(size=(5, 2, 3))
         cls.dummy_data_set = {"inputs": dummy_data, "targets": dummy_data}
 
     def test_instantiation(self):
@@ -73,8 +73,8 @@ class TestModelRecording:
         recorder.instantiate_recorder(data_set=self.dummy_data_set)
 
         # Populate the arrays deliberately.
-        recorder._ntk_array = np.random.uniform(size=(10, 5, 5))
-        recorder._loss_array = np.random.uniform(size=(10,))
+        recorder._ntk_array = onp.random.uniform(size=(10, 5, 5))
+        recorder._loss_array = onp.random.uniform(size=(10,))
 
         new_ntk = recorder._build_or_resize_array("_ntk_array", (5, 5), False)
         new_loss = recorder._build_or_resize_array("_loss_array", (), False)
@@ -99,7 +99,7 @@ class TestModelRecording:
         recorder.instantiate_recorder(data_set=self.dummy_data_set)
 
         # Populate the arrays deliberately.
-        recorder._ntk_array = np.random.uniform(size=(10, 5, 5))
+        recorder._ntk_array = onp.random.uniform(size=(10, 5, 5))
         assert recorder._ntk_array.sum() != 0.0  # check the data is there
 
         recorder.instantiate_recorder(data_set=self.dummy_data_set, overwrite=False)
