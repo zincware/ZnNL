@@ -23,14 +23,16 @@ Summary
 -------
 Module for recording jax training.
 """
+import logging
 from dataclasses import dataclass, make_dataclass
 
 import numpy as onp
-from rich import print
 
 from znrnd.analysis.eigensystem import EigenSpaceAnalysis
 from znrnd.analysis.entropy import EntropyAnalysis
 from znrnd.models.jax_model import JaxModel
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -224,7 +226,7 @@ class JaxRecorder:
                     )
                     parsed_data["ntk"] = ntk["empirical"]
                 except NotImplementedError:
-                    print(
+                    logger.info(
                         "NTK calculation is not yet available for this model. Removing "
                         "it from this recorder."
                     )
@@ -298,7 +300,7 @@ class JaxRecorder:
                 parsed_data["predictions"], self._data_set["targets"]
             )
         except AttributeError:
-            print(
+            logger.info(
                 "There is no accuracy function in the model class, switching this "
                 "recording option off."
             )
