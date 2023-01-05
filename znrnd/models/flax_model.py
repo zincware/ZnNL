@@ -28,12 +28,10 @@ from typing import Callable, List, Sequence, Union
 
 import jax
 import jax.numpy as np
-import neural_tangents as nt
 from flax import linen as nn
 
 from znrnd.accuracy_functions.accuracy_function import AccuracyFunction
 from znrnd.models.jax_model import JaxModel
-from znrnd.utils import normalize_covariance_matrix
 
 logger = logging.getLogger(__name__)
 
@@ -121,25 +119,16 @@ class FlaxModel(JaxModel):
 
         self.apply_fn = jax.jit(self.model.apply)
 
-        self.empirical_ntk = nt.batch(
-            nt.empirical_ntk_fn(
-                f=self._ntk_apply_fn,
-                trace_axes=trace_axes,
-                vmap_axes=0,
-                implementation=nt.NtkImplementation.AUTO,
-            ),
-            batch_size=batch_size,
-        )
-        self.empirical_ntk_jit = jax.jit(self.empirical_ntk)
-
         # Save input parameters, call self.init_model
         super().__init__(
-            loss_fn,
-            optimizer,
-            input_shape,
-            training_threshold,
-            accuracy_fn,
-            seed,
+            loss_fn=loss_fn,
+            optimizer=optimizer,
+            input_shape=input_shape,
+            training_threshold=training_threshold,
+            accuracy_fn=accuracy_fn,
+            seed=seed,
+            trace_axes=trace_axes,
+            ntk_batch_size=batch_size,
         )
 
     def _ntk_apply_fn(self, params, x: np.ndarray):
@@ -198,45 +187,3 @@ class FlaxModel(JaxModel):
         Output of the model.
         """
         return self.apply_fn({"params": params}, inputs)
-
-    def compute_ntk(
-        self,
-        x_i: np.ndarray,
-        x_j: np.ndarray = None,
-        normalize: bool = True,
-        infinite: bool = False,
-    ):
-        """
-        Compute the NTK matrix for the model.
-
-        Parameters
-        ----------
-        x_i : np.ndarray
-                Dataset for which to compute the NTK matrix.
-        x_j : np.ndarray (optional)
-                Dataset for which to compute the NTK matrix.
-        normalize : bool (default = True)
-                If true, divide each row by its max value.
-        infinite : bool (default = False)
-                If true, compute the infinite width limit as well.
-
-        Returns
-        -------
-        NTK : dict
-                The NTK matrix for both the empirical and infinite width computation.
-        """
-        if x_j is None:
-            x_j = x_i
-        empirical_ntk = self.empirical_ntk_jit(x_i, x_j, self.model_state.params)
-
-        if infinite:
-            raise NotImplementedError("Infinite NTK is not available for Flax models.")
-        else:
-            infinite_ntk = None
-
-        if normalize:
-            empirical_ntk = normalize_covariance_matrix(empirical_ntk)
-            if infinite:
-                infinite_ntk = None
-
-        return {"empirical": empirical_ntk, "infinite": infinite_ntk}

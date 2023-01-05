@@ -37,7 +37,7 @@ from znrnd.loss_functions import MeanPowerLoss
 from znrnd.models import FlaxModel
 
 
-class Flax_test_model(nn.Module):
+class FlaxTestModule(nn.Module):
     """
     Test model for the Flax tests.
     """
@@ -61,7 +61,7 @@ class TestFlaxModule:
         shape of the NTK.
         """
         model = FlaxModel(
-            flax_module=Flax_test_model(),
+            flax_module=FlaxTestModule(),
             optimizer=optax.adam(learning_rate=0.001),
             loss_fn=MeanPowerLoss(order=2),
             input_shape=(8,),
