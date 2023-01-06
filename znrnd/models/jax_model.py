@@ -41,7 +41,7 @@ class JaxModel:
         training_threshold: float,
         accuracy_fn: AccuracyFunction = None,
         seed: int = None,
-        trace_axes: tuple = (-1),
+        trace_axes: Union[int, Sequence[int]] = (-1,),
         ntk_batch_size: int = 10,
     ):
         """
