@@ -146,7 +146,6 @@ class FlaxModel(JaxModel):
         -------
         Acts on the data with the model architecture and parameter set.
         """
-        # train=False
         return self.model.apply({"params": params}, x, mutable=["batch_stats"])[0]
 
     def _init_params(self, kernel_init: Callable = None, bias_init: Callable = None):
