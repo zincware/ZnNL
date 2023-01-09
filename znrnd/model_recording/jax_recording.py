@@ -31,6 +31,7 @@ import numpy as onp
 from znrnd.analysis.eigensystem import EigenSpaceAnalysis
 from znrnd.analysis.entropy import EntropyAnalysis
 from znrnd.models.jax_model import JaxModel
+from znrnd.utils.matrix_utils import calculate_l_pq_norm
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +58,9 @@ class JaxRecorder:
             If true, entropy will be recorded. Warning, large overhead.
     eigenvalues : bool (default=False)
             If true, eigenvalues will be recorded. Warning, large overhead.
+    loss_derivative : bool (default=False)
+            If true, the derivative of the loss function with respect to the network
+            output will be recorded.
     update_rate : int (default=1)
             How often the values are updated.
 
@@ -86,12 +90,17 @@ class JaxRecorder:
     eigenvalues: bool = False
     _eigenvalues_array: list = None
 
+    # Model eigenvalues
+    loss_derivative: bool = False
+    _loss_derivative_array: list = None
+
     # Class helpers
     update_rate: int = 1
     _selected_properties: list = None
     _model: JaxModel = None
     _data_set: dict = None
     _compute_ntk: bool = False  # Helps to know so we can compute it once and share.
+    _compute_loss_derivative: bool = False
     _index_count: int = 0  # Helps to avoid problems with non-1 update rates.
 
     def _read_selected_attributes(self):
@@ -325,6 +334,23 @@ class JaxRecorder:
         calculator = EigenSpaceAnalysis(matrix=parsed_data["ntk"])
         eigenvalues = calculator.compute_eigenvalues(normalize=False)
         self._eigenvalues_array.append(eigenvalues)
+
+    def _update_loss_derivative(self, parsed_data):
+        """
+        Update the loss derivative array.
+
+        The loss derivative is normalized by the L_pq matrix norm.
+
+        Parameters
+        ----------
+        parsed_data : dict
+                Data computed before the update to prevent repeated calculations.
+        """
+        vector_loss_derivative = self._model.calculate_loss_derivative_jit(
+            parsed_data["predictions"], self._data_set["targets"]
+        )
+        loss_derivative = calculate_l_pq_norm(vector_loss_derivative)
+        self._loss_derivative_array.append(loss_derivative)
 
     def export_dataset(self):
         """

@@ -87,3 +87,29 @@ def normalize_covariance_matrix(covariance_matrix: np.ndarray):
     normalizing_matrix = np.sqrt(repeated_diagonals * repeated_diagonals.T)
 
     return covariance_matrix / normalizing_matrix
+
+
+def calculate_l_pq_norm(matrix: np.ndarray, p: int = 2, q: int = 2):
+    """
+    Calculate the L_pq norm of a matrix.
+
+    The norm calculates (sum_j (sum_i abs(a_ij)^p)^(p/q) )^(1/q)
+    For the defaults (p = 2, q = 2) the function calculates the Frobenius
+    (or Hilbert-Schmidt) norm.
+
+    Parameters
+    ----------
+    matrix: np.ndarray
+            Matrix to calculate the L_pq norm of
+    p: int
+            Inner power of the norm.
+    q: int
+            Outer power of the norm.
+
+    Returns
+    -------
+    L_qp norm of the matrix.
+    """
+    inner_sum = np.sum(np.power(matrix, q), axis=-1)
+    outer_sum = np.sum(np.power(inner_sum, q / p), axis=-1)
+    return np.power(outer_sum, 1 / q)

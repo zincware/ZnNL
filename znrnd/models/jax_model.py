@@ -91,6 +91,7 @@ class JaxModel:
             batch_size=ntk_batch_size,
         )
         self.empirical_ntk_jit = jax.jit(self.empirical_ntk)
+        self.calculate_loss_derivative_jit = jax.jit(self._calculate_loss_derivative)
 
     def init_model(
         self,
@@ -351,6 +352,22 @@ class JaxModel:
             accuracy = None
 
         return {"loss": loss, "accuracy": accuracy}
+
+    def _calculate_loss_derivative(self, predictions, targets):
+        """
+
+        Parameters
+        ----------
+        predictions : np.ndarray
+                Predictions made by the network.
+        targets : np.ndarray
+                Targets from the training data.
+
+        Returns
+        -------
+        Gradient of the loss function with respect to the predictions.
+        """
+        return jax.grad(self.loss_fn)(predictions, targets)
 
     def train_model(
         self,
