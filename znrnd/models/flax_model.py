@@ -24,7 +24,7 @@ Summary
 Module for the use of a Flax model with ZnRND.
 """
 import logging
-from typing import Callable, List
+from typing import Callable, List, Sequence, Union
 
 import jax
 import jax.numpy as np
@@ -74,8 +74,10 @@ class FlaxModel(JaxModel):
         optimizer: Callable,
         input_shape: tuple,
         training_threshold: float = 0.01,
+        batch_size: int = 10,
         layer_stack: List[nn.Module] = None,
         flax_module: nn.Module = None,
+        trace_axes: Union[int, Sequence[int]] = (-1,),
         accuracy_fn: AccuracyFunction = None,
         seed: int = None,
     ):
@@ -95,11 +97,12 @@ class FlaxModel(JaxModel):
                 Shape of the NN input.
         training_threshold : float
                 The loss value at which point you consider the model trained.
+        batch_size : int
+                Size of batch to use in the NTk calculation.
         flax_module : nn.Module
                 Flax module to use instead of building one from scratch here.
-        compute_accuracy : bool, default False
-                If true, an accuracy computation will be performed. Only valid for
-                classification tasks.
+        accuracy_fn : Callable
+                Ann accuracy function to use in the model analysis.
         seed : int, default None
                 Random seed for the RNG. Uses a random int if not specified.
         """
@@ -118,13 +121,32 @@ class FlaxModel(JaxModel):
 
         # Save input parameters, call self.init_model
         super().__init__(
-            loss_fn,
-            optimizer,
-            input_shape,
-            training_threshold,
-            accuracy_fn,
-            seed,
+            loss_fn=loss_fn,
+            optimizer=optimizer,
+            input_shape=input_shape,
+            training_threshold=training_threshold,
+            accuracy_fn=accuracy_fn,
+            seed=seed,
+            trace_axes=trace_axes,
+            ntk_batch_size=batch_size,
         )
+
+    def _ntk_apply_fn(self, params, inputs: np.ndarray):
+        """
+        Return an NTK capable apply function.
+
+        Parameters
+        ----------
+        params : dict
+                Network parameters to use in the calculation.
+        inputs : np.ndarray
+                Data on which to apply the network
+
+        Returns
+        -------
+        Acts on the data with the model architecture and parameter set.
+        """
+        return self.model.apply({"params": params}, inputs, mutable=["batch_stats"])[0]
 
     def _init_params(self, kernel_init: Callable = None, bias_init: Callable = None):
         """Initialize a state for the model parameters.
@@ -164,31 +186,3 @@ class FlaxModel(JaxModel):
         Output of the model.
         """
         return self.apply_fn({"params": params}, inputs)
-
-    def compute_ntk(
-        self,
-        x_i: np.ndarray,
-        x_j: np.ndarray = None,
-        normalize: bool = True,
-        infinite: bool = False,
-    ):
-        """
-        Compute the NTK matrix for the model.
-
-        Parameters
-        ----------
-        x_i : np.ndarray
-                Dataset for which to compute the NTK matrix.
-        x_j : np.ndarray (optional)
-                Dataset for which to compute the NTK matrix.
-        normalize : bool (default = True)
-                If true, divide each row by its max value.
-        infinite : bool (default = False)
-                If true, compute the infinite width limit as well.
-
-        Returns
-        -------
-        NTK : dict
-                The NTK matrix for both the empirical and infinite width computation.
-        """
-        raise NotImplementedError("Not yet available.")

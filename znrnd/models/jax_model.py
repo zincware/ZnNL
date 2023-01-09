@@ -9,10 +9,12 @@ Copyright Contributors to the Zincware Project.
 Description: Parent class for the Jax-based models.
 """
 import logging
-from typing import TYPE_CHECKING, Callable, List, Tuple, Union
+from typing import TYPE_CHECKING, Callable, List, Tuple, Union, Sequence
 
+import jax
 import jax.numpy as np
 import jax.random
+import neural_tangents as nt
 import numpy as onp
 import optax
 from flax.training.train_state import TrainState
@@ -20,6 +22,7 @@ from tqdm import trange
 
 from znrnd.accuracy_functions.accuracy_function import AccuracyFunction
 from znrnd.optimizers.trace_optimizer import TraceOptimizer
+from znrnd.utils import normalize_covariance_matrix
 from znrnd.utils.prng import PRNGKey
 
 if TYPE_CHECKING:
@@ -41,6 +44,8 @@ class JaxModel:
         training_threshold: float,
         accuracy_fn: AccuracyFunction = None,
         seed: int = None,
+        trace_axes: Union[int, Sequence[int]] = (-1,),
+        ntk_batch_size: int = 10,
     ):
         """
         Construct a znrnd model.
@@ -58,6 +63,13 @@ class JaxModel:
                 The loss value at which point you consider the model trained.
         seed : int, default None
                 Random seed for the RNG. Uses a random int if not specified.
+        ntk_batch_size : int, default 10
+                Batch size to use in the NTK computation.
+        trace_axes : Union[int, Sequence[int]]
+                Tracing over axes of the NTK.
+                The default value is trace_axes(-1,), which reduces the NTK to a tensor
+                of rank 2.
+                For a full NTK set trace_axes=().
         """
         self.loss_fn = loss_fn
         self.accuracy_fn = accuracy_fn
@@ -72,6 +84,13 @@ class JaxModel:
         # initialize the model state
         self.model_state = None
         self.init_model(seed)
+
+        # Prepare NTK calculation
+        self.empirical_ntk = nt.batch(
+            nt.empirical_ntk_fn(f=self._ntk_apply_fn, trace_axes=trace_axes),
+            batch_size=ntk_batch_size,
+        )
+        self.empirical_ntk_jit = jax.jit(self.empirical_ntk)
 
     def init_model(
         self,
@@ -244,6 +263,23 @@ class JaxModel:
             metrics = {"loss": loss}
 
         return metrics
+
+    def _ntk_apply_fn(self, params: dict, inputs: np.ndarray):
+        """
+        Apply function used in the NTK computation.
+
+        Parameters
+        ----------
+        params: dict
+                Contains the model parameters to use for the model computation.
+        inputs : np.ndarray
+                Feature vector on which to apply the model.
+
+        Returns
+        -------
+        The apply function used in the NTK computation.
+        """
+        raise NotImplementedError("Implemented in child class")
 
     def _evaluate_step(self, params: dict, batch: dict):
         """
@@ -510,7 +546,24 @@ class JaxModel:
         NTK : dict
                 The NTK matrix for both the empirical and infinite width computation.
         """
-        raise NotImplementedError("Implemented in child class")
+        if x_j is None:
+            x_j = x_i
+        empirical_ntk = self.empirical_ntk_jit(x_i, x_j, self.model_state.params)
+
+        if infinite:
+            try:
+                infinite_ntk = self.kernel_fn(x_i, x_j, "ntk")
+                if normalize:
+                    infinite_ntk = normalize_covariance_matrix(infinite_ntk)
+            except AttributeError:
+                raise NotImplementedError("Infinite NTK not available for this model.")
+        else:
+            infinite_ntk = None
+
+        if normalize:
+            empirical_ntk = normalize_covariance_matrix(empirical_ntk)
+
+        return {"empirical": empirical_ntk, "infinite": infinite_ntk}
 
     def __call__(self, feature_vector: np.ndarray):
         """

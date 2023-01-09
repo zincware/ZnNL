@@ -23,23 +23,37 @@ If you use this module please cite us with:
 
 Summary
 -------
-Test that reinitialization of a model with a seed produces the same configuration.
+Unit tests for the flax models.
 """
 import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 import optax
+import pytest
+from flax import linen as nn
 from jax import random
-from neural_tangents import stax
 
 from znrnd.loss_functions import MeanPowerLoss
-from znrnd.models import NTModel
+from znrnd.models import FlaxModel
 
 
-class TestNTKShape:
+class FlaxTestModule(nn.Module):
     """
-    Class to test the shape of the Neural Tangent Kernel
+    Test model for the Flax tests.
+    """
+
+    @nn.compact
+    def __call__(self, x):
+        x = nn.Dense(5, use_bias=True)(x)
+        x = nn.relu(x)
+        x = nn.Dense(features=1, use_bias=True)(x)
+        return x
+
+
+class TestFlaxModule:
+    """
+    Test suite for the neural tangents module.
     """
 
     def test_ntk_shape(self):
@@ -47,40 +61,35 @@ class TestNTKShape:
         Creates two models with different NTK tracing, which results in a different
         shape of the NTK.
         """
-        test_model = stax.serial(
-            stax.Dense(5, b_std=0.5),
-            stax.Relu(),
-            stax.Dense(5, b_std=0.5),
-            stax.Relu(),
-            stax.Dense(5),
+        model = FlaxModel(
+            flax_module=FlaxTestModule(),
+            optimizer=optax.adam(learning_rate=0.001),
+            loss_fn=MeanPowerLoss(order=2),
+            input_shape=(8,),
+            training_threshold=0.1,
+            seed=17,
         )
 
         key1, key2 = random.split(random.PRNGKey(1), 2)
-        x1 = random.normal(key1, (3, 8))
+        x = random.normal(key1, (3, 8))
+        ntk = model.compute_ntk(x, normalize=False)["empirical"]
+        assert ntk.shape == (3, 3)
 
-        nt_model_1 = NTModel(
-            nt_module=test_model,
+    def test_infinite_failure(self):
+        """
+        Test that the call to the infinite NTK fails.
+        """
+        model = FlaxModel(
+            flax_module=FlaxTestModule(),
             optimizer=optax.adam(learning_rate=0.001),
             loss_fn=MeanPowerLoss(order=2),
-            input_shape=(1, 8),
+            input_shape=(8,),
             training_threshold=0.1,
-            batch_size=1,
             seed=17,
         )
 
-        nt_model_2 = NTModel(
-            nt_module=test_model,
-            optimizer=optax.adam(learning_rate=0.001),
-            loss_fn=MeanPowerLoss(order=2),
-            input_shape=(1, 8),
-            training_threshold=0.1,
-            batch_size=1,
-            seed=17,
-            trace_axes=(),
-        )
+        key1, key2 = random.split(random.PRNGKey(1), 2)
+        x = random.normal(key1, (3, 8))
 
-        ntk_1 = nt_model_1.compute_ntk(x1, normalize=False)["empirical"]
-        ntk_2 = nt_model_2.compute_ntk(x1, normalize=False)["empirical"]
-
-        assert ntk_1.shape == (3, 3)
-        assert ntk_2.shape == (3, 3, 5, 5)
+        with pytest.raises(NotImplementedError):
+            model.compute_ntk(x, normalize=False, infinite=True)
