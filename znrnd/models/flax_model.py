@@ -131,7 +131,7 @@ class FlaxModel(JaxModel):
             ntk_batch_size=batch_size,
         )
 
-    def _ntk_apply_fn(self, params, x: np.ndarray):
+    def _ntk_apply_fn(self, params, inputs: np.ndarray):
         """
         Return an NTK capable apply function.
 
@@ -139,14 +139,14 @@ class FlaxModel(JaxModel):
         ----------
         params : dict
                 Network parameters to use in the calculation.
-        x : np.ndarray
+        inputs : np.ndarray
                 Data on which to apply the network
 
         Returns
         -------
         Acts on the data with the model architecture and parameter set.
         """
-        return self.model.apply({"params": params}, x, mutable=["batch_stats"])[0]
+        return self.model.apply({"params": params}, inputs, mutable=["batch_stats"])[0]
 
     def _init_params(self, kernel_init: Callable = None, bias_init: Callable = None):
         """Initialize a state for the model parameters.
