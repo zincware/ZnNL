@@ -29,8 +29,6 @@ import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-import copy
-
 import numpy as onp
 import optax
 from neural_tangents import stax
@@ -102,18 +100,15 @@ class TestRecorderDeployment:
         """
         Test that the recorder internally holds the correct values.
         """
-        assert len(self.train_recorder._loss_array) == 100
+        assert len(self.train_recorder._loss_array) == 10
         assert onp.sum(self.train_recorder._loss_array) > 0
-        assert len(self.train_recorder._accuracy_array) == 100
+        assert len(self.train_recorder._accuracy_array) == 10
         assert onp.sum(self.train_recorder._accuracy_array) > 0
 
-        assert len(self.test_recorder._loss_array) == 100
-        assert len(self.test_recorder._accuracy_array) == 100
+        assert len(self.test_recorder._loss_array) == 2
+        assert len(self.test_recorder._accuracy_array) == 2
         assert onp.sum(self.test_recorder._loss_array) > 0
         assert onp.sum(self.test_recorder._accuracy_array) > 0
-
-        # Test that the sample rate is correct
-        assert onp.sum(self.test_recorder._accuracy_array[2:]) == 0.0
 
     def test_export_function(self):
         """
@@ -132,26 +127,3 @@ class TestRecorderDeployment:
         assert onp.sum(test_report.loss) > 0
         assert len(test_report.accuracy) == 2
         assert onp.sum(test_report.accuracy) > 0
-
-    def test_dynamic_resizing(self):
-        """
-        Test to see if the arrays are resized automatically during training.
-        """
-        # Deep copy to avoid overwriting the classes and messing up other tests.
-        model = copy.deepcopy(self.production_model)
-        recorder = copy.deepcopy(self.train_recorder)
-        # Reinstantiate the recorder
-        recorder.instantiate_recorder(self.data_generator.train_ds, overwrite=True)
-
-        model.train_model(
-            train_ds=self.data_generator.train_ds,
-            test_ds=self.data_generator.test_ds,
-            batch_size=5,
-            recorders=[recorder],
-            epochs=101,
-        )
-
-        assert recorder._loss_array.shape == (200,)
-        print(recorder._loss_array)
-        assert recorder._loss_array[101:].sum() == 0.0
-        assert recorder._loss_array[:101].sum() != 0.0

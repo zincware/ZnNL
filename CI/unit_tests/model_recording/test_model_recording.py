@@ -56,38 +56,10 @@ class TestModelRecording:
                 assert val is True
             if key == "update_rate":
                 assert val == 1
-            elif key == "_ntk_array":
-                assert val.shape == (100, 5, 5)
             elif key.split("_")[-1] == "array:":
-                assert val.shape == (100,)
+                assert val == []
             elif key == "_selected_properties":
                 pass
-
-    def test_array_resizing(self):
-        """
-        Test that the array is resized correctly.
-        """
-        recorder = JaxRecorder(
-            loss=True, accuracy=False, ntk=True, entropy=False, eigenvalues=False
-        )
-        recorder.instantiate_recorder(data_set=self.dummy_data_set)
-
-        # Populate the arrays deliberately.
-        recorder._ntk_array = onp.random.uniform(size=(10, 5, 5))
-        recorder._loss_array = onp.random.uniform(size=(10,))
-
-        new_ntk = recorder._build_or_resize_array("_ntk_array", (5, 5), False)
-        new_loss = recorder._build_or_resize_array("_loss_array", (), False)
-
-        # Assert correct shapes
-        assert new_ntk.shape == (110, 5, 5)
-        assert new_loss.shape == (110,)
-
-        # Assert data is not lost and new data is 0.0
-        assert new_ntk[:10].sum() != 0.0
-        assert new_ntk[10:].sum() == 0.0
-        assert new_loss[:10].sum() != 0.0
-        assert new_loss[10:].sum() == 0.0
 
     def test_overwriting(self):
         """
@@ -99,13 +71,13 @@ class TestModelRecording:
         recorder.instantiate_recorder(data_set=self.dummy_data_set)
 
         # Populate the arrays deliberately.
-        recorder._ntk_array = onp.random.uniform(size=(10, 5, 5))
-        assert recorder._ntk_array.sum() != 0.0  # check the data is there
+        recorder._ntk_array = onp.random.uniform(size=(10, 5, 5)).tolist()
+        assert onp.sum(recorder._ntk_array) != 0.0  # check the data is there
 
-        recorder.instantiate_recorder(data_set=self.dummy_data_set, overwrite=False)
         # Check normal resizing on instantiation.
-        assert recorder._ntk_array.shape == (110, 5, 5)
+        recorder.instantiate_recorder(data_set=self.dummy_data_set, overwrite=False)
+        assert onp.shape(recorder._ntk_array) == (10, 5, 5)
 
+        # Test overwriting.
         recorder.instantiate_recorder(data_set=self.dummy_data_set, overwrite=True)
-        assert recorder._ntk_array.shape == (100, 5, 5)
-        assert recorder._ntk_array.sum() == 0.0
+        assert recorder._ntk_array == []
