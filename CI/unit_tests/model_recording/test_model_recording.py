@@ -47,7 +47,12 @@ class TestModelRecording:
         """
 
         recorder = JaxRecorder(
-            loss=True, accuracy=True, ntk=True, entropy=True, eigenvalues=True
+            loss=True,
+            accuracy=True,
+            ntk=True,
+            entropy=True,
+            eigenvalues=True,
+            loss_derivative=True,
         )
         recorder.instantiate_recorder(data_set=self.dummy_data_set)
 
