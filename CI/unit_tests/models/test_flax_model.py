@@ -36,6 +36,7 @@ from jax import random
 from znrnd.loss_functions import MeanPowerLoss
 from znrnd.models import FlaxModel
 
+import pytest
 
 class FlaxTestModule(nn.Module):
     """
@@ -73,3 +74,22 @@ class TestFlaxModule:
         x = random.normal(key1, (3, 8))
         ntk = model.compute_ntk(x, normalize=False)["empirical"]
         assert ntk.shape == (3, 3)
+
+    def test_infinite_failure(self):
+        """
+        Test that the call to the infinite NTK fails.
+        """
+        model = FlaxModel(
+            flax_module=FlaxTestModule(),
+            optimizer=optax.adam(learning_rate=0.001),
+            loss_fn=MeanPowerLoss(order=2),
+            input_shape=(8,),
+            training_threshold=0.1,
+            seed=17,
+        )
+
+        key1, key2 = random.split(random.PRNGKey(1), 2)
+        x = random.normal(key1, (3, 8))
+
+        with pytest.raises(NotImplementedError):
+            model.compute_ntk(x, normalize=False, infinite=True)
