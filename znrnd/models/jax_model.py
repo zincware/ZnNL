@@ -533,14 +533,17 @@ class JaxModel:
         empirical_ntk = self.empirical_ntk_jit(x_i, x_j, self.model_state.params)
 
         if infinite:
-            infinite_ntk = self.kernel_fn(x_i, x_j, "ntk")
+            try:
+                infinite_ntk = self.kernel_fn(x_i, x_j, "ntk")
+                if normalize:
+                    infinite_ntk = normalize_covariance_matrix(infinite_ntk)
+            except AttributeError:
+                raise NotImplementedError("Infinite NTK not available for this model.")
         else:
             infinite_ntk = None
 
         if normalize:
             empirical_ntk = normalize_covariance_matrix(empirical_ntk)
-            if infinite:
-                infinite_ntk = normalize_covariance_matrix(infinite_ntk)
 
         return {"empirical": empirical_ntk, "infinite": infinite_ntk}
 
