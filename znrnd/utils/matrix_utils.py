@@ -101,9 +101,9 @@ def calculate_l_pq_norm(matrix: np.ndarray, p: int = 2, q: int = 2):
     ----------
     matrix: np.ndarray
             Matrix to calculate the L_pq norm of
-    p: int
+    p: int (default=2)
             Inner power of the norm.
-    q: int
+    q: int (default=2)
             Outer power of the norm.
 
     Returns
