@@ -108,7 +108,8 @@ def calculate_l_pq_norm(matrix: np.ndarray, p: int = 2, q: int = 2):
 
     Returns
     -------
-    L_qp norm of the matrix.
+    calculate_l_pq_norm: np.ndarray
+            L_qp norm of the matrix.
     """
     inner_sum = np.sum(np.power(matrix, q), axis=-1)
     outer_sum = np.sum(np.power(inner_sum, q / p), axis=-1)
