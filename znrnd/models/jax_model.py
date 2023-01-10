@@ -353,7 +353,7 @@ class JaxModel:
 
         return {"loss": loss, "accuracy": accuracy}
 
-    def _calculate_loss_derivative(self, predictions, targets):
+    def _calculate_loss_derivative(self, predictions: np.ndarray, targets: np.ndarray):
         """
 
         Parameters
