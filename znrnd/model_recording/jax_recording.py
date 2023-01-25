@@ -211,6 +211,8 @@ class JaxRecorder:
             # Add epoch to the parsed data
             # Compute representations here to avoid repeated computation.
             predictions = self._model(self._data_set["inputs"])
+            if type(predictions) is tuple:
+                predictions = predictions[0]
             parsed_data["predictions"] = predictions
 
             # Compute ntk here to avoid repeated computation.

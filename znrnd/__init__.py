@@ -18,6 +18,7 @@ from znrnd import (
     utils,
 )
 from znrnd.visualization import TSNEVisualizer
+from znrnd.utils.machine_properties import print_local_device_properties
 
 logging.getLogger(znrnd.__name__).addHandler(logging.NullHandler())
 
@@ -36,3 +37,5 @@ __all__ = [
     utils.__name__,
     model_recording.__name__,
 ]
+
+print_local_device_properties()  # Report local hardware information.
