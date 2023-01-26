@@ -33,7 +33,6 @@ import jax.numpy as np
 import neural_tangents as nt
 from neural_tangents.stax import serial
 
-from znrnd.accuracy_functions.accuracy_function import AccuracyFunction
 from znrnd.models.jax_model import JaxModel
 from znrnd.optimizers.trace_optimizer import TraceOptimizer
 
@@ -47,12 +46,9 @@ class NTModel(JaxModel):
 
     def __init__(
         self,
-        loss_fn: Callable,
         optimizer: Union[Callable, TraceOptimizer],
         input_shape: tuple,
-        training_threshold: float = 0.01,
         nt_module: serial = None,
-        accuracy_fn: AccuracyFunction = None,
         batch_size: int = 10,
         trace_axes: Union[int, Sequence[int]] = (-1,),
         seed: int = None,
@@ -62,19 +58,13 @@ class NTModel(JaxModel):
 
         Parameters
         ----------
-        loss_fn : Callable
-                A function to use in the loss computation.
         optimizer : Callable
                 optimizer to use in the training. OpTax is used by default and
                 cross-compatibility is not assured.
         input_shape : tuple
                 Shape of the NN input.
-        training_threshold : float
-                The loss value at which point you consider the model trained.
         nt_module : serial
                 NT model used.
-        accuracy_fn : AccuracyFunction
-                Accuracy function to use for accuracy computation.
         batch_size : int, default 10
                 Batch size to use in the NTK computation.
         trace_axes : Union[int, Sequence[int]]
@@ -91,11 +81,8 @@ class NTModel(JaxModel):
 
         # Save input parameters, call self.init_model
         super().__init__(
-            loss_fn=loss_fn,
             optimizer=optimizer,
             input_shape=input_shape,
-            training_threshold=training_threshold,
-            accuracy_fn=accuracy_fn,
             seed=seed,
             trace_axes=trace_axes,
             ntk_batch_size=batch_size,

@@ -30,7 +30,6 @@ import jax
 import jax.numpy as np
 from flax import linen as nn
 
-from znrnd.accuracy_functions.accuracy_function import AccuracyFunction
 from znrnd.models.jax_model import JaxModel
 
 logger = logging.getLogger(__name__)
@@ -70,15 +69,12 @@ class FlaxModel(JaxModel):
 
     def __init__(
         self,
-        loss_fn: Callable,
         optimizer: Callable,
         input_shape: tuple,
-        training_threshold: float = 0.01,
         batch_size: int = 10,
         layer_stack: List[nn.Module] = None,
         flax_module: nn.Module = None,
         trace_axes: Union[int, Sequence[int]] = (-1,),
-        accuracy_fn: AccuracyFunction = None,
         seed: int = None,
     ):
         """
@@ -88,21 +84,20 @@ class FlaxModel(JaxModel):
         ----------
         layer_stack : List[nn.Module]
                 A list of flax modules to be used in the call method.
-        loss_fn : Callable
-                A function to use in the loss computation.
         optimizer : Callable
                 optimizer to use in the training. OpTax is used by default and
                 cross-compatibility is not assured.
         input_shape : tuple
                 Shape of the NN input.
-        training_threshold : float
-                The loss value at which point you consider the model trained.
         batch_size : int
                 Size of batch to use in the NTk calculation.
         flax_module : nn.Module
                 Flax module to use instead of building one from scratch here.
-        accuracy_fn : Callable
-                Ann accuracy function to use in the model analysis.
+        trace_axes : Union[int, Sequence[int]]
+                Tracing over axes of the NTK.
+                The default value is trace_axes(-1,), which reduces the NTK to a tensor
+                of rank 2.
+                For a full NTK set trace_axes=().
         seed : int, default None
                 Random seed for the RNG. Uses a random int if not specified.
         """
@@ -121,11 +116,8 @@ class FlaxModel(JaxModel):
 
         # Save input parameters, call self.init_model
         super().__init__(
-            loss_fn=loss_fn,
             optimizer=optimizer,
             input_shape=input_shape,
-            training_threshold=training_threshold,
-            accuracy_fn=accuracy_fn,
             seed=seed,
             trace_axes=trace_axes,
             ntk_batch_size=batch_size,

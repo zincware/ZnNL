@@ -20,6 +20,7 @@ from znrnd.data import DataGenerator
 from znrnd.distance_metrics.distance_metric import DistanceMetric
 from znrnd.models import JaxModel
 from znrnd.point_selection import PointSelection
+from znrnd.training_strategies.simple_training import SimpleTraining
 from znrnd.visualization.tsne_visualizer import TSNEVisualizer
 
 
@@ -40,13 +41,12 @@ class RND(Agent):
     def __init__(
         self,
         data_generator: DataGenerator,
-        target_network: JaxModel = None,
-        predictor_network: JaxModel = None,
+        target_network: JaxModel,
+        predictor_network: JaxModel,
+        training_strategy: SimpleTraining,
         distance_metric: DistanceMetric = None,
         point_selector: PointSelection = None,
         visualizer: TSNEVisualizer = None,
-        epochs_latest_data: int = 0,
-        epochs_all_data: int = 50,
         tolerance: int = 100,
         seed_point: list = None,
         disable_loading_bar: bool = False,
@@ -60,6 +60,8 @@ class RND(Agent):
                 Model class for the target network
         predictor_network : Jax_Model
                 Model class for the predictor.
+        training_strategy : SimpleTraining
+                Training strategy for training the predictor model.
         distance_metric : SimilarityMeasures
                 Metric to use in the representation comparison
         data_generator : objector
@@ -69,10 +71,6 @@ class RND(Agent):
                 Class to select points from the data pool.
         visualizer : TSNEVisualizer
                 Class for the representation visualization.
-        epochs_latest_data: int
-                Number of epochs to train the latest added data per recursion.
-        epochs_all_data: int
-                Number of epochs to train all data per recursion.
         tolerance : int
                 Number of stationary iterations to go through before ending the
                 run.
@@ -84,14 +82,13 @@ class RND(Agent):
         # User defined attributes.
         self.target = target_network
         self.predictor = predictor_network
+        self.training_strategy = training_strategy
         self.metric = distance_metric
         self.data_generator = data_generator
         self.point_selector = point_selector
         self.tolerance = tolerance
         self.seed_point = seed_point
         self.visualizer = visualizer
-        self.epochs_latest_data = epochs_latest_data
-        self.epochs_all_data = epochs_all_data
         self.disable_loading_bar = disable_loading_bar
 
         self.historical_length: int = 0
@@ -102,6 +99,7 @@ class RND(Agent):
         self.metric_results = None
         self.metric_results_storage: list = []
         self.target_size: int = None
+        self.epochs = None
 
         # Run the class initialization
         self._set_defaults()
@@ -202,12 +200,11 @@ class RND(Agent):
             domain = np.array(self.target_set)
             codomain = self.target(domain)
             dataset = {"inputs": domain, "targets": codomain}
-            self.predictor.train_model_recursively(
+            self.training_strategy.train_model(
                 train_ds=dataset,
                 test_ds=dataset,
+                epochs=self.epochs,
                 disable_loading_bar=self.disable_loading_bar,
-                epochs_latest_data=self.epochs_latest_data,
-                epochs_all_data=self.epochs_all_data,
             )
 
     def _seed_process(self, visualize: bool):
@@ -328,6 +325,7 @@ class RND(Agent):
         visualize: bool = False,
         report: bool = False,
         store_metrics: bool = False,
+        epochs: int = 50,
     ):
         """
         Run the random network distillation methods and build the target set.
@@ -345,6 +343,8 @@ class RND(Agent):
                 If true, print a report about the RND performance.
         store_metrics : bool (default=True)
                 If true, store the RND metrics.
+        epochs : int (default = 50)
+                Epochs to train the predictor model.
 
         Returns
         -------
@@ -353,6 +353,8 @@ class RND(Agent):
         """
         # Allow for optional target_sizes.
         self.target_size = target_size
+        self.epochs = epochs
+
         start = time.time()
         if seed_randomly:
             self._seed_process(visualize=visualize)
