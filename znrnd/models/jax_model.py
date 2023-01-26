@@ -90,7 +90,7 @@ class JaxModel:
             nt.empirical_ntk_fn(f=self._ntk_apply_fn, trace_axes=trace_axes),
             batch_size=ntk_batch_size,
         )
-        self.empirical_ntk_jit = self.empirical_ntk
+        self.empirical_ntk_jit = jax.jit(self.empirical_ntk)
         self.calculate_loss_derivative_jit = jax.jit(self._calculate_loss_derivative)
 
     def init_model(
@@ -353,8 +353,9 @@ class JaxModel:
 
         return {"loss": loss, "accuracy": accuracy}
 
-    def _calculate_loss_derivative(self, predictions, targets):
+    def _calculate_loss_derivative(self, predictions: np.ndarray, targets: np.ndarray):
         """
+        Compute loss derivative.
 
         Parameters
         ----------
