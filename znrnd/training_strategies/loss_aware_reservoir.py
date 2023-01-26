@@ -140,7 +140,7 @@ class LossAwareReservoir(SimpleTraining):
         self,
         train_ds: dict,
         test_ds: dict,
-        epochs: int = None,
+        epochs: int = 50,
         batch_size: int = 1,
         disable_loading_bar: bool = False,
         **kwargs,
@@ -177,9 +177,6 @@ class LossAwareReservoir(SimpleTraining):
 
         state = self.model.model_state
         self.reservoir = self._sort_ds_by_loss(train_ds)
-
-        if not epochs:
-            epochs = 50
 
         loading_bar = trange(
             1, epochs + 1, ncols=100, unit="batch", disable=disable_loading_bar

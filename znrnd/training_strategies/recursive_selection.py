@@ -115,8 +115,8 @@ class RecursiveSelection(SimpleTraining):
         self,
         train_ds: dict,
         test_ds: dict,
-        epochs: list[int] = None,
-        train_ds_selection: list[slice] = None,
+        epochs: list[int] = [50, 50],
+        train_ds_selection: list[slice] = [[-1], slice(1, None, None)],
         batch_size: int = 1,
         disable_loading_bar: bool = False,
         **kwargs,
@@ -152,10 +152,6 @@ class RecursiveSelection(SimpleTraining):
             model updates whereas the recorder will store the results on a single set
             of parameters.
         """
-
-        if not epochs:
-            epochs = [150, 50]
-            train_ds_selection = [[-1], slice(1, None, None)]
 
         state = self.model.model_state
 
