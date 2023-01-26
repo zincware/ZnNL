@@ -17,8 +17,8 @@ from znrnd import (
     similarity_measures,
     utils,
 )
-from znrnd.visualization import TSNEVisualizer
 from znrnd.utils.machine_properties import print_local_device_properties
+from znrnd.visualization import TSNEVisualizer
 
 logging.getLogger(znrnd.__name__).addHandler(logging.NullHandler())
 

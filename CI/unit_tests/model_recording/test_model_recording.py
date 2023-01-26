@@ -23,7 +23,12 @@ Summary
 -------
 Test for the model recording module.
 """
+import tempfile
+from pathlib import Path
+
+import h5py as hf
 import numpy as onp
+from numpy import testing
 
 from znrnd.model_recording import JaxRecorder
 
@@ -55,9 +60,9 @@ class TestModelRecording:
             loss_derivative=True,
         )
         recorder.instantiate_recorder(data_set=self.dummy_data_set)
-
+        _exclude_list = ["update_rate", "name", "storage_path", "chunk_size"]
         for key, val in vars(recorder).items():
-            if key[0] != "_" and key != "update_rate":
+            if key[0] != "_" and key not in _exclude_list:
                 assert val is True
             if key == "update_rate":
                 assert val == 1
@@ -65,6 +70,33 @@ class TestModelRecording:
                 assert val == []
             elif key == "_selected_properties":
                 pass
+
+    def test_data_dump(self):
+        """
+        Test that data is dumped correctly.
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            recorder = JaxRecorder(
+                storage_path=directory,
+                name="my_recorder",
+                loss=True,
+                accuracy=False,
+                ntk=False,
+                entropy=False,
+                eigenvalues=False,
+            )
+            recorder.instantiate_recorder(data_set=self.dummy_data_set)
+
+            # Add some dummy data.
+            test_data = onp.random.uniform(size=(200,))
+            recorder._loss_array = test_data.tolist()
+
+            recorder.dump_records()  # dump to disk
+
+            # Check that the dump worked.
+            assert Path(f"{directory}/my_recorder.h5").exists()
+            with hf.File(f"{directory}/my_recorder.h5", "r") as db:
+                testing.assert_almost_equal(db["loss"], test_data, decimal=7)
 
     def test_overwriting(self):
         """
