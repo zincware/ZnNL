@@ -48,8 +48,6 @@ class TestApproximateMaxEntropy:
             nt_module=model,
             optimizer=optax.sgd(0.001),
             input_shape=(2,),
-            loss_fn=znrnd.loss_functions.MeanPowerLoss(order=2),
-            training_threshold=0.002,
         )
 
         # Data generator preparation

@@ -37,6 +37,7 @@ from neural_tangents import stax
 
 from znrnd.loss_functions import MeanPowerLoss
 from znrnd.models import FlaxModel, NTModel
+from znrnd.training_strategies import SimpleTraining
 
 
 class TestNTModelSeed:
@@ -55,7 +56,6 @@ class TestNTModelSeed:
             optimizer=optax.adam(learning_rate=0.001),
             loss_fn=MeanPowerLoss(order=2),
             input_shape=(1,),
-            training_threshold=0.1,
             batch_size=1,
             seed=17,
         )
@@ -63,9 +63,7 @@ class TestNTModelSeed:
         nt_model_2 = NTModel(
             nt_module=test_model,
             optimizer=optax.adam(learning_rate=0.001),
-            loss_fn=MeanPowerLoss(order=2),
             input_shape=(1,),
-            training_threshold=0.1,
             batch_size=1,
             seed=17,
         )
@@ -87,7 +85,12 @@ class TestNTModelSeed:
         """
         test_models = self.test_models()
         old_params, _ = ravel_pytree(test_models[0].model_state.params)
-        test_models[0].train_model(
+        training_strategy = SimpleTraining(
+            model=test_models[0],
+            loss_fn=MeanPowerLoss(order=2),
+            seed=17,
+        )
+        training_strategy.train_model(
             train_ds={"inputs": np.ones((10, 1)), "targets": np.zeros((10, 1))},
             test_ds={"inputs": np.ones((10, 1)), "targets": np.zeros((10, 1))},
             batch_size=1,
@@ -103,11 +106,16 @@ class TestNTModelSeed:
         test_models[0].init_model(seed=17)
         params_after_reinit, _ = ravel_pytree(test_models[0].model_state.params)
 
-        # Check that the model is in the initial state after reinitalization
+        # Check that the model is in the initial state after reinitialization
         np.testing.assert_array_equal(params_after_reinit, old_params)
 
         # Check that retraining leads at the same configuration
-        test_models[0].train_model(
+        training_strategy = SimpleTraining(
+            model=test_models[0],
+            loss_fn=MeanPowerLoss(order=2),
+            seed=17,
+        )
+        training_strategy.train_model(
             train_ds={"inputs": np.ones((10, 1)), "targets": np.zeros((10, 1))},
             test_ds={"inputs": np.ones((10, 1)), "targets": np.zeros((10, 1))},
             batch_size=1,
@@ -143,18 +151,14 @@ class TestFlaxModelSeed:
         flax_model_1 = FlaxModel(
             flax_module=Flax_test_model(),
             optimizer=optax.adam(learning_rate=0.001),
-            loss_fn=MeanPowerLoss(order=2),
             input_shape=(1,),
-            training_threshold=0.1,
             seed=17,
         )
 
         flax_model_2 = FlaxModel(
             flax_module=Flax_test_model(),
             optimizer=optax.adam(learning_rate=0.001),
-            loss_fn=MeanPowerLoss(order=2),
             input_shape=(1,),
-            training_threshold=0.1,
             seed=17,
         )
         return flax_model_1, flax_model_2
@@ -175,7 +179,12 @@ class TestFlaxModelSeed:
         """
         test_models = self.test_models()
         old_params, _ = ravel_pytree(test_models[0].model_state.params)
-        test_models[0].train_model(
+        training_strategy = SimpleTraining(
+            model=test_models[0],
+            loss_fn=MeanPowerLoss(order=2),
+            seed=17,
+        )
+        training_strategy.train_model(
             train_ds={"inputs": np.ones((10, 1)), "targets": np.zeros((10, 1))},
             test_ds={"inputs": np.ones((10, 1)), "targets": np.zeros((10, 1))},
             batch_size=1,
@@ -195,7 +204,12 @@ class TestFlaxModelSeed:
         np.testing.assert_array_equal(params_after_reinit, old_params)
 
         # Check that retraining leads at the same configuration
-        test_models[0].train_model(
+        training_strategy = SimpleTraining(
+            model=test_models[0],
+            loss_fn=MeanPowerLoss(order=2),
+            seed=17,
+        )
+        training_strategy.train_model(
             train_ds={"inputs": np.ones((10, 1)), "targets": np.zeros((10, 1))},
             test_ds={"inputs": np.ones((10, 1)), "targets": np.zeros((10, 1))},
             batch_size=1,

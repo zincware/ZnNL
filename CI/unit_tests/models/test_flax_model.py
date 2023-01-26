@@ -34,7 +34,6 @@ import pytest
 from flax import linen as nn
 from jax import random
 
-from znrnd.loss_functions import MeanPowerLoss
 from znrnd.models import FlaxModel
 
 
@@ -64,9 +63,7 @@ class TestFlaxModule:
         model = FlaxModel(
             flax_module=FlaxTestModule(),
             optimizer=optax.adam(learning_rate=0.001),
-            loss_fn=MeanPowerLoss(order=2),
             input_shape=(8,),
-            training_threshold=0.1,
             seed=17,
         )
 
@@ -82,9 +79,7 @@ class TestFlaxModule:
         model = FlaxModel(
             flax_module=FlaxTestModule(),
             optimizer=optax.adam(learning_rate=0.001),
-            loss_fn=MeanPowerLoss(order=2),
             input_shape=(8,),
-            training_threshold=0.1,
             seed=17,
         )
 
