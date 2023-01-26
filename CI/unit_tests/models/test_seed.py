@@ -54,7 +54,6 @@ class TestNTModelSeed:
         nt_model_1 = NTModel(
             nt_module=test_model,
             optimizer=optax.adam(learning_rate=0.001),
-            loss_fn=MeanPowerLoss(order=2),
             input_shape=(1,),
             batch_size=1,
             seed=17,
