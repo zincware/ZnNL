@@ -9,7 +9,7 @@ Copyright Contributors to the Zincware Project.
 Description: Parent class for the Jax-based models.
 """
 import logging
-from typing import Callable, List, Tuple
+from typing import Callable, List, Optional, Tuple, Union
 
 import jax
 import jax.numpy as np
@@ -38,11 +38,11 @@ class SimpleTraining:
         self,
         model: JaxModel,
         loss_fn: Callable,
-        accuracy_fn: AccuracyFunction = None,
+        accuracy_fn: Optional[AccuracyFunction, None] = None,
         seed: int = None,
         recursive_use: bool = False,
         recursive_threshold: float = None,
-        recorders: List["JaxRecorder"] = None,
+        recorders: Optional[List["JaxRecorder"], None] = None,
     ):
         """
         Construct a simple training strategy for a model.
@@ -262,7 +262,7 @@ class SimpleTraining:
         self,
         train_ds: dict,
         test_ds: dict,
-        epochs: int = 50,
+        epochs: Union[int, list[int]] = 50,
         batch_size: int = 1,
         disable_loading_bar: bool = False,
         **kwargs,

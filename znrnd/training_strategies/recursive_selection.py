@@ -26,7 +26,7 @@ Summary
 Module for the neural tangents infinite width network models.
 """
 import logging
-from typing import Callable, List
+from typing import Callable, List, Optional
 
 import numpy as onp
 from tqdm import trange
@@ -54,11 +54,11 @@ class RecursiveSelection(SimpleTraining):
         self,
         model: JaxModel,
         loss_fn: Callable,
-        accuracy_fn: AccuracyFunction = None,
+        accuracy_fn: Optional[AccuracyFunction, None] = None,
         seed: int = None,
         recursive_use: bool = False,
         recursive_threshold: float = None,
-        recorders: List["JaxRecorder"] = None,
+        recorders: Optional[List["JaxRecorder"], None] = None,
     ):
         """
         Construct a biased training strategy for a model.
@@ -115,8 +115,8 @@ class RecursiveSelection(SimpleTraining):
         self,
         train_ds: dict,
         test_ds: dict,
-        epochs: list[int] = [50, 50],
-        train_ds_selection: list[slice] = [[-1], slice(1, None, None)],
+        epochs: Optional[list[int]] = None,
+        train_ds_selection: Optional[list[slice]] = None,
         batch_size: int = 1,
         disable_loading_bar: bool = False,
         **kwargs,
@@ -152,6 +152,17 @@ class RecursiveSelection(SimpleTraining):
             model updates whereas the recorder will store the results on a single set
             of parameters.
         """
+
+        if len(epochs) != len(train_ds_selection):
+            raise KeyError(
+                "epochs and train_ds_selection has to be of same length,"
+                "as each data selection will be trained for some epochs."
+            )
+
+        # Write the default values for epochs and train_ds_selection
+        if not epochs and not train_ds_selection:
+            epochs = [150, 50]
+            train_ds_selection = [[-1], slice(1, None, None)]
 
         state = self.model.model_state
 

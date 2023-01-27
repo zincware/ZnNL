@@ -26,7 +26,7 @@ Summary
 Module for the neural tangents infinite width network models.
 """
 import logging
-from typing import Callable, List
+from typing import Callable, List, Optional
 
 import jax.numpy as np
 from tqdm import trange
@@ -53,12 +53,12 @@ class LossAwareReservoir(SimpleTraining):
         self,
         model: JaxModel,
         loss_fn: Callable,
-        accuracy_fn: AccuracyFunction = None,
+        accuracy_fn: Optional[AccuracyFunction, None] = None,
         seed: int = None,
         reservoir_size: int = 500,
         recursive_use: bool = False,
         recursive_threshold: float = None,
-        recorders: List["JaxRecorder"] = None,
+        recorders: Optional[List["JaxRecorder"], None] = None,
     ):
         """
         Construct a biased training strategy for a model.
