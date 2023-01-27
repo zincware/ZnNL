@@ -52,6 +52,7 @@ class TestModelRecording:
             ntk=True,
             entropy=True,
             eigenvalues=True,
+            trace=True,
             loss_derivative=True,
         )
         recorder.instantiate_recorder(data_set=self.dummy_data_set)
