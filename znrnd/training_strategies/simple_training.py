@@ -262,7 +262,7 @@ class SimpleTraining:
         self,
         train_ds: dict,
         test_ds: dict,
-        epochs: Union[int, list[int]] = 50,
+        epochs: Union[int, List[int]] = 50,
         batch_size: int = 1,
         disable_loading_bar: bool = False,
         **kwargs,

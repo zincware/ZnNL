@@ -115,7 +115,7 @@ class RecursiveSelection(SimpleTraining):
         self,
         train_ds: dict,
         test_ds: dict,
-        epochs: Optional[list[int]] = None,
+        epochs: Optional[List[int]] = None,
         train_ds_selection: Optional[list[slice]] = None,
         batch_size: int = 1,
         disable_loading_bar: bool = False,
