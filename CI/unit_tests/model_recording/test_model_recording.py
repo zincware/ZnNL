@@ -58,7 +58,13 @@ class TestModelRecording:
         recorder.instantiate_recorder(data_set=self.dummy_data_set)
 
         for key, val in vars(recorder).items():
-            if key[0] != "_" and key != "update_rate":
+            print(key, val)
+            if (
+                key[0] != "_"
+                and key != "update_rate"
+                and key != "loss_fn"
+                and key != "accuracy_fn"
+            ):
                 assert val is True
             if key == "update_rate":
                 assert val == 1
