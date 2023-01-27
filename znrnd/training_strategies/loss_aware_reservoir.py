@@ -26,7 +26,7 @@ Summary
 Module for the neural tangents infinite width network models.
 """
 import logging
-from typing import Callable, List, Optional
+from typing import Callable, List
 
 import jax.numpy as np
 from tqdm import trange

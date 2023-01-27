@@ -9,7 +9,7 @@ Copyright Contributors to the Zincware Project.
 Description: Parent class for the Jax-based models.
 """
 import logging
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Callable, List, Tuple, Union
 
 import jax
 import jax.numpy as np
@@ -276,7 +276,7 @@ class SimpleTraining:
                 Train dataset with inputs and targets.
         test_ds : dict
                 Test dataset with inputs and targets.
-        epochs : int
+        epochs : Union[int, List[int]]
                 Number of epochs to train over.
         batch_size : int
                 Size of the batch to use in training.

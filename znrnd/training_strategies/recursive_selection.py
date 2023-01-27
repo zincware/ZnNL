@@ -116,7 +116,7 @@ class RecursiveSelection(SimpleTraining):
         train_ds: dict,
         test_ds: dict,
         epochs: Optional[List[int]] = None,
-        train_ds_selection: Optional[list[slice]] = None,
+        train_ds_selection: Optional[List[slice]] = None,
         batch_size: int = 1,
         disable_loading_bar: bool = False,
         **kwargs,
@@ -130,10 +130,10 @@ class RecursiveSelection(SimpleTraining):
                 Train dataset with inputs and targets.
         test_ds : dict
                 Test dataset with inputs and targets.
-        epochs : list[int]
+        epochs : List[int]
                 Number of epochs to train over.
                 Each epoch defines a training phase.
-        train_ds_selection : list[slice]
+        train_ds_selection : List[slice]
                 Indices or slices selecting training data.
                 Each slice or index defines a training phase.
         batch_size : int
