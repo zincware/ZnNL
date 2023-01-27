@@ -38,11 +38,11 @@ class SimpleTraining:
         self,
         model: JaxModel,
         loss_fn: Callable,
-        accuracy_fn: Optional[AccuracyFunction, None] = None,
+        accuracy_fn: AccuracyFunction = None,
         seed: int = None,
         recursive_use: bool = False,
         recursive_threshold: float = None,
-        recorders: Optional[List["JaxRecorder"], None] = None,
+        recorders: List["JaxRecorder"] = None,
     ):
         """
         Construct a simple training strategy for a model.
