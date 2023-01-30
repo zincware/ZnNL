@@ -376,7 +376,7 @@ class JaxRecorder:
         loss_derivative = calculate_l_pq_norm(vector_loss_derivative)
         self._loss_derivative_array.append(loss_derivative)
 
-    def export_dataset(self, selected_properties: list = None) -> dataclass:
+    def gather_recording(self, selected_properties: list = None) -> dataclass:
         """
         Export a dataclass of used properties.
 

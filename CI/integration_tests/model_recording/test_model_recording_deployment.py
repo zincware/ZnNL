@@ -165,8 +165,8 @@ class TestRecorderDeployment:
         """
         Test that the reports are exported correctly.
         """
-        train_report = self.train_recorder.export_dataset()
-        test_report = self.test_recorder.export_dataset()
+        train_report = self.train_recorder.gather_recording()
+        test_report = self.test_recorder.gather_recording()
 
         assert len(train_report.loss) == 10
         assert onp.sum(train_report.loss) > 0
@@ -199,7 +199,7 @@ class TestRecorderDeployment:
                 epochs=20,
             )
 
-            report = train_recorder.export_dataset()
+            report = train_recorder.gather_recording()
             assert report.loss.shape[0] == 20
             testing.assert_array_equal(report.loss[11:], train_recorder._loss_array)
 
@@ -208,7 +208,7 @@ class TestRecorderDeployment:
         Test that the reports are exported correctly.
         """
         # Note, NTK is not recorded, it should be caught and removed.
-        train_report = self.train_recorder.export_dataset(
+        train_report = self.train_recorder.gather_recording(
             selected_properties=["loss", "ntk"]
         )
 
