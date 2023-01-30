@@ -25,11 +25,14 @@ Module for recording jax training.
 """
 import logging
 from dataclasses import dataclass, make_dataclass
+from os import path
+from pathlib import Path
 
 import numpy as onp
 
 from znrnd.analysis.eigensystem import EigenSpaceAnalysis
 from znrnd.analysis.entropy import EntropyAnalysis
+from znrnd.model_recording.data_storage import DataStorage
 from znrnd.models.jax_model import JaxModel
 from znrnd.utils.matrix_utils import calculate_l_pq_norm
 
@@ -48,6 +51,12 @@ class JaxRecorder:
 
     Attributes
     ----------
+    name : str
+            Name of the recorder.
+    storage_path : str
+            Where to store the data on disk.
+    chunk_size : int
+            Amount of data to keep in memory before it is dumped to a hdf5 database.
     loss : bool (default=True)
             If true, loss will be recorded.
     accuracy : bool (default=False)
@@ -69,6 +78,11 @@ class JaxRecorder:
     Currently the options are hard-coded. In the future, we will work towards allowing
     for arbitrary computations to be added, for example, two losses.
     """
+
+    # Recorder Attributes
+    name: str = "my_recorder"
+    storage_path: str = "./"
+    chunk_size: int = 100
 
     # Model Loss
     loss: bool = True
@@ -99,9 +113,10 @@ class JaxRecorder:
     _selected_properties: list = None
     _model: JaxModel = None
     _data_set: dict = None
-    _compute_ntk: bool = False  # Helps to know so we can compute it once and share.
+    _compute_ntk: bool = False  # Helps to know if we can compute it once and share.
     _compute_loss_derivative: bool = False
     _index_count: int = 0  # Helps to avoid problems with non-1 update rates.
+    _data_storage: DataStorage = None  # For writing to disk.
 
     def _read_selected_attributes(self):
         """
@@ -123,7 +138,7 @@ class JaxRecorder:
         name : str
                 Name of array. Needed to check for resizing.
         overwrite : bool
-                If True, arrays will no be resized but overwritten.
+                If True, arrays will not be resized but overwritten.
 
         Returns
         -------
@@ -154,6 +169,11 @@ class JaxRecorder:
         -------
         Populates the array attributes of the dataclass.
         """
+
+        # Create the data storage manager.
+        _storage_path = path.join(self.storage_path, self.name)
+        self._data_storage = DataStorage(Path(_storage_path))
+
         # Update simple attributes
         self._data_set = data_set
 
@@ -211,6 +231,8 @@ class JaxRecorder:
             # Add epoch to the parsed data
             # Compute representations here to avoid repeated computation.
             predictions = self._model(self._data_set["inputs"])
+            if type(predictions) is tuple:
+                predictions = predictions[0]
             parsed_data["predictions"] = predictions
 
             # Compute ntk here to avoid repeated computation.
@@ -240,15 +262,17 @@ class JaxRecorder:
         else:
             pass
 
+        # Dump records if the index hits the chunk size.
+        if self._index_count == self.chunk_size:
+            self.dump_records()
+
     def dump_records(self):
         """
         Dump recorded properties to hdf5 database.
-
-        Returns
-        -------
-
         """
-        raise NotImplementedError("Not yet available in ZnRND.")
+        export_data = self._export_in_memory_data()  # collect the in-memory data.
+        self._data_storage.write_data(export_data)
+        self.instantiate_recorder(self._data_set, overwrite=True)  # clear data.
 
     def visualize_recorder(self):
         """
@@ -352,7 +376,56 @@ class JaxRecorder:
         loss_derivative = calculate_l_pq_norm(vector_loss_derivative)
         self._loss_derivative_array.append(loss_derivative)
 
-    def export_dataset(self):
+    def gather_recording(self, selected_properties: list = None) -> dataclass:
+        """
+        Export a dataclass of used properties.
+
+        Parameters
+        ----------
+        selected_properties : list default = None
+                List of parameters to export. If None, all available are exported.
+
+        Returns
+        -------
+        dataset : object
+                A dataclass of only the data recorder during the training.
+        """
+        if selected_properties is None:
+            selected_properties = self._selected_properties
+        else:
+            # Check if we can collect all the data.
+            comparison = [i in self._selected_properties for i in selected_properties]
+            # Throw away data that was not saved in the first place.
+            if not all(comparison):
+                logger.info(
+                    "You have asked for properties that were not recorded. Removing"
+                    " the impossible elements."
+                )
+                selected_properties = onp.array(selected_properties)[
+                    onp.array(comparison).astype(int) == 1
+                ]
+
+        DataSet = make_dataclass(
+            "DataSet", [(item, onp.ndarray) for item in selected_properties]
+        )
+        selected_data = {
+            item: onp.array(vars(self)[f"_{item}_array"])
+            for item in selected_properties
+        }
+
+        # Try to load some data from the hdf5 database.
+        try:
+            db_data = self._data_storage.fetch_data(selected_properties)
+            # Add db data to the selected data dict.
+            for item, data in selected_data.items():
+                selected_data[item] = onp.concatenate((db_data[item], data), axis=0)
+
+        except FileNotFoundError:  # There is no database.
+            pass
+
+        return DataSet(**selected_data)
+
+    def _export_in_memory_data(self) -> dataclass:
         """
         Export a dataclass of used properties.
 

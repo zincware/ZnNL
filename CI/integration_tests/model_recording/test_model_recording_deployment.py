@@ -29,9 +29,14 @@ import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
+import copy
+import tempfile
+
+import h5py as hf
 import numpy as onp
 import optax
 from neural_tangents import stax
+from numpy import testing
 
 import znrnd as rnd
 
@@ -60,7 +65,7 @@ class TestRecorderDeployment:
 
         # Set the class assigned recorders
         cls.train_recorder = rnd.model_recording.JaxRecorder(
-            loss=True, accuracy=True, update_rate=1
+            loss=True, accuracy=True, update_rate=1, chunk_size=11, name="trainer"
         )
         cls.test_recorder = rnd.model_recording.JaxRecorder(
             loss=True, accuracy=True, ntk=True, update_rate=5
@@ -110,12 +115,58 @@ class TestRecorderDeployment:
         assert onp.sum(self.test_recorder._loss_array) > 0
         assert onp.sum(self.test_recorder._accuracy_array) > 0
 
-    def test_export_function(self):
+    def test_data_dump(self):
+        """
+        Test that the data dumping works correctly.
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            new_model = copy.deepcopy(self.production_model)
+            train_recorder = copy.deepcopy(self.train_recorder)
+            train_recorder.storage_path = directory
+            train_recorder.instantiate_recorder(
+                train_recorder._data_set, overwrite=True
+            )
+            # Retrain the model.
+            new_model.train_model(
+                train_ds=self.data_generator.train_ds,
+                test_ds=self.data_generator.test_ds,
+                batch_size=5,
+                recorders=[train_recorder],
+                epochs=20,
+            )
+
+            # Check if there is data in database
+            with hf.File(f"{directory}/trainer.h5", "r") as db:
+                db_loss = onp.array(db["loss"])
+                db_accuracy = onp.array(db["accuracy"])
+
+                class_loss = onp.array(train_recorder._loss_array)
+                class_accuracy = onp.array(train_recorder._accuracy_array)
+
+                assert db_loss.shape == (11,)
+                assert class_loss.shape == (9,)
+                testing.assert_raises(
+                    AssertionError,
+                    testing.assert_array_equal,
+                    db_loss.sum(),
+                    class_loss.sum(),
+                )
+
+                assert db_accuracy.shape == (11,)
+                assert class_accuracy.shape == (9,)
+                testing.assert_raises(
+                    AssertionError,
+                    testing.assert_array_equal,
+                    db_accuracy.sum(),
+                    class_accuracy.sum(),
+                )
+
+    def test_export_function_no_db(self):
         """
         Test that the reports are exported correctly.
         """
-        train_report = self.train_recorder.export_dataset()
-        test_report = self.test_recorder.export_dataset()
+        train_report = self.train_recorder.gather_recording()
+        test_report = self.test_recorder.gather_recording()
 
         assert len(train_report.loss) == 10
         assert onp.sum(train_report.loss) > 0
@@ -127,3 +178,40 @@ class TestRecorderDeployment:
         assert onp.sum(test_report.loss) > 0
         assert len(test_report.accuracy) == 2
         assert onp.sum(test_report.accuracy) > 0
+
+    def test_export_function_db(self):
+        """
+        Test that the reports are exported correctly.
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            new_model = copy.deepcopy(self.production_model)
+            train_recorder = copy.deepcopy(self.train_recorder)
+            train_recorder.storage_path = directory
+            train_recorder.instantiate_recorder(
+                train_recorder._data_set, overwrite=True
+            )
+            # Retrain the model.
+            new_model.train_model(
+                train_ds=self.data_generator.train_ds,
+                test_ds=self.data_generator.test_ds,
+                batch_size=5,
+                recorders=[train_recorder],
+                epochs=20,
+            )
+
+            report = train_recorder.gather_recording()
+            assert report.loss.shape[0] == 20
+            testing.assert_array_equal(report.loss[11:], train_recorder._loss_array)
+
+    def test_export_function_no_db_custom_selection(self):
+        """
+        Test that the reports are exported correctly.
+        """
+        # Note, NTK is not recorded, it should be caught and removed.
+        train_report = self.train_recorder.gather_recording(
+            selected_properties=["loss", "ntk"]
+        )
+
+        assert len(train_report.loss) == 10
+        assert onp.sum(train_report.loss) > 0
+        assert "ntk" not in list(train_report.__dict__)

@@ -355,6 +355,7 @@ class JaxModel:
 
     def _calculate_loss_derivative(self, predictions: np.ndarray, targets: np.ndarray):
         """
+        Compute loss derivative.
 
         Parameters
         ----------
