@@ -97,7 +97,6 @@ class RND(Agent):
         self.iterations: int = 0
         self.stationary_iterations: int = 0
         self.metric_results = None
-        self.metric_results_storage: list = []
         self.target_size: int = None
         self.epochs = None
 
@@ -235,19 +234,6 @@ class RND(Agent):
         if visualize:
             self.update_visualization(reference=False)
 
-    def _store_metrics(self):
-        """
-        Storage of metric calculations
-
-        Returns
-        -------
-        updates the metric storage.
-        """
-        if len(self.target_set) == self.historical_length:
-            pass
-        else:
-            self.metric_results_storage.append(np.sort(self.metric_results)[-3:])
-
     def _evaluate_agent(self) -> bool:
         """
         Determine whether or not it is time to stop the searching.
@@ -324,7 +310,6 @@ class RND(Agent):
         seed_randomly: bool = False,
         visualize: bool = False,
         report: bool = False,
-        store_metrics: bool = False,
         epochs: int = 50,
     ):
         """
@@ -341,8 +326,6 @@ class RND(Agent):
                 If true, a t-SNE visualization will be performed on the final models.
         report : bool (default=True)
                 If true, print a report about the RND performance.
-        store_metrics : bool (default=True)
-                If true, store the RND metrics.
         epochs : int (default = 50)
                 Epochs to train the predictor model.
 
@@ -366,8 +349,6 @@ class RND(Agent):
 
         while not criteria:
             self._choose_points()
-            if store_metrics:
-                self._store_metrics()
             self._retrain_network()
 
             criteria = self._evaluate_agent()
