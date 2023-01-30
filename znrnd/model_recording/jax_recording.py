@@ -114,8 +114,8 @@ class JaxRecorder:
 
     # Class helpers
     update_rate: int = 1
-    loss_fn: SimpleLoss = None
-    accuracy_fn: AccuracyFunction = None
+    _loss_fn: SimpleLoss = None
+    _accuracy_fn: AccuracyFunction = None
     _selected_properties: list = None
     _model: JaxModel = None
     _data_set: dict = None
@@ -226,7 +226,7 @@ class JaxRecorder:
             self._compute_ntk = True
 
         if "loss_derivative" in self._selected_properties:
-            self._loss_derivative_fn = LossDerivative(self.loss_fn)
+            self._loss_derivative_fn = LossDerivative(self._loss_fn)
 
     def update_recorder(self, epoch: int, model: JaxModel):
         """
@@ -316,7 +316,7 @@ class JaxRecorder:
                 Data computed before the update to prevent repeated calculations.
         """
         self._loss_array.append(
-            self.loss_fn(parsed_data["predictions"], self._data_set["targets"])
+            self._loss_fn(parsed_data["predictions"], self._data_set["targets"])
         )
 
     def _update_accuracy(self, parsed_data: dict):
@@ -330,7 +330,7 @@ class JaxRecorder:
         """
         try:
             self._accuracy_array.append(
-                self.accuracy_fn(parsed_data["predictions"], self._data_set["targets"])
+                self._accuracy_fn(parsed_data["predictions"], self._data_set["targets"])
             )
         except TypeError:
             logger.info(

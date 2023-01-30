@@ -87,8 +87,8 @@ class SimpleTraining:
         # Add the loss and accuracy function to the recorders and re-instantiate them
         if self.recorders is not None:
             for item in self.recorders:
-                item.loss_fn = loss_fn
-                item.accuracy_fn = accuracy_fn
+                item._loss_fn = loss_fn
+                item._accuracy_fn = accuracy_fn
                 item.instantiate_recorder()
 
     def _compute_metrics(self, predictions: np.ndarray, targets: np.ndarray):
