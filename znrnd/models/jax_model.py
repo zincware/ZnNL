@@ -8,7 +8,7 @@ Copyright Contributors to the Zincware Project.
 
 Description: Parent class for the Jax-based models.
 """
-from typing import Callable, Sequence, Union
+from typing import TYPE_CHECKING, Callable, List, Sequence, Tuple, Union
 
 import jax
 import jax.numpy as np
