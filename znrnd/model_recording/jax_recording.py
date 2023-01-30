@@ -25,6 +25,8 @@ Module for recording jax training.
 """
 import logging
 from dataclasses import dataclass, make_dataclass
+from os import path
+from pathlib import Path
 
 import numpy as onp
 
@@ -33,8 +35,9 @@ from znrnd.analysis.eigensystem import EigenSpaceAnalysis
 from znrnd.analysis.entropy import EntropyAnalysis
 from znrnd.analysis.loss_fn_derivative import LossDerivative
 from znrnd.loss_functions import SimpleLoss
-from os import path
-from pathlib import Path
+from znrnd.model_recording.data_storage import DataStorage
+from znrnd.models.jax_model import JaxModel
+from znrnd.utils.matrix_utils import calculate_l_pq_norm
 
 logger = logging.getLogger(__name__)
 
@@ -388,8 +391,8 @@ class JaxRecorder:
         parsed_data : dict
                 Data computed before the update to prevent repeated calculations.
         """
-        diagonal = np.diagonal(parsed_data["ntk"])
-        trace = np.sum(diagonal)
+        diagonal = onp.diagonal(parsed_data["ntk"])
+        trace = onp.sum(diagonal)
         self._trace_array.append(trace)
 
     def _update_loss_derivative(self, parsed_data):
