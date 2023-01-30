@@ -122,15 +122,9 @@ class JaxRecorder:
     _selected_properties: list = None
     _model: JaxModel = None
     _data_set: dict = None
-    _compute_ntk: bool = False  # Helps to know so we can compute it once and share.
-    _compute_loss_derivative: bool = False
-    _loss_derivative_fn: LossDerivative = False
-    _index_count: int = 0  # Helps to avoid problems with non-1 update rates.
-    _selected_properties: list = None
-    _model: JaxModel = None
-    _data_set: dict = None
     _compute_ntk: bool = False  # Helps to know if we can compute it once and share.
     _compute_loss_derivative: bool = False
+    _loss_derivative_fn: LossDerivative = False
     _index_count: int = 0  # Helps to avoid problems with non-1 update rates.
     _data_storage: DataStorage = None  # For writing to disk.
 
