@@ -61,7 +61,14 @@ class TestModelRecording:
             loss_derivative=True,
         )
         recorder.instantiate_recorder(data_set=self.dummy_data_set)
-        _exclude_list = ["accuracy_fn", "loss_fn", "update_rate", "name", "storage_path", "chunk_size"]
+        _exclude_list = [
+            "_accuracy_fn",
+            "_loss_fn",
+            "update_rate",
+            "name",
+            "storage_path",
+            "chunk_size",
+        ]
         for key, val in vars(recorder).items():
             if key[0] != "_" and key not in _exclude_list:
                 assert val is True
