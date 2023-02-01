@@ -130,12 +130,20 @@ class TestRecorderDeployment:
             train_recorder.instantiate_recorder(
                 train_recorder._data_set, overwrite=True
             )
+
+            # Define the training strategy
+            training_strategy = rnd.training_strategies.SimpleTraining(
+                model=new_model,
+                loss_fn=rnd.loss_functions.CrossEntropyLoss(),
+                accuracy_fn=rnd.accuracy_functions.LabelAccuracy(),
+                recorders=[train_recorder],
+            )
+
             # Retrain the model.
-            new_model.train_model(
+            training_strategy.train_model(
                 train_ds=self.data_generator.train_ds,
                 test_ds=self.data_generator.test_ds,
                 batch_size=5,
-                recorders=[train_recorder],
                 epochs=20,
             )
 
@@ -194,12 +202,19 @@ class TestRecorderDeployment:
             train_recorder.instantiate_recorder(
                 train_recorder._data_set, overwrite=True
             )
+            # Define the training strategy
+            training_strategy = rnd.training_strategies.SimpleTraining(
+                model=new_model,
+                loss_fn=rnd.loss_functions.CrossEntropyLoss(),
+                accuracy_fn=rnd.accuracy_functions.LabelAccuracy(),
+                recorders=[train_recorder],
+            )
+
             # Retrain the model.
-            new_model.train_model(
+            training_strategy.train_model(
                 train_ds=self.data_generator.train_ds,
                 test_ds=self.data_generator.test_ds,
                 batch_size=5,
-                recorders=[train_recorder],
                 epochs=20,
             )
 
