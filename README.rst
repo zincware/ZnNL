@@ -1,3 +1,5 @@
+|zincware|
+
 ZnRND
 =====
 A Python library for the implementation of the RND data filtering process.
@@ -20,3 +22,7 @@ For tutorials and more theoretical information please see the included documenta
    cd docs
    make html
    firefox/safari/chrome/open build/html/index.html
+
+
+.. |zincware| image:: https://img.shields.io/badge/Powered%20by-zincware-darkcyan
+   :target: https://github.com/zincware
