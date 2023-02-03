@@ -9,7 +9,7 @@ Copyright Contributors to the Zincware Project.
 Description: Parent class for the Jax-based models.
 """
 import logging
-from typing import Callable, List, Tuple, Union
+from typing import Callable, List, Optional, Tuple, Union
 
 import jax
 import jax.numpy as np
@@ -262,7 +262,7 @@ class SimpleTraining:
         self,
         train_ds: dict,
         test_ds: dict,
-        epochs: Union[int, List[int]] = 50,
+        epochs: Optional[Union[int, List[int]]] = None,
         batch_size: int = 1,
         disable_loading_bar: bool = False,
         **kwargs,
@@ -276,7 +276,7 @@ class SimpleTraining:
                 Train dataset with inputs and targets.
         test_ds : dict
                 Test dataset with inputs and targets.
-        epochs : Union[int, List[int]]
+        epochs : Optional[Union[int, List[int]]] (default = 50)
                 Number of epochs to train over.
         batch_size : int
                 Size of the batch to use in training.
@@ -296,6 +296,9 @@ class SimpleTraining:
         """
 
         state = self.model.model_state
+
+        if not epochs:
+            epochs = 50
 
         loading_bar = trange(
             1, epochs + 1, ncols=100, unit="batch", disable=disable_loading_bar

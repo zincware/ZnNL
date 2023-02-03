@@ -130,10 +130,10 @@ class RecursiveSelection(SimpleTraining):
                 Train dataset with inputs and targets.
         test_ds : dict
                 Test dataset with inputs and targets.
-        epochs : List[int]
+        epochs : Optional[List[int]] (default = [150, 50])
                 Number of epochs to train over.
                 Each epoch defines a training phase.
-        train_ds_selection : List[slice]
+        train_ds_selection : List[slice] (default = [[-1], slice(1, None, None)])
                 Indices or slices selecting training data.
                 Each slice or index defines a training phase.
         batch_size : int
@@ -153,16 +153,25 @@ class RecursiveSelection(SimpleTraining):
             of parameters.
         """
 
-        if len(epochs) != len(train_ds_selection):
+        # Write the default values for epochs and train_ds_selection
+        if not epochs:
+            epochs = [150, 50]
+        if not train_ds_selection:
+            train_ds_selection = [[-1], slice(1, None, None)]
+
+        if type(epochs) == int and type(train_ds_selection) != int:
             raise KeyError(
-                "epochs and train_ds_selection has to be of same length,"
-                "as each data selection will be trained for some epochs."
+                "epochs and train_ds_selection has to be of same type, as each data"
+                " selection will be trained for some epochs. Current arguments are:"
+                f" epochs={epochs}, train_ds_selection={train_ds_selection}"
             )
 
-        # Write the default values for epochs and train_ds_selection
-        if not epochs and not train_ds_selection:
-            epochs = [150, 50]
-            train_ds_selection = [[-1], slice(1, None, None)]
+        if len(epochs) != len(train_ds_selection):
+            raise KeyError(
+                "epochs and train_ds_selection has to be of same length, as each data"
+                " selection will be trained for some epochs. Current arguments are:"
+                f" epochs={epochs}, train_ds_selection={train_ds_selection}"
+            )
 
         state = self.model.model_state
 

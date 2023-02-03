@@ -26,7 +26,7 @@ Summary
 Module for the neural tangents infinite width network models.
 """
 import logging
-from typing import Callable, List
+from typing import Callable, List, Optional
 
 import jax.numpy as np
 from tqdm import trange
@@ -100,7 +100,7 @@ class LossAwareReservoir(SimpleTraining):
         self.reservoir = None
         self.reservoir_size = reservoir_size
 
-    def _sort_ds_by_loss(self, train_ds):
+    def _update_reservoir(self, train_ds):
         """
         Updates the reservoir in the following steps:
 
@@ -108,9 +108,14 @@ class LossAwareReservoir(SimpleTraining):
         * Sort the training set according to the distance
         * Update the reservoir with the sorted training set
 
+        The reservoir is a dictionary, similar to the train_ds, containing points based
+        on a selection.
+        The points are selected by comparing their losses. The n points with the biggest
+        loss are put into the reservoir, with n being the reservoir length.
+
         Returns
         -------
-
+        The loss aware reservoir
         """
         distances = self._compute_distance(train_ds)
         max_size = self.reservoir_size
@@ -140,7 +145,7 @@ class LossAwareReservoir(SimpleTraining):
         self,
         train_ds: dict,
         test_ds: dict,
-        epochs: int = 50,
+        epochs: Optional[int] = None,
         batch_size: int = 1,
         disable_loading_bar: bool = False,
         **kwargs,
@@ -154,7 +159,7 @@ class LossAwareReservoir(SimpleTraining):
                 Train dataset with inputs and targets.
         test_ds : dict
                 Test dataset with inputs and targets.
-        epochs : int
+        epochs : Optional[int] (default = 50)
                 Number of epochs to train over.
         batch_size : int
                 Size of the batch to use in training.
@@ -175,8 +180,10 @@ class LossAwareReservoir(SimpleTraining):
             of parameters.
         """
 
+        if not epochs:
+            epochs = 50
         state = self.model.model_state
-        self.reservoir = self._sort_ds_by_loss(train_ds)
+        self.reservoir = self._update_reservoir(train_ds)
 
         loading_bar = trange(
             1, epochs + 1, ncols=100, unit="batch", disable=disable_loading_bar
