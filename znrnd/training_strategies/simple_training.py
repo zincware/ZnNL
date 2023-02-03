@@ -363,7 +363,7 @@ class SimpleTraining:
         self,
         train_ds: dict,
         test_ds: dict,
-        epochs: list = 50,
+        epochs: Optional[Union[int, List[int]]] = None,
         batch_size: int = 1,
         disable_loading_bar: bool = False,
         **kwargs,
@@ -378,7 +378,7 @@ class SimpleTraining:
                 Train dataset with inputs and targets.
         test_ds : dict
                 Test dataset with inputs and targets.
-        epochs : int
+        epochs : Optional[Union[int, List[int]]] (default = 50)
                 Number of epochs to train over.
         batch_size : int
                 Size of the batch to use in training.
@@ -392,6 +392,8 @@ class SimpleTraining:
         """
         if len(train_ds["inputs"]) < batch_size:
             batch_size = len(train_ds["inputs"])
+        if not epochs:
+            epochs = 50
 
         condition = False
         counter = 0
