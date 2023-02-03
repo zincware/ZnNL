@@ -9,7 +9,7 @@ Copyright Contributors to the Zincware Project.
 Description: Module for the implementation of random network distillation.
 """
 import time
-from typing import Union
+from typing import Optional, Union
 
 import jax.numpy as np
 import numpy as onp
@@ -99,6 +99,7 @@ class RND(Agent):
         self.metric_results = None
         self.target_size: int = None
         self.epochs = None
+        self.training_kwargs = None
 
         # Run the class initialization
         self._set_defaults()
@@ -204,6 +205,7 @@ class RND(Agent):
                 test_ds=dataset,
                 epochs=self.epochs,
                 disable_loading_bar=self.disable_loading_bar,
+                **self.training_kwargs,
             )
 
     def _seed_process(self, visualize: bool):
@@ -310,7 +312,8 @@ class RND(Agent):
         seed_randomly: bool = False,
         visualize: bool = False,
         report: bool = False,
-        epochs: int = 50,
+        epochs: Optional[int] = None,
+        **training_kwargs,
     ):
         """
         Run the random network distillation methods and build the target set.
@@ -328,6 +331,9 @@ class RND(Agent):
                 If true, print a report about the RND performance.
         epochs : int (default = 50)
                 Epochs to train the predictor model.
+        training_kwargs: dict
+                Additional kwargs used for the training procedure.
+                Depending on the training strategy, additional arguments can be needed.
 
         Returns
         -------
@@ -337,6 +343,7 @@ class RND(Agent):
         # Allow for optional target_sizes.
         self.target_size = target_size
         self.epochs = epochs
+        self.training_kwargs = training_kwargs
 
         start = time.time()
         if seed_randomly:
