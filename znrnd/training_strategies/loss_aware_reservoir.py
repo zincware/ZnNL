@@ -235,9 +235,7 @@ class LossAwareReservoir(SimpleTraining):
             of parameters.
         """
         batch_size, epochs = self._check_training_args(
-            train_ds=train_ds,
-            batch_size=batch_size,
-            epochs=epochs
+            train_ds=train_ds, batch_size=batch_size, epochs=epochs
         )
 
         state = self.model.model_state
