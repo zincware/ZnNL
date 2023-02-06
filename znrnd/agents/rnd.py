@@ -8,6 +8,7 @@ Copyright Contributors to the Zincware Project.
 
 Description: Module for the implementation of random network distillation.
 """
+import logging
 import time
 from typing import Optional, Union
 
@@ -22,6 +23,8 @@ from znrnd.models import JaxModel
 from znrnd.point_selection import PointSelection
 from znrnd.training_strategies.simple_training import SimpleTraining
 from znrnd.visualization.tsne_visualizer import TSNEVisualizer
+
+logger = logging.getLogger(__name__)
 
 
 class RND(Agent):
@@ -83,6 +86,7 @@ class RND(Agent):
         self.target = target_network
         self.predictor = predictor_network
         self.training_strategy = training_strategy
+        self.training_strategy.model = self.predictor
         self.metric = distance_metric
         self.data_generator = data_generator
         self.point_selector = point_selector
@@ -102,11 +106,12 @@ class RND(Agent):
         self.training_kwargs = None
 
         # Run the class initialization
-        self._set_defaults()
+        self._check_defaults()
 
-    def _set_defaults(self):
+    def _check_defaults(self):
         """
-        Set the default parameters if necessary.
+        Set the default parameters if necessary and check for model correct model
+        inputs.
 
         Returns
         -------
@@ -114,6 +119,8 @@ class RND(Agent):
            * self.point_selector (default = greedy selection)
            * self.metric (default = cosine similarity)
            * Models (default = dense model.)
+        Checks whether the model input in the training strategy is None.
+        Giving feedback otherwise.
         """
         if self.point_selector is None:
             self.point_selector = znrnd.point_selection.GreedySelection()
@@ -121,6 +128,13 @@ class RND(Agent):
             self.metric = znrnd.similarity_measures.CosineSim()
         if self.visualizer is None:
             self.visualizer = TSNEVisualizer()
+        if self.training_strategy.model is not None:
+            logger.info(
+                "The model defined in the training strategy will be ignored. "
+                "The defined training strategy will operate on the predictor "
+                "model. \n "
+                "You can set the model in the training strategy to None. "
+            )
 
     def compute_distance(self, points: np.ndarray) -> np.ndarray:
         """

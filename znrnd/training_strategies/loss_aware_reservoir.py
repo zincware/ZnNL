@@ -26,7 +26,7 @@ Summary
 Module for the neural tangents infinite width network models.
 """
 import logging
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Union
 
 import jax.numpy as np
 from tqdm import trange
@@ -51,7 +51,7 @@ class LossAwareReservoir(SimpleTraining):
 
     def __init__(
         self,
-        model: JaxModel,
+        model: Union[JaxModel, None],
         loss_fn: Callable,
         accuracy_fn: AccuracyFunction = None,
         seed: int = None,
@@ -65,8 +65,12 @@ class LossAwareReservoir(SimpleTraining):
 
         Parameters
         ----------
-        model : JaxModel
+        model : Union[JaxModel, None]
+                model : Union[JaxModel, None]
                 Model class for a Jax model.
+                "None" is only used if the training strategy is passed as an input
+                to a bigger framework. The strategy then is applied to the framework
+                and the model instantiation is handled by that framework.
         loss_fn : Callable
                 A function to use in the loss computation.
         accuracy_fn : AccuracyFunction (default = None)

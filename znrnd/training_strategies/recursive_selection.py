@@ -26,7 +26,7 @@ Summary
 Module for the neural tangents infinite width network models.
 """
 import logging
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Union
 
 import numpy as onp
 from tqdm import trange
@@ -52,7 +52,7 @@ class RecursiveSelection(SimpleTraining):
 
     def __init__(
         self,
-        model: JaxModel,
+        model: Union[JaxModel, None],
         loss_fn: Callable,
         accuracy_fn: AccuracyFunction = None,
         seed: int = None,
@@ -65,7 +65,8 @@ class RecursiveSelection(SimpleTraining):
 
         Parameters
         ----------
-        model : JaxModel
+        model : Union[JaxModel, None]
+                model : Union[JaxModel, None]
                 Model class for a Jax model.
         loss_fn : Callable
                 A function to use in the loss computation.
