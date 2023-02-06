@@ -10,7 +10,7 @@ Description: Module for the implementation of random network distillation.
 """
 import logging
 import time
-from typing import Optional, Union
+from typing import Union
 
 import jax.numpy as np
 import numpy as onp
@@ -338,7 +338,7 @@ class RND(Agent):
                 If true, a t-SNE visualization will be performed on the final models.
         report : bool (default=True)
                 If true, print a report about the RND performance.
-        epochs : int (default = 50)
+        epochs :  Union[int, list] (default = 50)
                 Epochs to train the predictor model.
         training_kwargs: dict
                 Additional kwargs used for the training procedure.

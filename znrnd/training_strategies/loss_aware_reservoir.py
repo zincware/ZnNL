@@ -190,10 +190,7 @@ class LossAwareReservoir(SimpleTraining):
             train_ds, batch_size, epochs
         )
 
-        if not epochs:
-            epochs = 50
         state = self.model.model_state
-        self.reservoir = self._update_reservoir(train_ds)
 
         loading_bar = trange(
             1, epochs + 1, ncols=100, unit="batch", disable=self.disable_loading_bar
@@ -202,6 +199,7 @@ class LossAwareReservoir(SimpleTraining):
         train_losses = []
         train_accuracy = []
         for i in loading_bar:
+            self.reservoir = self._update_reservoir(train_ds)
             # Update the recorder properties
             if self.recorders is not None:
                 for item in self.recorders:

@@ -58,6 +58,7 @@ class RecursiveSelection(SimpleTraining):
         seed: int = None,
         recursive_use: bool = False,
         recursive_threshold: float = None,
+        disable_loading_bar: bool = False,
         recorders: List["JaxRecorder"] = None,
     ):
         """
