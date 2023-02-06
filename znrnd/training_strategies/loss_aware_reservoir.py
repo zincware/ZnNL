@@ -51,7 +51,7 @@ class LossAwareReservoir(SimpleTraining):
 
     def __init__(
         self,
-        model: JaxModel,
+        model: Union[JaxModel, None],
         loss_fn: Callable,
         accuracy_fn: AccuracyFunction = None,
         seed: int = None,
