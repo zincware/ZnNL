@@ -27,7 +27,7 @@ Module for the trace optimizer.
 """
 from __future__ import annotations
 from dataclasses import dataclass
-# from typing import Callable
+from typing import Callable
 
 import jax.numpy as np
 import optax
@@ -58,7 +58,7 @@ class TraceOptimizer:
         self,
         model_state: TrainState,
         data_set: np.ndarray,
-        ntk_fn: callable,
+        ntk_fn: Callable,
         epoch: int,
     ):
         """
