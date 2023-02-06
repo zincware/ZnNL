@@ -23,6 +23,10 @@ Summary
 -------
 Module for testing the trace optimizer
 """
+import os
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
 import jax.numpy as np
 from neural_tangents import stax
 
