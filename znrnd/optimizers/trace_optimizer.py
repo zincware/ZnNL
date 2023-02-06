@@ -87,7 +87,7 @@ class TraceOptimizer:
             trace = np.trace(ntk)
 
             # Create the new optimizer.
-            new_optimizer = self.optimizer(self.scale_factor / (trace + eps))
+            new_optimizer = self.optimizer(float(self.scale_factor / (trace + eps)))
 
             # Create the new state
             new_state = TrainState.create(
