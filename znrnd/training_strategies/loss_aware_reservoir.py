@@ -32,9 +32,9 @@ import jax.numpy as np
 from tqdm import trange
 
 from znrnd.accuracy_functions.accuracy_function import AccuracyFunction
-from znrnd.model_recording import JaxRecorder
 from znrnd.models.jax_model import JaxModel
 from znrnd.optimizers.trace_optimizer import TraceOptimizer
+from znrnd.training_recording import JaxRecorder
 from znrnd.training_strategies.simple_training import SimpleTraining
 
 logger = logging.getLogger(__name__)

@@ -30,7 +30,7 @@ import h5py as hf
 import numpy as onp
 from numpy import testing
 
-from znrnd.model_recording import JaxRecorder
+from znrnd.training_recording import JaxRecorder
 
 
 class TestModelRecording:

@@ -35,8 +35,8 @@ from znrnd.analysis.eigensystem import EigenSpaceAnalysis
 from znrnd.analysis.entropy import EntropyAnalysis
 from znrnd.analysis.loss_fn_derivative import LossDerivative
 from znrnd.loss_functions import SimpleLoss
-from znrnd.model_recording.data_storage import DataStorage
 from znrnd.models.jax_model import JaxModel
+from znrnd.training_recording.data_storage import DataStorage
 from znrnd.utils.matrix_utils import calculate_l_pq_norm
 
 logger = logging.getLogger(__name__)

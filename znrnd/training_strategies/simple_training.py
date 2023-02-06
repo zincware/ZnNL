@@ -19,9 +19,9 @@ from flax.training.train_state import TrainState
 from tqdm import trange
 
 from znrnd.accuracy_functions.accuracy_function import AccuracyFunction
-from znrnd.model_recording import JaxRecorder
 from znrnd.models.jax_model import JaxModel
 from znrnd.optimizers.trace_optimizer import TraceOptimizer
+from znrnd.training_recording import JaxRecorder
 from znrnd.utils.prng import PRNGKey
 
 logger = logging.getLogger(__name__)

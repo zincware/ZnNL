@@ -23,7 +23,7 @@ Summary
 -------
 Init for model recording package
 """
-from znrnd.model_recording.data_storage import DataStorage
-from znrnd.model_recording.jax_recording import JaxRecorder
+from znrnd.training_recording.data_storage import DataStorage
+from znrnd.training_recording.jax_recording import JaxRecorder
 
 __all__ = [JaxRecorder.__name__, DataStorage.__name__]
