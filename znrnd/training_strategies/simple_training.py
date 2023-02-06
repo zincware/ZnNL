@@ -36,7 +36,7 @@ class SimpleTraining:
 
     def __init__(
         self,
-        model: Optional[JaxModel],
+        model: JaxModel,
         loss_fn: Callable,
         accuracy_fn: AccuracyFunction = None,
         seed: int = None,
@@ -50,7 +50,7 @@ class SimpleTraining:
 
         Parameters
         ----------
-        model : Optional[JaxModel]
+        model : Union[JaxModel, None]
                 Model class for a Jax model.
                 "None" is only used if the training strategy is passed as an input
                 to a bigger framework. The strategy then is applied to the framework
