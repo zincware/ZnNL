@@ -64,10 +64,10 @@ class TestRecorderDeployment:
         )
 
         # Set the class assigned recorders
-        cls.train_recorder = rnd.model_recording.JaxRecorder(
+        cls.train_recorder = rnd.training_recording.JaxRecorder(
             loss=True, accuracy=True, update_rate=1, chunk_size=11, name="trainer"
         )
-        cls.test_recorder = rnd.model_recording.JaxRecorder(
+        cls.test_recorder = rnd.training_recording.JaxRecorder(
             loss=True, accuracy=True, ntk=True, update_rate=5
         )
 
