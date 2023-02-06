@@ -52,7 +52,7 @@ class RecursiveSelection(SimpleTraining):
 
     def __init__(
         self,
-        model: Union[JaxModel, None],
+        model: Optional[JaxModel],
         loss_fn: Callable,
         accuracy_fn: AccuracyFunction = None,
         seed: int = None,
@@ -66,7 +66,7 @@ class RecursiveSelection(SimpleTraining):
 
         Parameters
         ----------
-        model : Union[JaxModel, None]
+        model : Optional[JaxModel]
                 model : Union[JaxModel, None]
                 Model class for a Jax model.
                 "None" is only used if the training strategy is passed as an input
