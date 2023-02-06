@@ -149,6 +149,54 @@ class LossAwareReservoir(SimpleTraining):
         predictions = self.model(dataset["inputs"])
         return self.loss_fn.metric(predictions, dataset["targets"])
 
+    def _check_training_args(
+        self,
+        train_ds: dict,
+        epochs: Optional[Union[int, List[int]]],
+        batch_size: int,
+    ):
+        """
+        Check if the arguments for the training are properly set.
+
+            * Raise and error if no model is set
+            * Reset the batch size if batch_size > len(train_ds)
+            * Set default value for epochs
+
+        Parameters
+        ----------
+        train_ds : dict
+                Train dataset with inputs and targets.
+        epochs : Optional[Union[int, List[int]]] (default = 50)
+                Number of epochs to train over.
+        batch_size : int
+                Size of the batch to use in training.
+
+        Returns
+        -------
+        Possible new train parameters
+        """
+        # Raise error if no model is available
+        if self.model is None:
+            raise KeyError(
+                "self.model = None \n"
+                "If the training strategy should operate on a model, a model"
+                "must be given."
+                "Pass the model in the construction."
+            )
+
+        if self.reservoir_size < batch_size:
+            batch_size = self.reservoir_size
+            if len(train_ds) < self.reservoir_size:
+                batch_size = len(train_ds)
+            logger.info(
+                "The size of the train data is smaller than the batch size. "
+                f"Setting the batch size equal to the train data size of {batch_size}."
+            )
+        if not epochs:
+            epochs = 50
+
+        return batch_size, epochs
+
     def _train_model(
         self,
         train_ds: dict,
@@ -186,8 +234,10 @@ class LossAwareReservoir(SimpleTraining):
             model updates whereas the recorder will store the results on a single set
             of parameters.
         """
-        train_ds, batch_size, epochs = self._check_training_args(
-            train_ds, batch_size, epochs
+        batch_size, epochs = self._check_training_args(
+            train_ds=train_ds,
+            batch_size=batch_size,
+            epochs=epochs
         )
 
         state = self.model.model_state

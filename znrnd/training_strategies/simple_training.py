@@ -307,13 +307,12 @@ class SimpleTraining:
             batch_size = len(train_ds["inputs"])
             logger.info(
                 "The size of the train data is smaller than the batch size: "
-                f"{len(train_ds['inputs'])}  < {batch_size}. "
-                "Setting the batch size equal to the train data size of ."
+                f"Setting the batch size equal to the train data size of {batch_size}."
             )
         if not epochs:
             epochs = 50
 
-        return train_ds, batch_size, epochs
+        return batch_size, epochs
 
     def _train_model(
         self,
@@ -348,7 +347,7 @@ class SimpleTraining:
             model updates whereas the recorder will store the results on a single set
             of parameters.
         """
-        train_ds, batch_size, epochs = self._check_training_args(
+        batch_size, epochs = self._check_training_args(
             train_ds=train_ds, batch_size=batch_size, epochs=epochs
         )
 

@@ -125,7 +125,6 @@ class RecursiveSelection(SimpleTraining):
         epochs: Optional[Union[int, List[int]]],
         batch_size: int,
         train_ds_selection: Optional[List[slice]],
-        **kwargs,
     ):
         """
         Check if the arguments for the training are properly set.
@@ -163,8 +162,7 @@ class RecursiveSelection(SimpleTraining):
             batch_size = len(train_ds["inputs"])
             logger.info(
                 "The size of the train data is smaller than the batch size: "
-                f"{len(train_ds['inputs'])}  < {batch_size}. "
-                "Setting the batch size equal to the train data size of ."
+                f"Setting the batch size equal to the train data size of {batch_size}."
             )
         if not epochs:
             epochs = [150, 50]
