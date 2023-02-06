@@ -52,7 +52,6 @@ class RND(Agent):
         visualizer: TSNEVisualizer = None,
         tolerance: int = 100,
         seed_point: list = None,
-        disable_loading_bar: bool = False,
     ):
         """
         Constructor for the RND class.
@@ -79,8 +78,6 @@ class RND(Agent):
                 run.
         seed_point : list
                 Choose to start with an initial point as seed point
-        disable_loading_bar : bool
-                Disable the output visualization of the loading par.
         """
         # User defined attributes.
         self.target = target_network
@@ -93,7 +90,6 @@ class RND(Agent):
         self.tolerance = tolerance
         self.seed_point = seed_point
         self.visualizer = visualizer
-        self.disable_loading_bar = disable_loading_bar
 
         self.historical_length: int = 0
         self.target_set: list = []
@@ -218,7 +214,6 @@ class RND(Agent):
                 train_ds=dataset,
                 test_ds=dataset,
                 epochs=self.epochs,
-                disable_loading_bar=self.disable_loading_bar,
                 **self.training_kwargs,
             )
 
@@ -326,7 +321,7 @@ class RND(Agent):
         seed_randomly: bool = False,
         visualize: bool = False,
         report: bool = False,
-        epochs: Optional[int] = None,
+        epochs: Union[int, list] = None,
         **training_kwargs,
     ):
         """

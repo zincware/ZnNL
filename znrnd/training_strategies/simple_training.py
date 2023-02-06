@@ -42,6 +42,7 @@ class SimpleTraining:
         seed: int = None,
         recursive_use: bool = False,
         recursive_threshold: float = None,
+        disable_loading_bar: bool = False,
         recorders: List["JaxRecorder"] = None,
     ):
         """
@@ -66,6 +67,8 @@ class SimpleTraining:
                 After a given number of epochs, the training continues for more epochs.
         recursive_threshold : float
                 The loss value at which point you consider the model trained.
+        disable_loading_bar : bool
+                Disable the output visualization of the loading bar.
         recorders : List[JaxRecorder]
                 A list of recorders to monitor model training.
         """
@@ -74,6 +77,7 @@ class SimpleTraining:
         self.accuracy_fn = accuracy_fn
         self.recursive_use = recursive_use
         self.recursive_threshold = recursive_threshold
+        self.disable_loading_bar = disable_loading_bar
         self.recorders = recorders
 
         self.rng = PRNGKey(seed)
@@ -351,7 +355,7 @@ class SimpleTraining:
         state = self.model.model_state
 
         loading_bar = trange(
-            1, epochs + 1, ncols=100, unit="batch", disable=disable_loading_bar
+            1, epochs + 1, ncols=100, unit="batch", disable=self.disable_loading_bar
         )
 
         train_losses = []
@@ -415,7 +419,6 @@ class SimpleTraining:
         test_ds: dict,
         epochs: Optional[Union[int, List[int]]] = None,
         batch_size: int = 1,
-        disable_loading_bar: bool = False,
         **kwargs,
     ):
         """
@@ -432,8 +435,6 @@ class SimpleTraining:
                 Number of epochs to train over.
         batch_size : int
                 Size of the batch to use in training.
-        disable_loading_bar : bool
-                Disable the output visualization of the loading par.
         **kwargs
                 Additional keyword arguments used for training strategies that are
                 non-uniform in training.
@@ -449,7 +450,6 @@ class SimpleTraining:
                 test_ds=test_ds,
                 epochs=epochs,
                 batch_size=batch_size,
-                disable_loading_bar=disable_loading_bar,
                 **kwargs,
             )
             for key, val in new_batch_wise_loss.items():

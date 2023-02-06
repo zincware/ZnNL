@@ -58,6 +58,7 @@ class LossAwareReservoir(SimpleTraining):
         reservoir_size: int = 500,
         recursive_use: bool = False,
         recursive_threshold: float = None,
+        disable_loading_bar: bool = False,
         recorders: List["JaxRecorder"] = None,
     ):
         """
@@ -87,6 +88,8 @@ class LossAwareReservoir(SimpleTraining):
                 After a given number of epochs, the training continues for more epochs.
         recursive_threshold : float
                 The loss value at which point you consider the model trained.
+        disable_loading_bar : bool
+                Disable the output visualization of the loading bar.
         recorders : List[JaxRecorder]
                 A list of recorders to monitor model training.
         """
@@ -97,6 +100,7 @@ class LossAwareReservoir(SimpleTraining):
             seed=seed,
             recursive_use=recursive_use,
             recursive_threshold=recursive_threshold,
+            disable_loading_bar=disable_loading_bar,
             recorders=recorders,
         )
 
@@ -151,7 +155,6 @@ class LossAwareReservoir(SimpleTraining):
         test_ds: dict,
         epochs: Optional[int] = None,
         batch_size: int = 1,
-        disable_loading_bar: bool = False,
         **kwargs,
     ):
         """
@@ -193,7 +196,7 @@ class LossAwareReservoir(SimpleTraining):
         self.reservoir = self._update_reservoir(train_ds)
 
         loading_bar = trange(
-            1, epochs + 1, ncols=100, unit="batch", disable=disable_loading_bar
+            1, epochs + 1, ncols=100, unit="batch", disable=self.disable_loading_bar
         )
 
         train_losses = []

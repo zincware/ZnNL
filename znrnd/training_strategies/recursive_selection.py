@@ -83,6 +83,8 @@ class RecursiveSelection(SimpleTraining):
                 After a given number of epochs, the training continues for more epochs.
         recursive_threshold : float
                 The loss value at which point you consider the model trained.
+        disable_loading_bar : bool
+                Disable the output visualization of the loading bar.
         recorders : List[JaxRecorder]
                 A list of recorders to monitor model training.
         """
@@ -93,6 +95,7 @@ class RecursiveSelection(SimpleTraining):
             seed=seed,
             recursive_use=recursive_use,
             recursive_threshold=recursive_threshold,
+            disable_loading_bar=disable_loading_bar,
             recorders=recorders,
         )
 
@@ -176,7 +179,6 @@ class RecursiveSelection(SimpleTraining):
         epochs: Optional[List[int]] = None,
         train_ds_selection: Optional[List[slice]] = None,
         batch_size: int = 1,
-        disable_loading_bar: bool = False,
         **kwargs,
     ):
         """
@@ -196,8 +198,6 @@ class RecursiveSelection(SimpleTraining):
                 Each slice or index defines a training phase.
         batch_size : int
                 Size of the batch to use in training.
-        disable_loading_bar : bool
-                Disable the output visualization of the loading par.
         **kwargs
                 No additional kwargs in this class.
 
@@ -221,7 +221,11 @@ class RecursiveSelection(SimpleTraining):
         state = self.model.model_state
 
         loading_bar = trange(
-            1, onp.sum(epochs) + 1, ncols=100, unit="batch", disable=disable_loading_bar
+            1,
+            onp.sum(epochs) + 1,
+            ncols=100,
+            unit="batch",
+            disable=self.disable_loading_bar,
         )
 
         train_losses = []
