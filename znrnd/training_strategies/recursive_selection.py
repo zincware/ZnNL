@@ -68,6 +68,9 @@ class RecursiveSelection(SimpleTraining):
         model : Union[JaxModel, None]
                 model : Union[JaxModel, None]
                 Model class for a Jax model.
+                "None" is only used if the training strategy is passed as an input
+                to a bigger framework. The strategy then is applied to the framework
+                and the model instantiation is handled by that framework.
         loss_fn : Callable
                 A function to use in the loss computation.
         accuracy_fn : AccuracyFunction (default = None)
@@ -112,6 +115,60 @@ class RecursiveSelection(SimpleTraining):
         """
         return {k: v[data_slice, ...] for k, v in train_ds.items()}
 
+    def _check_training_args(
+        self,
+        train_ds: dict,
+        epochs: Optional[Union[int, List[int]]],
+        batch_size: int,
+        train_ds_selection: Optional[List[slice]],
+        **kwargs,
+    ):
+        """
+        Check if the arguments for the training are properly set.
+
+            * Raise and error if no model is set
+            * Reset the batch size if batch_size > len(train_ds)
+            * Set default value for epochs if necessary
+            * Set default value for train_ds_selection if necessary
+
+        Parameters
+        ----------
+        train_ds : dict
+                Train dataset with inputs and targets.
+        epochs : Optional[Union[int, List[int]]] (default = 50)
+                Number of epochs to train over.
+        batch_size : int
+                Size of the batch to use in training.
+        train_ds_selection : List[slice] (default = [[-1], slice(1, None, None)])
+                Indices or slices selecting training data.
+
+        Returns
+        -------
+        Possible new train parameters
+        """
+        # Raise error if no model is available
+        if self.model is None:
+            raise KeyError(
+                "self.model = None \n"
+                "If the training strategy should operate on a model, a model"
+                "must be given."
+                "Pass the model in the construction."
+            )
+
+        if len(train_ds["inputs"]) < batch_size:
+            batch_size = len(train_ds["inputs"])
+            logger.info(
+                "The size of the train data is smaller than the batch size: "
+                f"{len(train_ds['inputs'])}  < {batch_size}. "
+                "Setting the batch size equal to the train data size of ."
+            )
+        if not epochs:
+            epochs = [150, 50]
+        if not train_ds_selection:
+            train_ds_selection = [[-1], slice(1, None, None)]
+
+        return train_ds, batch_size, epochs, train_ds_selection
+
     def _train_model(
         self,
         train_ds: dict,
@@ -154,25 +211,12 @@ class RecursiveSelection(SimpleTraining):
             of parameters.
         """
 
-        # Write the default values for epochs and train_ds_selection
-        if not epochs:
-            epochs = [150, 50]
-        if not train_ds_selection:
-            train_ds_selection = [[-1], slice(1, None, None)]
-
-        if type(epochs) == int and type(train_ds_selection) != int:
-            raise KeyError(
-                "epochs and train_ds_selection has to be of same type, as each data"
-                " selection will be trained for some epochs. Current arguments are:"
-                f" epochs={epochs}, train_ds_selection={train_ds_selection}"
-            )
-
-        if len(epochs) != len(train_ds_selection):
-            raise KeyError(
-                "epochs and train_ds_selection has to be of same length, as each data"
-                " selection will be trained for some epochs. Current arguments are:"
-                f" epochs={epochs}, train_ds_selection={train_ds_selection}"
-            )
+        train_ds, batch_size, epochs, train_ds_selection = self._check_training_args(
+            train_ds=train_ds,
+            batch_size=batch_size,
+            epochs=epochs,
+            train_ds_selection=train_ds_selection,
+        )
 
         state = self.model.model_state
 

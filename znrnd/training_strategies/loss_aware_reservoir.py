@@ -183,6 +183,9 @@ class LossAwareReservoir(SimpleTraining):
             model updates whereas the recorder will store the results on a single set
             of parameters.
         """
+        train_ds, batch_size, epochs = self._check_training_args(
+            train_ds, batch_size, epochs
+        )
 
         if not epochs:
             epochs = 50

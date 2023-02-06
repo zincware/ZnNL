@@ -261,6 +261,56 @@ class SimpleTraining:
 
         return state, epoch_metrics_np
 
+    def _check_training_args(
+        self,
+        train_ds: dict,
+        epochs: Optional[Union[int, List[int]]],
+        batch_size: int,
+        **kwargs,
+    ):
+        """
+        Check if the arguments for the training are properly set.
+
+            * Raise and error if no model is set
+            * Reset the batch size if batch_size > len(train_ds)
+            * Set default value for epochs
+
+        Parameters
+        ----------
+        train_ds : dict
+                Train dataset with inputs and targets.
+        epochs : Optional[Union[int, List[int]]] (default = 50)
+                Number of epochs to train over.
+        batch_size : int
+                Size of the batch to use in training.
+        kwargs : dict
+                Additional kwargs used in the child classes.
+
+        Returns
+        -------
+        Possible new train parameters
+        """
+        # Raise error if no model is available
+        if self.model is None:
+            raise KeyError(
+                "self.model = None \n"
+                "If the training strategy should operate on a model, a model"
+                "must be given."
+                "Pass the model in the construction."
+            )
+
+        if len(train_ds["inputs"]) < batch_size:
+            batch_size = len(train_ds["inputs"])
+            logger.info(
+                "The size of the train data is smaller than the batch size: "
+                f"{len(train_ds['inputs'])}  < {batch_size}. "
+                "Setting the batch size equal to the train data size of ."
+            )
+        if not epochs:
+            epochs = 50
+
+        return train_ds, batch_size, epochs
+
     def _train_model(
         self,
         train_ds: dict,
@@ -299,9 +349,6 @@ class SimpleTraining:
         )
 
         state = self.model.model_state
-
-        if not epochs:
-            epochs = 50
 
         loading_bar = trange(
             1, epochs + 1, ncols=100, unit="batch", disable=disable_loading_bar
@@ -393,11 +440,6 @@ class SimpleTraining:
                 This is needed for more complex weighting of data.
                 More specific information can be found in each child class.
         """
-        if len(train_ds["inputs"]) < batch_size:
-            batch_size = len(train_ds["inputs"])
-        if not epochs:
-            epochs = 50
-
         condition = False
         counter = 0
         batch_wise_loss = {"train_losses": [], "train_accuracy": []}
