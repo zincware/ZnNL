@@ -23,6 +23,10 @@ Summary
 -------
 Test for the model recording module.
 """
+import os
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
 import copy
 
 import optax
@@ -59,11 +63,12 @@ class TestRecursiveSelection:
         trainer = RecursiveSelection(
             model=model,
             loss_fn=MeanPowerLoss(order=2),
+            disable_loading_bar=True,
         )
 
         # Check if default train for 200 epochs
         batch_metric = trainer.train_model(
-            train_ds=train_ds, test_ds=test_ds, disable_loading_bar=True
+            train_ds=train_ds, test_ds=test_ds,
         )
         assert len(batch_metric["train_losses"]) == 200
 
@@ -73,7 +78,6 @@ class TestRecursiveSelection:
             test_ds=test_ds,
             epochs=[2, 5],
             train_ds_selection=[[-1], slice(1, -1, 3)],
-            disable_loading_bar=True,
         )
         assert len(batch_metric["train_losses"]) == 7
 
@@ -107,23 +111,23 @@ class TestRecursiveSelection:
             model=copy.deepcopy(model),
             loss_fn=MeanPowerLoss(order=2),
             seed=17,
+            disable_loading_bar=True,
         )
         recursive_out = recursive_trainer.train_model(
             train_ds=train_ds,
             test_ds=test_ds,
             epochs=[3],
             train_ds_selection=[slice(None, None, None)],
-            disable_loading_bar=True,
         )
         simple_trainer = SimpleTraining(
             model=copy.deepcopy(model),
             loss_fn=MeanPowerLoss(order=2),
             seed=17,
+            disable_loading_bar=True,
         )
         simple_out = simple_trainer.train_model(
             train_ds=train_ds,
             test_ds=test_ds,
             epochs=3,
-            disable_loading_bar=True,
         )
         assert simple_out == recursive_out

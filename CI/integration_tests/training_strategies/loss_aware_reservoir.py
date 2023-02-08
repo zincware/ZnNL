@@ -23,6 +23,10 @@ Summary
 -------
 Test for the model recording module.
 """
+import os
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
 import copy
 
 import numpy as np
@@ -69,11 +73,12 @@ class TestLossAwareReservoir:
             model=model,
             loss_fn=MeanPowerLoss(order=2),
             reservoir_size=4,
+            disable_loading_bar=True
         )
 
         # Test if a smaller reservoir selects the correctly sorted points
         _ = trainer.train_model(
-            train_ds=train_ds, test_ds=test_ds, epochs=1, disable_loading_bar=True
+            train_ds=train_ds, test_ds=test_ds, epochs=1
         )
         selection_idx = np.argsort(np.abs(raw_x))[::-1][:4]
         assert_array_equal(trainer.reservoir["inputs"], x[selection_idx])
@@ -104,22 +109,22 @@ class TestLossAwareReservoir:
             loss_fn=MeanPowerLoss(order=2),
             reservoir_size=500,
             seed=17,
+            disable_loading_bar=True,
         )
         reservoir_out = recursive_trainer.train_model(
             train_ds=train_ds,
             test_ds=test_ds,
             epochs=3,
-            disable_loading_bar=True,
         )
         simple_trainer = SimpleTraining(
             model=copy.deepcopy(model),
             loss_fn=MeanPowerLoss(order=2),
             seed=17,
+            disable_loading_bar=True,
         )
         simple_out = simple_trainer.train_model(
             train_ds=train_ds,
             test_ds=test_ds,
             epochs=3,
-            disable_loading_bar=True,
         )
         assert simple_out == reservoir_out
