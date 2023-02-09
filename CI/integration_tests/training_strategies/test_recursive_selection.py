@@ -68,7 +68,8 @@ class TestRecursiveSelection:
 
         # Check if default train for 200 epochs
         batch_metric = trainer.train_model(
-            train_ds=train_ds, test_ds=test_ds,
+            train_ds=train_ds,
+            test_ds=test_ds,
         )
         assert len(batch_metric["train_losses"]) == 200
 
@@ -118,6 +119,7 @@ class TestRecursiveSelection:
             test_ds=test_ds,
             epochs=[3],
             train_ds_selection=[slice(None, None, None)],
+            batch_size=[2],
         )
         simple_trainer = SimpleTraining(
             model=copy.deepcopy(model),
@@ -126,8 +128,6 @@ class TestRecursiveSelection:
             disable_loading_bar=True,
         )
         simple_out = simple_trainer.train_model(
-            train_ds=train_ds,
-            test_ds=test_ds,
-            epochs=3,
+            train_ds=train_ds, test_ds=test_ds, epochs=3, batch_size=2
         )
         assert simple_out == recursive_out

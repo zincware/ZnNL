@@ -73,13 +73,11 @@ class TestLossAwareReservoir:
             model=model,
             loss_fn=MeanPowerLoss(order=2),
             reservoir_size=4,
-            disable_loading_bar=True
+            disable_loading_bar=True,
         )
 
         # Test if a smaller reservoir selects the correctly sorted points
-        _ = trainer.train_model(
-            train_ds=train_ds, test_ds=test_ds, epochs=1
-        )
+        _ = trainer.train_model(train_ds=train_ds, test_ds=test_ds, epochs=1)
         selection_idx = np.argsort(np.abs(raw_x))[::-1][:4]
         assert_array_equal(trainer.reservoir["inputs"], x[selection_idx])
 
