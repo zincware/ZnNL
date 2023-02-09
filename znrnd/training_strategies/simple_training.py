@@ -8,6 +8,8 @@ Copyright Contributors to the Zincware Project.
 
 Description: Parent class for the Jax-based models.
 """
+import functools
+import inspect
 import logging
 from typing import Callable, List, Optional, Tuple, Union
 
@@ -22,9 +24,96 @@ from znrnd.accuracy_functions.accuracy_function import AccuracyFunction
 from znrnd.models.jax_model import JaxModel
 from znrnd.optimizers.trace_optimizer import TraceOptimizer
 from znrnd.training_recording import JaxRecorder
+from znrnd.training_strategies.recursive_mode import RecursiveMode
 from znrnd.utils.prng import PRNGKey
 
 logger = logging.getLogger(__name__)
+
+
+def recursive_decorator(train_fn: Callable):
+    """
+    Decorator enabling a recursive mode of train function.
+
+    The training of a model (with a given strategy) is executed by calling the
+    train_model function.
+    The decorator enables the use of this function in a recursive way. The training is
+    repeated until a condition is satisfied or the training is considered to be stuck in
+    a local minimum.
+    In the letter case, the model is perturbed and the training starts again. The
+    default perturbation method is the re-initialization of the model. The perturbation
+    function is an optional parameter when constructing the recursive mode.
+
+    Parameters
+    ----------
+    train_fn : Callable
+            Decorated train function.
+            Function that trains a model with a given training strategy.
+
+    Returns
+    -------
+    Wrapped training function.
+    """
+
+    @functools.wraps(train_fn)
+    def wrapper(trainer, *args, **kwargs):
+        # Make args to kwargs to enable easy access
+        # Get all possible args
+        all_args = list(inspect.signature(train_fn).parameters)
+        all_args.remove("self")
+        # Check which args were given and put them into a dict
+        new_kwargs = {k: v for k, v in zip(all_args, args)}
+        # Merge given kwargs and the arg dict
+        kwargs.update(new_kwargs)
+        # Add the remaining keys to the dict and set them to None
+        remaining_kwargs = {k: None for k in all_args if k not in kwargs.keys()}
+        kwargs.update(remaining_kwargs)
+
+        # check parameters and model
+        kwargs = trainer.update_training_kwargs(**kwargs)
+
+        # Set some defaults
+        recursive_mode = trainer.recursive_mode
+        kwargs["epochs"] = onp.array(kwargs["epochs"])
+        initial_epochs = kwargs["epochs"]
+
+        # Recursive use of train_fn
+        if recursive_mode and recursive_mode.use_recursive_mode:
+            # Set the default for perturbing the model in recursive training.
+            if recursive_mode.perturb_fn is None:
+                recursive_mode.perturb_fn = trainer.model.init_model
+
+            condition = False
+            counter = 0
+            batch_wise_loss = {"train_losses": [], "train_accuracy": []}
+
+            while not condition:
+                new_batch_wise_loss = train_fn(trainer, **kwargs)
+                for key, val in new_batch_wise_loss.items():
+                    batch_wise_loss[key].extend(val)
+
+                # Check the condition and update epochs
+                counter += 1
+                kwargs["epochs"] = (
+                    recursive_mode.scale_factor * kwargs["epochs"]
+                ).astype(int)
+                condition = recursive_mode.update_recursive_condition(
+                    trainer.review_metric["loss"]
+                )
+
+                # Re-initialize the network if it is simply not converging.
+                if counter % recursive_mode.break_counter == 0:
+                    recursive_mode.perturb_training()
+                    # Reset local variables
+                    counter = 0
+                    kwargs["epochs"] = initial_epochs
+
+            return batch_wise_loss
+
+        # Non-recursive use of train_fn
+        else:
+            return train_fn(trainer, **kwargs)
+
+    return wrapper
 
 
 class SimpleTraining:
@@ -40,8 +129,7 @@ class SimpleTraining:
         loss_fn: Callable,
         accuracy_fn: AccuracyFunction = None,
         seed: int = None,
-        recursive_use: bool = False,
-        recursive_threshold: float = None,
+        recursive_mode: RecursiveMode = None,
         disable_loading_bar: bool = False,
         recorders: List["JaxRecorder"] = None,
     ):
@@ -61,12 +149,10 @@ class SimpleTraining:
                 Funktion class for computing the accuracy of model and given data.
         seed : int (default = None)
                 Random seed for the RNG. Uses a random int if not specified.
-        recursive_use : bool (default = False)
-                If False, the training will be performed for a given number of epochs.
-                If True, the training will be performed until a condition is fulfilled.
-                After a given number of epochs, the training continues for more epochs.
-        recursive_threshold : float
-                The loss value at which point you consider the model trained.
+        recursive_mode : RecursiveMode
+                Defining the recursive mode that can be used in training.
+                If the recursive mode is used, the training will be performed until a
+                condition is fulfilled.
         disable_loading_bar : bool
                 Disable the output visualization of the loading bar.
         recorders : List[JaxRecorder]
@@ -75,20 +161,13 @@ class SimpleTraining:
         self.model = model
         self.loss_fn = loss_fn
         self.accuracy_fn = accuracy_fn
-        self.recursive_use = recursive_use
-        self.recursive_threshold = recursive_threshold
+        self.recursive_mode = recursive_mode
+
         self.disable_loading_bar = disable_loading_bar
         self.recorders = recorders
 
         self.rng = PRNGKey(seed)
 
-        # select the training method based on the init
-        if self.recursive_use:
-            self.train_model = self._train_model_recursively
-        else:
-            self.train_model = self._train_model
-
-        # Review metric is updated during training
         self.review_metric = None
 
         # Add the loss and accuracy function to the recorders and re-instantiate them
@@ -265,61 +344,55 @@ class SimpleTraining:
 
         return state, epoch_metrics_np
 
-    def _check_training_args(
-        self,
-        train_ds: dict,
-        epochs: Optional[Union[int, List[int]]],
-        batch_size: int,
-        **kwargs,
-    ):
+    def update_training_kwargs(self, **kwargs):
         """
-        Check if the arguments for the training are properly set.
+        Check model and keyword arguments before executing the training.
 
-            * Raise and error if no model is set
-            * Reset the batch size if batch_size > len(train_ds)
-            * Set default value for epochs
+        In detail:
+            * Raise an error no model is applied.
+            * Set default value for epochs (default = 50)
+            * set default value for the batch size (default = 1)
+            * Adapt batch size if there is too little data for one batch
 
         Parameters
         ----------
-        train_ds : dict
-                Train dataset with inputs and targets.
-        epochs : Optional[Union[int, List[int]]] (default = 50)
-                Number of epochs to train over.
-        batch_size : int
-                Size of the batch to use in training.
         kwargs : dict
-                Additional kwargs used in the child classes.
+                Keyword arguments of the train_fn.
 
         Returns
         -------
-        Possible new train parameters
+        Updated kwargs of the train_fn.
         """
-        # Raise error if no model is available
         if self.model is None:
             raise KeyError(
-                "self.model = None \n"
+                "self.model = None. "
                 "If the training strategy should operate on a model, a model"
                 "must be given."
                 "Pass the model in the construction."
             )
 
-        if len(train_ds["inputs"]) < batch_size:
-            batch_size = len(train_ds["inputs"])
+        if not kwargs["epochs"]:
+            kwargs["epochs"] = 50
+        if not kwargs["batch_size"]:
+            kwargs["batch_size"] = 1
+
+        if len(kwargs["train_ds"]["inputs"]) < kwargs["batch_size"]:
+            kwargs["batch_size"] = len(kwargs["train_ds"]["inputs"])
             logger.info(
-                "The size of the train data is smaller than the batch size: "
-                f"Setting the batch size equal to the train data size of {batch_size}."
+                "The size of the train data is smaller than the batch size: Setting"
+                " the batch size equal to the train data size of"
+                f" {kwargs['batch_size']}."
             )
-        if not epochs:
-            epochs = 50
 
-        return batch_size, epochs
+        return kwargs
 
-    def _train_model(
+    @recursive_decorator
+    def train_model(
         self,
         train_ds: dict,
         test_ds: dict,
         epochs: Optional[Union[int, List[int]]] = None,
-        batch_size: int = 1,
+        batch_size: Optional[Union[int, List[int]]] = None,
         **kwargs,
     ):
         """
@@ -333,7 +406,7 @@ class SimpleTraining:
                 Test dataset with inputs and targets.
         epochs : Optional[Union[int, List[int]]] (default = 50)
                 Number of epochs to train over.
-        batch_size : int
+        batch_size : Optional[Union[int, List[int]]]
                 Size of the batch to use in training.
         **kwargs
                 No additional kwargs in this class.
@@ -347,10 +420,6 @@ class SimpleTraining:
             model updates whereas the recorder will store the results on a single set
             of parameters.
         """
-        batch_size, epochs = self._check_training_args(
-            train_ds=train_ds, batch_size=batch_size, epochs=epochs
-        )
-
         state = self.model.model_state
 
         loading_bar = trange(
@@ -396,72 +465,3 @@ class SimpleTraining:
             "train_losses": train_losses,
             "train_accuracy": train_accuracy,
         }
-
-    def _update_recursive_condition(self) -> bool:
-        """
-        Check and update the condition for stopping the recursive training.
-
-        Returns
-        -------
-        Boolean value
-        If True, the training will be stopped.
-        If False, the training continues.
-
-        Todo:   Implement this method more flexible, so that a user can define his own
-                stopping condition.
-        """
-        return self.review_metric["loss"] <= self.recursive_threshold
-
-    def _train_model_recursively(
-        self,
-        train_ds: dict,
-        test_ds: dict,
-        epochs: Optional[Union[int, List[int]]] = None,
-        batch_size: int = 1,
-        **kwargs,
-    ):
-        """
-        Train a model recursively until a condition is fulfilled or the models fails
-        to converge.
-
-        Parameters
-        ----------
-        train_ds : dict
-                Train dataset with inputs and targets.
-        test_ds : dict
-                Test dataset with inputs and targets.
-        epochs : Optional[Union[int, List[int]]] (default = 50)
-                Number of epochs to train over.
-        batch_size : int
-                Size of the batch to use in training.
-        **kwargs
-                Additional keyword arguments used for training strategies that are
-                non-uniform in training.
-                This is needed for more complex weighting of data.
-                More specific information can be found in each child class.
-        """
-        condition = False
-        counter = 0
-        batch_wise_loss = {"train_losses": [], "train_accuracy": []}
-        while not condition:
-            new_batch_wise_loss = self._train_model(
-                train_ds=train_ds,
-                test_ds=test_ds,
-                epochs=epochs,
-                batch_size=batch_size,
-                **kwargs,
-            )
-            for key, val in new_batch_wise_loss.items():
-                batch_wise_loss[key].extend(val)
-
-            # Perform checks and update parameters
-            counter += 1
-            epochs = int(1.1 * epochs)
-            condition = self._update_recursive_condition()
-
-            # Re-initialize the network if it is simply not converging.
-            if counter % 10 == 0:
-                logger.info("Model training stagnating, re-initializing model.")
-                self.model.init_model()
-
-        return batch_wise_loss

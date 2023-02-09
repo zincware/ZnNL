@@ -26,7 +26,7 @@ Summary
 Module for the neural tangents infinite width network models.
 """
 import logging
-from typing import Callable, List, Optional, Union
+from typing import Callable, List, Union
 
 import numpy as onp
 from tqdm import trange
@@ -35,7 +35,11 @@ from znrnd.accuracy_functions.accuracy_function import AccuracyFunction
 from znrnd.models.jax_model import JaxModel
 from znrnd.optimizers.trace_optimizer import TraceOptimizer
 from znrnd.training_recording import JaxRecorder
-from znrnd.training_strategies.simple_training import SimpleTraining
+from znrnd.training_strategies.recursive_mode import RecursiveMode
+from znrnd.training_strategies.simple_training import (
+    SimpleTraining,
+    recursive_decorator,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -56,8 +60,7 @@ class RecursiveSelection(SimpleTraining):
         loss_fn: Callable,
         accuracy_fn: AccuracyFunction = None,
         seed: int = None,
-        recursive_use: bool = False,
-        recursive_threshold: float = None,
+        recursive_mode: RecursiveMode = None,
         disable_loading_bar: bool = False,
         recorders: List["JaxRecorder"] = None,
     ):
@@ -78,11 +81,10 @@ class RecursiveSelection(SimpleTraining):
                 Funktion class for computing the accuracy of model and given data.
         seed : int (default = None)
                 Random seed for the RNG. Uses a random int if not specified.
-        recursive_use : bool (default = False)
-                If False, the training will be performed for a given number of epochs.
-                If True, the training will be performed until a condition is fulfilled.
-                After a given number of epochs, the training continues for more epochs.
-        recursive_threshold : float
+        recursive_mode : RecursiveMode
+                Defining the recursive mode that can be used in training.
+                If the recursive mode is used, the training will be performed until a
+                condition is fulfilled.
                 The loss value at which point you consider the model trained.
         disable_loading_bar : bool
                 Disable the output visualization of the loading bar.
@@ -94,8 +96,7 @@ class RecursiveSelection(SimpleTraining):
             loss_fn=loss_fn,
             accuracy_fn=accuracy_fn,
             seed=seed,
-            recursive_use=recursive_use,
-            recursive_threshold=recursive_threshold,
+            recursive_mode=recursive_mode,
             disable_loading_bar=disable_loading_bar,
             recorders=recorders,
         )
@@ -119,66 +120,86 @@ class RecursiveSelection(SimpleTraining):
         """
         return {k: v[data_slice, ...] for k, v in train_ds.items()}
 
-    def _check_training_args(
-        self,
-        train_ds: dict,
-        epochs: Optional[Union[int, List[int]]],
-        batch_size: int,
-        train_ds_selection: Optional[List[slice]],
-    ):
+    def update_training_kwargs(self, **kwargs):
         """
-        Check if the arguments for the training are properly set.
+        Check model and keyword arguments before executing the training.
 
-            * Raise and error if no model is set
-            * Reset the batch size if batch_size > len(train_ds)
-            * Set default value for epochs if necessary
+        In detail:
+            * Raise an error no model is applied.
+            * Set default value for epochs (default = [150, 50])
+            * set default value for the batch size (default = 1)
             * Set default value for train_ds_selection if necessary
+                (default = [[-1], slice(1, None, None)])
+            * Check that epochs, batch_size and train_ds_selection are of similar
+                length and of type list.
+
+        The combination of default parameters for epochs and train_ds_selection means
+        that the last point in train_ds is trained for 150 epochs and the all other
+        points are trained for 50 epochs afterwards.
 
         Parameters
         ----------
-        train_ds : dict
-                Train dataset with inputs and targets.
-        epochs : Optional[Union[int, List[int]]] (default = 50)
-                Number of epochs to train over.
-        batch_size : int
-                Size of the batch to use in training.
-        train_ds_selection : List[slice] (default = [[-1], slice(1, None, None)])
-                Indices or slices selecting training data.
+        kwargs : dict
+                Keyword arguments of the train_fn.
 
         Returns
         -------
-        Possible new train parameters
+        Updated kwargs of the train_fn.
         """
-        # Raise error if no model is available
         if self.model is None:
             raise KeyError(
-                "self.model = None \n"
+                "self.model = None. "
                 "If the training strategy should operate on a model, a model"
                 "must be given."
                 "Pass the model in the construction."
             )
 
-        if len(train_ds["inputs"]) < batch_size:
-            batch_size = len(train_ds["inputs"])
-            logger.info(
-                "The size of the train data is smaller than the batch size: "
-                f"Setting the batch size equal to the train data size of {batch_size}."
+        # Set defaults
+        if not kwargs["epochs"]:
+            kwargs["epochs"] = [150, 50]
+        if not kwargs["batch_size"]:
+            kwargs["batch_size"] = [1, 1]
+        if not kwargs["train_ds_selection"]:
+            kwargs["train_ds_selection"] = [[-1], slice(1, None, None)]
+
+        # Check type list
+        def raise_key_list_error(key):
+            raise KeyError(
+                f"The kwarg {key} of the function train_model has to be of type list. "
             )
-        if not epochs:
-            epochs = [150, 50]
-        if not train_ds_selection:
-            train_ds_selection = [[-1], slice(1, None, None)]
 
-        return train_ds, batch_size, epochs, train_ds_selection
+        if type(kwargs["epochs"]) is int:
+            raise_key_list_error(kwargs["epochs"])
+        if not kwargs["batch_size"]:
+            raise_key_list_error(kwargs["batch_size"])
+        if not kwargs["train_ds_selection"]:
+            raise_key_list_error(kwargs["train_ds_selection"])
 
-    def _train_model(
+        # Check similar length of lists
+        if not (
+            len(kwargs["epochs"])
+            == len(kwargs["batch_size"])
+            == len(kwargs["train_ds_selection"])
+        ):
+            raise KeyError(
+                "The args for epochs, batch_size, and train_ds_selection do not "
+                "correspond in length: "
+                f"len(epochs)={len(kwargs['epochs'])}, "
+                f"len(batch_size)={len(kwargs['batch_size'])}, "
+                f"len(train_ds_selection)={len(kwargs['train_ds_selection'])}. "
+                "Make sure that for all of them have similar length. "
+            )
+
+        return kwargs
+
+    @recursive_decorator
+    def train_model(
         self,
         train_ds: dict,
         test_ds: dict,
-        epochs: Optional[List[int]] = None,
-        train_ds_selection: Optional[List[slice]] = None,
-        batch_size: int = 1,
-        **kwargs,
+        epochs: list = None,
+        train_ds_selection: list = None,
+        batch_size: list = None,
     ):
         """
         Train the model on data.
@@ -189,16 +210,14 @@ class RecursiveSelection(SimpleTraining):
                 Train dataset with inputs and targets.
         test_ds : dict
                 Test dataset with inputs and targets.
-        epochs : Optional[List[int]] (default = [150, 50])
+        epochs : list (default = [150, 50])
                 Number of epochs to train over.
                 Each epoch defines a training phase.
-        train_ds_selection : List[slice] (default = [[-1], slice(1, None, None)])
+        train_ds_selection : list (default = [[-1], slice(1, None, None)])
                 Indices or slices selecting training data.
                 Each slice or index defines a training phase.
-        batch_size : int
+        batch_size : list (default = [1, 1])
                 Size of the batch to use in training.
-        **kwargs
-                No additional kwargs in this class.
 
         Returns
         -------
@@ -209,14 +228,6 @@ class RecursiveSelection(SimpleTraining):
             model updates whereas the recorder will store the results on a single set
             of parameters.
         """
-
-        train_ds, batch_size, epochs, train_ds_selection = self._check_training_args(
-            train_ds=train_ds,
-            batch_size=batch_size,
-            epochs=epochs,
-            train_ds_selection=train_ds_selection,
-        )
-
         state = self.model.model_state
 
         loading_bar = trange(
@@ -257,7 +268,7 @@ class RecursiveSelection(SimpleTraining):
                 )
 
             state, train_metrics = self._train_epoch(
-                state=state, train_ds=train_data, batch_size=batch_size
+                state=state, train_ds=train_data, batch_size=batch_size[training_phase]
             )
             self.review_metric = self._evaluate_model(state.params, test_ds)
             train_losses.append(train_metrics["loss"])

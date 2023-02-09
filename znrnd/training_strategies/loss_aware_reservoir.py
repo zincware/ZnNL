@@ -35,7 +35,11 @@ from znrnd.accuracy_functions.accuracy_function import AccuracyFunction
 from znrnd.models.jax_model import JaxModel
 from znrnd.optimizers.trace_optimizer import TraceOptimizer
 from znrnd.training_recording import JaxRecorder
-from znrnd.training_strategies.simple_training import SimpleTraining
+from znrnd.training_strategies.recursive_mode import RecursiveMode
+from znrnd.training_strategies.simple_training import (
+    SimpleTraining,
+    recursive_decorator,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -56,8 +60,7 @@ class LossAwareReservoir(SimpleTraining):
         accuracy_fn: AccuracyFunction = None,
         seed: int = None,
         reservoir_size: int = 500,
-        recursive_use: bool = False,
-        recursive_threshold: float = None,
+        recursive_mode: RecursiveMode = None,
         disable_loading_bar: bool = False,
         recorders: List["JaxRecorder"] = None,
     ):
@@ -82,11 +85,10 @@ class LossAwareReservoir(SimpleTraining):
                 Size of the reservoir, corresponding to the maximum number of points the
                 model is trained on.
                 This property constraints the memory used while training.
-        recursive_use : bool (default = False)
-                If False, the training will be performed for a given number of epochs.
-                If True, the training will be performed until a condition is fulfilled.
-                After a given number of epochs, the training continues for more epochs.
-        recursive_threshold : float
+        recursive_mode : RecursiveMode
+                Defining the recursive mode that can be used in training.
+                If the recursive mode is used, the training will be performed until a
+                condition is fulfilled.
                 The loss value at which point you consider the model trained.
         disable_loading_bar : bool
                 Disable the output visualization of the loading bar.
@@ -98,8 +100,7 @@ class LossAwareReservoir(SimpleTraining):
             loss_fn=loss_fn,
             accuracy_fn=accuracy_fn,
             seed=seed,
-            recursive_use=recursive_use,
-            recursive_threshold=recursive_threshold,
+            recursive_mode=recursive_mode,
             disable_loading_bar=disable_loading_bar,
             recorders=recorders,
         )
@@ -149,11 +150,52 @@ class LossAwareReservoir(SimpleTraining):
         predictions = self.model(dataset["inputs"])
         return self.loss_fn.metric(predictions, dataset["targets"])
 
-    def _check_training_args(
-        self,
-        train_ds: dict,
-        epochs: Optional[Union[int, List[int]]],
-        batch_size: int,
+    def update_training_kwargs(self, **kwargs):
+        """
+        Check model and keyword arguments before executing the training.
+
+        In detail:
+            * Raise an error no model is applied.
+            * Set default value for epochs (default = 50)
+            * set default value for the batch size (default = 1)
+            * Adapt batch size if there is too little data for one batch
+
+        Parameters
+        ----------
+        kwargs : dict
+                Keyword arguments of the train_fn.
+
+        Returns
+        -------
+        Updated kwargs of the train_fn.
+        """
+        if self.model is None:
+            raise KeyError(
+                "self.model = None \n"
+                "If the training strategy should operate on a model, a model"
+                "must be given."
+                "Pass the model in the construction."
+            )
+
+        if not kwargs["epochs"]:
+            kwargs["epochs"] = 50
+        if not kwargs["batch_size"]:
+            kwargs["batch_size"] = 1
+
+        if self.reservoir_size < kwargs["batch_size"]:
+            kwargs["batch_size"] = self.reservoir_size
+            if len(kwargs["train_ds"]) < self.reservoir_size:
+                kwargs["batch_size"] = len(kwargs["train_ds"])
+            logger.info(
+                "The size of the train data is smaller than the batch size. Setting"
+                " the batch size equal to the train data size of"
+                f" {kwargs['batch_size']}."
+            )
+
+        return kwargs
+
+    def _check_training_kwargs(
+        self, train_ds: dict, epochs: Optional[Union[int, List[int]]], batch_size: int
     ):
         """
         Check if the arguments for the training are properly set.
@@ -178,7 +220,7 @@ class LossAwareReservoir(SimpleTraining):
         # Raise error if no model is available
         if self.model is None:
             raise KeyError(
-                "self.model = None \n"
+                "self.model = None. "
                 "If the training strategy should operate on a model, a model"
                 "must be given."
                 "Pass the model in the construction."
@@ -197,13 +239,13 @@ class LossAwareReservoir(SimpleTraining):
 
         return batch_size, epochs
 
-    def _train_model(
+    @recursive_decorator
+    def train_model(
         self,
         train_ds: dict,
         test_ds: dict,
         epochs: Optional[int] = None,
-        batch_size: int = 1,
-        **kwargs,
+        batch_size: int = None,
     ):
         """
         Train the model on data.
@@ -216,14 +258,8 @@ class LossAwareReservoir(SimpleTraining):
                 Test dataset with inputs and targets.
         epochs : Optional[int] (default = 50)
                 Number of epochs to train over.
-        batch_size : int
+        batch_size : int (default = 1)
                 Size of the batch to use in training.
-        recorders : List[JaxRecorder]
-                A list of recorders to monitor model training.
-        disable_loading_bar : bool
-                Disable the output visualization of the loading par.
-        **kwargs
-                No additional kwargs in this class.
 
         Returns
         -------
@@ -234,10 +270,6 @@ class LossAwareReservoir(SimpleTraining):
             model updates whereas the recorder will store the results on a single set
             of parameters.
         """
-        batch_size, epochs = self._check_training_args(
-            train_ds=train_ds, batch_size=batch_size, epochs=epochs
-        )
-
         state = self.model.model_state
 
         loading_bar = trange(
