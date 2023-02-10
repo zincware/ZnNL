@@ -23,26 +23,49 @@ If you use this module please cite us with:
 
 Summary
 -------
-Module for the analysis of the entropy of a matrix.
+Module for the calculating the derivative of a loss function.
 """
 import jax.numpy as np
 from jax import grad, jit
+
+from znrnd.loss_functions import SimpleLoss
 
 
 class LossDerivative:
     """
     Class to calculate the derivative of a loss function just in time.
+
+    The gradient calculation is performed with respect to the predictions by calling
+    LossDerivative.calculate().
+
+    The loss function is a map from a high dimensional space to a reel number.
+    The derivative here, is therefore a gradient calculation of the loss function with
+    respect to its input.
+    The calculation returns a gradient of size n, when n is the dimension of an input
+    of the loss function.
     """
 
-    def __init__(self, loss_fn):
+    def __init__(self, loss_fn: SimpleLoss):
         """
         Constructor for the loss function derivative class.
+
+        The gradient calculation of a loss function is performed by calling
+        self.calculate.
+
+        Parameters
+        ----------
+        loss_fn : SimpleLoss
+                Loss function to calculate the derivative of.
         """
         self.loss_fn = loss_fn
         self.calculate = jit(grad(self._calculate))
 
-    def _calculate(self, predictions: np.ndarray, targets: np.ndarray):
+    def _calculate(self, predictions: np.ndarray, targets: np.ndarray) -> float:
         """
+        Method for calculating the loss of given inputs.
+
+        This method is introduced in order to be jit compiled.
+        For the actual gradient computation self.calculate has to be called.
 
         Parameters
         ----------
@@ -53,6 +76,6 @@ class LossDerivative:
 
         Returns
         -------
-        Gradient of the loss function with respect to the predictions.
+        loss : float
         """
         return self.loss_fn(predictions, targets)
