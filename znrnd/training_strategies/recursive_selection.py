@@ -256,7 +256,9 @@ class RecursiveSelection(SimpleTraining):
         train_accuracy = []
         training_phase = 0
         epoch_phase_counter = 0
-        train_data = self._select_ds(train_ds, train_ds_selection[training_phase])
+        train_data = self._select_partition(
+            train_ds, train_ds_selection[training_phase]
+        )
 
         for i in loading_bar:
             # Update the recorder properties
@@ -268,7 +270,7 @@ class RecursiveSelection(SimpleTraining):
 
             if epoch_phase_counter >= epochs[training_phase]:
                 training_phase += 1
-                train_data = self._select_ds(
+                train_data = self._select_partition(
                     train_ds, train_ds_selection[training_phase]
                 )
                 epoch_phase_counter = 0
