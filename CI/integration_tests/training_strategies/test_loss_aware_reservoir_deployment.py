@@ -124,6 +124,5 @@ class TestLossAwareReservoir:
             train_ds=train_ds,
             test_ds=test_ds,
             epochs=3,
-            batch_size=len(x),
         )
         assert simple_out == reservoir_out
