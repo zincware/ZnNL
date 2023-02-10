@@ -117,6 +117,7 @@ class JaxRecorder:
 
     # Class helpers
     update_rate: int = 1
+    # loss_fn and accuracy_fn are instantiated in the training strategy.
     _loss_fn: SimpleLoss = None
     _accuracy_fn: AccuracyFunction = None
     _selected_properties: list = None
