@@ -385,8 +385,7 @@ class JaxRecorder:
         parsed_data : dict
                 Data computed before the update to prevent repeated calculations.
         """
-        diagonal = onp.diagonal(parsed_data["ntk"])
-        trace = onp.sum(diagonal)
+        trace = onp.trace(parsed_data["ntk"])
         self._trace_array.append(trace)
 
     def _update_loss_derivative(self, parsed_data):
