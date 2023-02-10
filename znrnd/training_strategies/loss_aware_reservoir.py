@@ -37,10 +37,8 @@ from znrnd.models.jax_model import JaxModel
 from znrnd.optimizers.trace_optimizer import TraceOptimizer
 from znrnd.training_recording import JaxRecorder
 from znrnd.training_strategies.recursive_mode import RecursiveMode
-from znrnd.training_strategies.simple_training import (
-    SimpleTraining,
-    recursive_decorator,
-)
+from znrnd.training_strategies.simple_training import SimpleTraining
+from znrnd.training_strategies.training_decorator import train_func
 
 logger = logging.getLogger(__name__)
 
@@ -218,7 +216,7 @@ class LossAwareReservoir(SimpleTraining):
 
         return kwargs
 
-    @recursive_decorator
+    @train_func
     def train_model(
         self,
         train_ds: dict,
