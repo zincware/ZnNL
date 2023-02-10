@@ -48,9 +48,16 @@ class LossAwareReservoir(SimpleTraining):
     """
     Class for a biased training strategy using a loss aware reservoir.
 
-    Data has non-uniform probability of being trained.
-    The selection of training data is performed by computing the loss of all samples.
-    The N worst predicted samples are stored in a reservoir and trained.
+    Instead of training on the whole data set, this strategy trains on a reservoir of
+    data. The reservoir consists has a maximum size N and is dynamically updated.
+    The update is performed by evaluating the loss for each point inside the training
+    data. The N points with the biggest loss are put into the reservoir.
+
+    This manipulates the probability of training a point by scaling it with the loss.
+
+    This training strategy focuses on training of data with strong initial differences
+    in the loss. This strategy aims to equalize strong loss differences without
+    overfitting points with small initial loss.
     """
 
     def __init__(
@@ -65,7 +72,7 @@ class LossAwareReservoir(SimpleTraining):
         recorders: List["JaxRecorder"] = None,
     ):
         """
-        Construct a biased training strategy for a model.
+        Constructor of the loss aware reservoir training strategy.
 
         Parameters
         ----------
