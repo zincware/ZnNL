@@ -46,12 +46,20 @@ logger = logging.getLogger(__name__)
 
 class RecursiveSelection(SimpleTraining):
     """
-    Class for a biased training strategy based on iterative training of individual parts
-    of the data.
+    Class for the partitioned training strategy.
 
-    Data has non-uniform probability of being trained.
-    The data is chosen by slices of indices and is trained for a certain number of
-    epochs.
+    In this training strategy, the user can select partitions/subsets of a data set as
+    training data. The partitions are sequentially trained using a given number of
+    epochs and a batch size. The partitions can be any defined subset of the full
+    data set and therefore, also overlap.
+    The selected partitions are passed as an argument in the train_model method.
+
+    This training strategy offers the possibility of leaving data out or training data
+    multiple times during one training run.
+
+    This strategy aims to equalize of create loss differences of data by training on
+    user defined partitions of the data. The user can decide which parts to focus on in
+    the training.
     """
 
     def __init__(
