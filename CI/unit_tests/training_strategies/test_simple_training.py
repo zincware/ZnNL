@@ -34,15 +34,20 @@ from znrnd.loss_functions import MeanPowerLoss
 from znrnd.training_strategies import SimpleTraining
 
 
-class TestRNDTraining:
+class TestSimpleTraining:
     """
-    Class to test the initialization of the simple training strategy
+    Unit test suite for the simple training strategy.
     """
 
     def test_model_error(self):
         """
-        The model is optional input in the training strategy, as the model input can be
-        handled by frameworks add the model in the workflow.
+        Test for error raise when no model is available.
+
+        The model is an optional input in the training strategy construction.
+        The input of a model can be handled by frameworks adding the model during the
+        workflow of that framework (an example is RND).
+        Testing for a KeyError if no model was added but the training method is
+        executed.
         """
 
         # Create some test data
