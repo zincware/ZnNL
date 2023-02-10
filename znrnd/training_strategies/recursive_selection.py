@@ -73,7 +73,7 @@ class RecursiveSelection(SimpleTraining):
         recorders: List["JaxRecorder"] = None,
     ):
         """
-        Construct a biased training strategy for a model.
+        Constructor of the partitioned training strategy.
 
         Parameters
         ----------
