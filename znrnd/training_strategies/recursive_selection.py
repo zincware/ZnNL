@@ -130,6 +130,8 @@ class RecursiveSelection(SimpleTraining):
         partition : dict
         Selected partition of data.
         """
+        if type(data_slice) is list:
+            data_slice = onp.array(data_slice)
         return {k: v[data_slice, ...] for k, v in train_ds.items()}
 
     def update_training_kwargs(self, **kwargs):
