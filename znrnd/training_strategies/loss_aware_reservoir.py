@@ -204,12 +204,12 @@ class LossAwareReservoir(SimpleTraining):
         if not kwargs["epochs"]:
             kwargs["epochs"] = 50
         if not kwargs["batch_size"]:
-            kwargs["batch_size"] = len(kwargs["train_ds"])
+            kwargs["batch_size"] = len(kwargs["train_ds"]["targets"])
 
         if self.reservoir_size < kwargs["batch_size"]:
             kwargs["batch_size"] = self.reservoir_size
-            if len(kwargs["train_ds"]) < self.reservoir_size:
-                kwargs["batch_size"] = len(kwargs["train_ds"])
+            if len(kwargs["train_ds"]["targets"]) < self.reservoir_size:
+                kwargs["batch_size"] = len(kwargs["train_ds"]["targets"])
             logger.info(
                 "The size of the train data is smaller than the batch size. Setting"
                 " the batch size equal to the train data size of"
