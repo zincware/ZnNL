@@ -10,7 +10,7 @@ Description: Module for the implementation of random network distillation.
 """
 import logging
 import time
-from typing import Union
+from typing import List, Optional, Union
 
 import jax.numpy as np
 import numpy as onp
@@ -97,9 +97,10 @@ class RND(Agent):
         self.iterations: int = 0
         self.stationary_iterations: int = 0
         self.metric_results = None
-        self.target_size: int = None
-        self.epochs = None
-        self.training_kwargs = None
+        self.target_size: Optional[int] = None
+        self.epochs: Optional[Union[int, List[int]]] = None
+        self.batch_size: Optional[Union[int, List[int]]] = None
+        self.training_kwargs: Optional[dict] = None
 
         # Run the class initialization
         self._check_and_update_defaults()
@@ -217,6 +218,7 @@ class RND(Agent):
                 train_ds=dataset,
                 test_ds=dataset,
                 epochs=self.epochs,
+                batch_size=self.batch_size,
                 **self.training_kwargs,
             )
 
@@ -325,10 +327,16 @@ class RND(Agent):
         visualize: bool = False,
         report: bool = False,
         epochs: Union[int, list] = None,
+        batch_size: Union[int, list] = None,
         **training_kwargs,
     ):
         """
         Run the random network distillation methods and build the target set.
+
+        This method runs the process of constructing a target set by training the
+        predictor model using the train_model method of the training strategy.
+        Depending on the training strategy, besides epochs and batch_size additional
+        kwargs can be used by writing them into training_kwargs.
 
         Parameters
         ----------
@@ -341,11 +349,19 @@ class RND(Agent):
                 If true, a t-SNE visualization will be performed on the final models.
         report : bool (default=True)
                 If true, print a report about the RND performance.
-        epochs :  Union[int, list] (default = 50)
-                Epochs to train the predictor model.
+        epochs : Optional[Union[int, List[int]]]
+                Epochs to train the predictor model. This argument is passed to the
+                train_model method. The defaults are set in the individual training
+                strategy.
+        batch_size : Optional[Union[int, List[int]]]
+                Size of the batch to use in training. This argument is passed to the
+                train_model method. The defaults are set in the individual training
+                strategy.
         training_kwargs: dict
-                Additional kwargs used for the training procedure.
-                Depending on the training strategy, additional arguments can be needed.
+                Additional kwargs (besides epochs and batch_size) used for the
+                train_model method of the according training strategy.
+                These kwargs are passed to the train_model method. The defaults are set
+                in the individual training strategy.
 
         Returns
         -------
@@ -355,6 +371,7 @@ class RND(Agent):
         # Allow for optional target_sizes.
         self.target_size = target_size
         self.epochs = epochs
+        self.batch_size = batch_size
         self.training_kwargs = training_kwargs
 
         start = time.time()
