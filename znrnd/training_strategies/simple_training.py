@@ -394,7 +394,7 @@ class SimpleTraining:
         epochs: Optional[Union[int, List[int]]] = None,
         batch_size: Optional[Union[int, List[int]]] = None,
         **kwargs,
-    ):
+    ) -> dict:
         """
         Train the model on data.
 

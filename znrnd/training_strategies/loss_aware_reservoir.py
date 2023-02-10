@@ -225,7 +225,7 @@ class LossAwareReservoir(SimpleTraining):
         test_ds: dict,
         epochs: Optional[int] = None,
         batch_size: int = None,
-    ):
+    ) -> dict:
         """
         Train the model on data.
 

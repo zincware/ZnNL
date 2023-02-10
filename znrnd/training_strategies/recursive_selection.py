@@ -200,7 +200,7 @@ class RecursiveSelection(SimpleTraining):
         epochs: list = None,
         train_ds_selection: list = None,
         batch_size: list = None,
-    ):
+    ) -> dict:
         """
         Train the model on data.
 
