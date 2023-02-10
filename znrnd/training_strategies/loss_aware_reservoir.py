@@ -116,7 +116,7 @@ class LossAwareReservoir(SimpleTraining):
         self.reservoir = None
         self.reservoir_size = reservoir_size
 
-    def _update_reservoir(self, train_ds):
+    def _update_reservoir(self, train_ds) -> dict:
         """
         Updates the reservoir in the following steps:
 
@@ -131,12 +131,15 @@ class LossAwareReservoir(SimpleTraining):
 
         Returns
         -------
-        The loss aware reservoir
+        Loss aware reservoir : dict
         """
         distances = self._compute_distance(train_ds)
         max_size = self.reservoir_size
-        if self.reservoir_size > len(train_ds["targets"]):
-            max_size = len(train_ds["targets"])
+
+        # Return the whole train data if reservoir can cover them all
+        if max_size >= len(train_ds["targets"]):
+            return train_ds
+        # If the reservoir is smaller than the train data select data via the loss
         sorted_idx = np.argsort(distances)[::-1][:max_size]
         return {k: v[sorted_idx, ...] for k, v in train_ds.items()}
 
