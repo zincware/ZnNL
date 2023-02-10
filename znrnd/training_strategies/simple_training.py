@@ -357,7 +357,7 @@ class SimpleTraining:
         Parameters
         ----------
         kwargs : dict
-                Keyword arguments of the train_fn.
+                See more details in the docstring of the train_model method below.
 
         Returns
         -------
