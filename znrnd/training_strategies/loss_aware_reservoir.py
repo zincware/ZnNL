@@ -119,6 +119,7 @@ class LossAwareReservoir(SimpleTraining):
             recorders=recorders,
         )
 
+        self.train_data_size = None
         # Define loss aware reservoir of training data
         self.reservoir = None
         self.reservoir_size = reservoir_size
@@ -149,7 +150,7 @@ class LossAwareReservoir(SimpleTraining):
         max_size = self.reservoir_size
 
         # Return the whole train data if reservoir can cover them all
-        if max_size >= len(train_ds["targets"]):
+        if max_size >= self.train_data_size:
             return train_ds
         # If the reservoir is smaller than the train data select data via the loss
         sorted_idx = np.argsort(distances)[::-1][:max_size]
@@ -294,6 +295,7 @@ class LossAwareReservoir(SimpleTraining):
             of parameters.
         """
         state = self.model.model_state
+        self.train_data_size = len(train_ds["targets"])
 
         loading_bar = trange(
             1, epochs + 1, ncols=100, unit="batch", disable=self.disable_loading_bar
