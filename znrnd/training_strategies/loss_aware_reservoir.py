@@ -32,6 +32,7 @@ import jax.numpy as np
 from tqdm import trange
 
 from znrnd.accuracy_functions.accuracy_function import AccuracyFunction
+from znrnd.distance_metrics import DistanceMetric
 from znrnd.models.jax_model import JaxModel
 from znrnd.optimizers.trace_optimizer import TraceOptimizer
 from znrnd.training_recording import JaxRecorder
@@ -67,6 +68,7 @@ class LossAwareReservoir(SimpleTraining):
         accuracy_fn: AccuracyFunction = None,
         seed: int = None,
         reservoir_size: int = 500,
+        reservoir_metric: Optional[DistanceMetric] = None,
         recursive_mode: RecursiveMode = None,
         disable_loading_bar: bool = False,
         recorders: List["JaxRecorder"] = None,
@@ -92,6 +94,11 @@ class LossAwareReservoir(SimpleTraining):
                 Size of the reservoir, corresponding to the maximum number of points the
                 model is trained on.
                 This property constraints the memory used while training.
+        reservoir_metric : Optional[DistanceMetric]
+                The metric i.e. point-wise loss function used to select points into the
+                reservoir.
+                As default the distance metric underlying the loss function chosen for
+                training the model is use.
         recursive_mode : RecursiveMode
                 Defining the recursive mode that can be used in training.
                 If the recursive mode is used, the training will be performed until a
@@ -112,9 +119,14 @@ class LossAwareReservoir(SimpleTraining):
             recorders=recorders,
         )
 
-        # Define ordered reservoir of training data
+        # Define loss aware reservoir of training data
         self.reservoir = None
         self.reservoir_size = reservoir_size
+        # Define distance metric used to select data into the reservoir
+        if reservoir_metric:
+            self.reservoir_metric = reservoir_metric
+        else:
+            self.reservoir_metric = loss_fn.metric
 
     def _update_reservoir(self, train_ds) -> dict:
         """
@@ -145,7 +157,8 @@ class LossAwareReservoir(SimpleTraining):
 
     def _compute_distance(self, dataset: dict) -> np.ndarray:
         """
-        Compute the distance between neural network representations.
+        Compute the distance i.e. point-wise loss between neural network representations
+        using the reservoir metric.
 
         Parameters
         ----------
@@ -158,7 +171,7 @@ class LossAwareReservoir(SimpleTraining):
                 A tensor of distances computed using the attached metric.
         """
         predictions = self.model(dataset["inputs"])
-        return self.loss_fn.metric(predictions, dataset["targets"])
+        return self.reservoir_metric(predictions, dataset["targets"])
 
     def update_training_kwargs(self, **kwargs):
         """
