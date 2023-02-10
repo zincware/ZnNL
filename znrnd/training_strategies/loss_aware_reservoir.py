@@ -181,7 +181,7 @@ class LossAwareReservoir(SimpleTraining):
         In detail:
             * Raise an error no model is applied.
             * Set default value for epochs (default = 50)
-            * set default value for the batch size (default = 1)
+            * set default value for the batch size (default = train data length)
             * Adapt batch size if there is too little data for one batch
 
         Parameters
@@ -204,7 +204,7 @@ class LossAwareReservoir(SimpleTraining):
         if not kwargs["epochs"]:
             kwargs["epochs"] = 50
         if not kwargs["batch_size"]:
-            kwargs["batch_size"] = 1
+            kwargs["batch_size"] = len(kwargs["train_ds"])
 
         if self.reservoir_size < kwargs["batch_size"]:
             kwargs["batch_size"] = self.reservoir_size
