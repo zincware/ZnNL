@@ -110,21 +110,25 @@ class RecursiveSelection(SimpleTraining):
         )
 
     @staticmethod
-    def _select_ds(train_ds, data_slice):
+    def _select_partition(train_ds: dict, data_slice: Union[list, slice]):
         """
-        Select a subset of data from a dict.
+        Select a partitions
+
+        This method selects a subset from data.
+        The training will be performed with the selected subsets instead of all training
+        data.
 
         Parameters
         ----------
         train_ds : dict
                 Train dataset with inputs and targets.
-        data_slice : slice
+        data_slice : Union[list, slice]
                 Slice to select from train_ds
 
         Returns
         -------
-        dict
-        Selected subset of data.
+        partition : dict
+        Selected partition of data.
         """
         return {k: v[data_slice, ...] for k, v in train_ds.items()}
 
