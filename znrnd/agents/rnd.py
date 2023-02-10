@@ -106,17 +106,20 @@ class RND(Agent):
 
     def _check_and_update_defaults(self):
         """
-        Set the default parameters if necessary and check for model correct model
+        Set the default arguments if necessary and check for model correct model
         inputs.
 
-        Returns
-        -------
         Updates the class state for the following:
            * self.point_selector (default = greedy selection)
            * self.metric (default = cosine similarity)
-           * Models (default = dense model.)
+           * self.visualizer (default = TSNE visualization)
+
         Checks whether the model input in the training strategy is None.
         Giving feedback otherwise.
+
+        Returns
+        -------
+        Updates defaults and gives feedback if necessary.
         """
         if self.point_selector is None:
             self.point_selector = znrnd.point_selection.GreedySelection()
