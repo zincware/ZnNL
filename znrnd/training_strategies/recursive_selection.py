@@ -218,6 +218,13 @@ class RecursiveSelection(SimpleTraining):
         """
         Train the model on data.
 
+        The training is performed using the PartitionedTraining strategy.
+        The partitioning is passes in this method.
+        Each partition is defined by as a slice or a list of indices.
+        The training order of the partitions in the list is determined from left (first)
+        to right (last).
+        For each partition, the user selects epochs and batch_size for training.
+
         Parameters
         ----------
         train_ds : dict
