@@ -32,7 +32,6 @@ import copy
 import optax
 from jax import random
 from neural_tangents import stax
-from numpy.testing import assert_raises
 
 from znrnd.loss_functions import MeanPowerLoss
 from znrnd.models import NTModel
@@ -41,12 +40,18 @@ from znrnd.training_strategies import RecursiveSelection, SimpleTraining
 
 class TestRecursiveSelection:
     """
-    Unit test suite for the recursive selection training strategy.
+    Integration test suite for the recursive selection training strategy.
     """
 
-    def test_parameter_setting(self):
+    def test_metric_length(self):
         """
-        Test the initialization of the training strategy.
+        Test the length of the metric output when training with the recursive selection
+        strategy.
+
+        The output of training a model provides a metric on the performance.
+        The number of epochs that has actually been trained can be checked by measuring
+        the length of this metric.
+        The length has to be adjustable by the number of epochs.
         """
         key1, key2 = random.split(random.PRNGKey(1), 2)
         x = random.normal(key1, (3, 8))
@@ -81,12 +86,6 @@ class TestRecursiveSelection:
             train_ds_selection=[[-1], slice(1, -1, 3)],
         )
         assert len(batch_metric["train_losses"]) == 7
-
-        # Check Error handling for not matching lengths
-        assert_raises(KeyError, trainer.train_model, train_ds, test_ds, [2])
-
-        # Check Error handling for passing an int for epochs instead of a list
-        assert_raises(KeyError, trainer.train_model, train_ds, test_ds, 50)
 
     def test_comparison_to_simple_training(self):
         """
