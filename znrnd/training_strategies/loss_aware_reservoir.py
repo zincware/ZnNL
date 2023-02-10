@@ -218,51 +218,6 @@ class LossAwareReservoir(SimpleTraining):
 
         return kwargs
 
-    def _check_training_kwargs(
-        self, train_ds: dict, epochs: Optional[Union[int, List[int]]], batch_size: int
-    ):
-        """
-        Check if the arguments for the training are properly set.
-
-            * Raise and error if no model is set
-            * Reset the batch size if batch_size > len(train_ds)
-            * Set default value for epochs
-
-        Parameters
-        ----------
-        train_ds : dict
-                Train dataset with inputs and targets.
-        epochs : Optional[Union[int, List[int]]] (default = 50)
-                Number of epochs to train over.
-        batch_size : int
-                Size of the batch to use in training.
-
-        Returns
-        -------
-        Possible new train parameters
-        """
-        # Raise error if no model is available
-        if self.model is None:
-            raise KeyError(
-                "self.model = None. "
-                "If the training strategy should operate on a model, a model"
-                "must be given."
-                "Pass the model in the construction."
-            )
-
-        if self.reservoir_size < batch_size:
-            batch_size = self.reservoir_size
-            if len(train_ds) < self.reservoir_size:
-                batch_size = len(train_ds)
-            logger.info(
-                "The size of the train data is smaller than the batch size. "
-                f"Setting the batch size equal to the train data size of {batch_size}."
-            )
-        if not epochs:
-            epochs = 50
-
-        return batch_size, epochs
-
     @recursive_decorator
     def train_model(
         self,
