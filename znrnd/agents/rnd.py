@@ -102,9 +102,9 @@ class RND(Agent):
         self.training_kwargs = None
 
         # Run the class initialization
-        self._check_defaults()
+        self._check_and_update_defaults()
 
-    def _check_defaults(self):
+    def _check_and_update_defaults(self):
         """
         Set the default parameters if necessary and check for model correct model
         inputs.
