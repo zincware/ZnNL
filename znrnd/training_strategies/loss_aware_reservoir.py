@@ -177,7 +177,7 @@ class LossAwareReservoir(SimpleTraining):
         Check model and keyword arguments before executing the training.
 
         In detail:
-            * Raise an error no model is applied.
+            * Raise an error if no model is applied.
             * Set default value for epochs (default = 50)
             * set default value for the batch size (default = train data length)
             * Adapt batch size if there is too little data for one batch
