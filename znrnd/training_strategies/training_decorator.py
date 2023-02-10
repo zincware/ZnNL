@@ -20,16 +20,21 @@ logger = logging.getLogger(__name__)
 
 def train_func(train_fn: Callable):
     """
-    Decorator enabling a recursive mode of a train function.
+    Decorator enabling flexible argument checking and recursive mode when training a
+    model.
 
-    The training of a model (with a given strategy) is executed by calling the
-    train_model function.
-    The decorator enables the use of this function in a recursive way. The training is
-    repeated until a condition is satisfied or the training is considered to be stuck in
-    a local minimum.
-    In the letter case, the model is perturbed and the training starts again. The
-    default perturbation method is the re-initialization of the model. The perturbation
-    function is an optional parameter when constructing the recursive mode.
+    The model training of given strategy is executed by calling the train_model method.
+    The decorator is used for these methods. It enables:
+        1. A flexible checking of arguments before starting the training.
+            Different training strategies can demand different input arguments.
+            When starting the training this decorator enables to set custom checks and
+            default settings in each training strategy.
+            This is done in the update_training_kwargs method.
+        2. A recursive option of training a model.
+            The decorator enables the use of the train_fn in a recursive way.
+            In this mode, training is repeated until a condition is satisfied or the
+            training is considered to be stuck in a local minimum.
+            The definition of the recursive mode is handled by the RecursiveMode class.
 
     Parameters
     ----------
@@ -44,6 +49,27 @@ def train_func(train_fn: Callable):
 
     @functools.wraps(train_fn)
     def wrapper(trainer, *args, **kwargs):
+        """
+        Wrapper function of the train_func decorator.
+
+        A more detailed documentation can be found in train_func.
+
+        Parameters
+        ----------
+        trainer : Todo
+                Training strategy in which the decorator is used for the train_model
+                method.
+        args : tuple
+                Arguments put into train_fn.
+        kwargs : dict
+                Keyword arguments put into the train_fn.
+
+        Returns
+        -------
+        in_training_metrics : dict
+        Output of the train_fn. A more detailed documentation can be found in the used
+        training strategy.
+        """
         # Make args to kwargs to enable easy access
         # Get all possible args
         all_args = list(inspect.signature(train_fn).parameters)
