@@ -42,7 +42,7 @@ from znrnd.training_strategies import LossAwareReservoir, SimpleTraining
 
 class TestLossAwareReservoir:
     """
-    Unit test suite for the recursive selection training strategy.
+    Integration test suite for the loss aware reservoir training strategy.
     """
 
     def test_reservoir_sorting(self):
