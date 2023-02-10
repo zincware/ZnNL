@@ -9,8 +9,8 @@ Copyright Contributors to the Zincware Project.
 Description:
 """
 from znrnd.training_strategies.loss_aware_reservoir import LossAwareReservoir
-from znrnd.training_strategies.recursive_mode import RecursiveMode
 from znrnd.training_strategies.partitioned_training import PartitionedTraining
+from znrnd.training_strategies.recursive_mode import RecursiveMode
 from znrnd.training_strategies.simple_training import SimpleTraining
 
 __all__ = [
