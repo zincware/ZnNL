@@ -44,7 +44,7 @@ from znrnd.training_strategies.simple_training import (
 logger = logging.getLogger(__name__)
 
 
-class RecursiveSelection(SimpleTraining):
+class PartitionedTraining(SimpleTraining):
     """
     Class for the partitioned training strategy.
 

@@ -35,17 +35,17 @@ from neural_tangents import stax
 
 from znrnd.loss_functions import MeanPowerLoss
 from znrnd.models import NTModel
-from znrnd.training_strategies import RecursiveSelection, SimpleTraining
+from znrnd.training_strategies import PartitionedTraining, SimpleTraining
 
 
-class TestRecursiveSelection:
+class TestPartitionedSelection:
     """
-    Integration test suite for the recursive selection training strategy.
+    Integration test suite for the partitioned training strategy.
     """
 
     def test_metric_length(self):
         """
-        Test the length of the metric output when training with the recursive selection
+        Test the length of the metric output when training with the partitioned training
         strategy.
 
         The output of training a model provides a metric on the performance.
@@ -65,7 +65,7 @@ class TestRecursiveSelection:
             input_shape=(1, 8),
         )
 
-        trainer = RecursiveSelection(
+        trainer = PartitionedTraining(
             model=model,
             loss_fn=MeanPowerLoss(order=2),
             disable_loading_bar=True,
@@ -91,7 +91,7 @@ class TestRecursiveSelection:
         """
         Test the comparison to simple training strategy.
 
-        The recursive selection has to be identical to simple training for selecting
+        The partitioned training has to be identical to simple training for selecting
         train_ds_selection=[slice(None, None, None)]
         """
 
@@ -107,13 +107,13 @@ class TestRecursiveSelection:
             input_shape=(1, 8),
         )
 
-        recursive_trainer = RecursiveSelection(
+        partitioned_trainer = PartitionedTraining(
             model=copy.deepcopy(model),
             loss_fn=MeanPowerLoss(order=2),
             seed=17,
             disable_loading_bar=True,
         )
-        recursive_out = recursive_trainer.train_model(
+        partitioned_out = partitioned_trainer.train_model(
             train_ds=train_ds,
             test_ds=test_ds,
             epochs=[3],
@@ -129,4 +129,4 @@ class TestRecursiveSelection:
         simple_out = simple_trainer.train_model(
             train_ds=train_ds, test_ds=test_ds, epochs=3, batch_size=2
         )
-        assert simple_out == recursive_out
+        assert simple_out == partitioned_out

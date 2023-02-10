@@ -21,7 +21,7 @@ If you use this module please cite us with:
 
 Summary
 -------
-Unit tests for the recursive selection class.
+Unit tests for the pertitioned training class.
 """
 import os
 
@@ -34,20 +34,20 @@ from numpy.testing import assert_raises
 
 from znrnd.loss_functions import MeanPowerLoss
 from znrnd.models import NTModel
-from znrnd.training_strategies import RecursiveSelection
+from znrnd.training_strategies import PartitionedTraining
 
 
-class TestRecursiveSelection:
+class TestPartitionedSelection:
     """
-    Unit test suite of the recursive selection training strategy.
+    Unit test suite of the partitioned training strategy.
     """
 
     def test_parameter_error(self):
         """
         Test error raises for wrong keyword arguments.
 
-        Assert a KeyError when using the recursive strategy with an integer instead of
-        a list input for epochs.
+        Assert a KeyError when using the partitioned training strategy with an integer
+        instead of a list input for epochs.
         Assert a KeyError for differing list lengths for epochs compared to batch_size
         and train_ds_selection.
         """
@@ -65,7 +65,7 @@ class TestRecursiveSelection:
             input_shape=(1, 8),
         )
 
-        trainer = RecursiveSelection(
+        trainer = PartitionedTraining(
             model=model,
             loss_fn=MeanPowerLoss(order=2),
             disable_loading_bar=True,
