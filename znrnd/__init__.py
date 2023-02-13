@@ -11,10 +11,11 @@ from znrnd import (
     data,
     distance_metrics,
     loss_functions,
-    model_recording,
     models,
     point_selection,
     similarity_measures,
+    training_recording,
+    training_strategies,
     utils,
 )
 from znrnd.utils.machine_properties import print_local_device_properties
@@ -35,7 +36,8 @@ __all__ = [
     agents.__name__,
     analysis.__name__,
     utils.__name__,
-    model_recording.__name__,
+    training_recording.__name__,
+    training_strategies.__name__,
 ]
 
 print_local_device_properties()  # Report local hardware information.

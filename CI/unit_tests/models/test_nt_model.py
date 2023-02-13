@@ -33,7 +33,6 @@ import optax
 from jax import random
 from neural_tangents import stax
 
-from znrnd.loss_functions import MeanPowerLoss
 from znrnd.models import NTModel
 
 
@@ -61,9 +60,7 @@ class TestNTModule:
         nt_model_1 = NTModel(
             nt_module=test_model,
             optimizer=optax.adam(learning_rate=0.001),
-            loss_fn=MeanPowerLoss(order=2),
             input_shape=(1, 8),
-            training_threshold=0.1,
             batch_size=1,
             seed=17,
         )
@@ -71,9 +68,7 @@ class TestNTModule:
         nt_model_2 = NTModel(
             nt_module=test_model,
             optimizer=optax.adam(learning_rate=0.001),
-            loss_fn=MeanPowerLoss(order=2),
             input_shape=(1, 8),
-            training_threshold=0.1,
             batch_size=1,
             seed=17,
             trace_axes=(),

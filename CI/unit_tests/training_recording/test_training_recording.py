@@ -30,7 +30,7 @@ import h5py as hf
 import numpy as onp
 from numpy import testing
 
-from znrnd.model_recording import JaxRecorder
+from znrnd.training_recording import JaxRecorder
 
 
 class TestModelRecording:
@@ -57,10 +57,18 @@ class TestModelRecording:
             ntk=True,
             entropy=True,
             eigenvalues=True,
+            trace=True,
             loss_derivative=True,
         )
         recorder.instantiate_recorder(data_set=self.dummy_data_set)
-        _exclude_list = ["update_rate", "name", "storage_path", "chunk_size"]
+        _exclude_list = [
+            "_accuracy_fn",
+            "_loss_fn",
+            "update_rate",
+            "name",
+            "storage_path",
+            "chunk_size",
+        ]
         for key, val in vars(recorder).items():
             if key[0] != "_" and key not in _exclude_list:
                 assert val is True

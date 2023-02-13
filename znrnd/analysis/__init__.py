@@ -26,5 +26,10 @@ Summary
 """
 from znrnd.analysis.eigensystem import EigenSpaceAnalysis
 from znrnd.analysis.entropy import EntropyAnalysis
+from znrnd.analysis.loss_fn_derivative import LossDerivative
 
-__all__ = [EntropyAnalysis.__name__, EigenSpaceAnalysis.__name__]
+__all__ = [
+    EntropyAnalysis.__name__,
+    EigenSpaceAnalysis.__name__,
+    LossDerivative.__name__,
+]

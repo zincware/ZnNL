@@ -30,10 +30,13 @@ from pathlib import Path
 
 import numpy as onp
 
+from znrnd.accuracy_functions.accuracy_function import AccuracyFunction
 from znrnd.analysis.eigensystem import EigenSpaceAnalysis
 from znrnd.analysis.entropy import EntropyAnalysis
-from znrnd.model_recording.data_storage import DataStorage
+from znrnd.analysis.loss_fn_derivative import LossDerivative
+from znrnd.loss_functions import SimpleLoss
 from znrnd.models.jax_model import JaxModel
+from znrnd.training_recording.data_storage import DataStorage
 from znrnd.utils.matrix_utils import calculate_l_pq_norm
 
 logger = logging.getLogger(__name__)
@@ -104,17 +107,24 @@ class JaxRecorder:
     eigenvalues: bool = False
     _eigenvalues_array: list = None
 
-    # Model eigenvalues
+    # Model trace
+    trace: bool = False
+    _trace_array: list = None
+
+    # Loss derivative
     loss_derivative: bool = False
     _loss_derivative_array: list = None
 
     # Class helpers
     update_rate: int = 1
+    _loss_fn: SimpleLoss = None
+    _accuracy_fn: AccuracyFunction = None
     _selected_properties: list = None
     _model: JaxModel = None
     _data_set: dict = None
     _compute_ntk: bool = False  # Helps to know if we can compute it once and share.
     _compute_loss_derivative: bool = False
+    _loss_derivative_fn: LossDerivative = False
     _index_count: int = 0  # Helps to avoid problems with non-1 update rates.
     _data_storage: DataStorage = None  # For writing to disk.
 
@@ -153,7 +163,7 @@ class JaxRecorder:
 
         return data
 
-    def instantiate_recorder(self, data_set: dict, overwrite: bool = False):
+    def instantiate_recorder(self, data_set: dict = None, overwrite: bool = False):
         """
         Prepare the recorder for training.
 
@@ -169,13 +179,18 @@ class JaxRecorder:
         -------
         Populates the array attributes of the dataclass.
         """
-
         # Create the data storage manager.
         _storage_path = path.join(self.storage_path, self.name)
         self._data_storage = DataStorage(Path(_storage_path))
 
-        # Update simple attributes
-        self._data_set = data_set
+        if data_set:
+            # Update simple attributes
+            self._data_set = data_set
+        if self._data_set is None and data_set is None:
+            raise AttributeError(
+                "No data set given for the recording process."
+                "Instantiate the recorder with a data set."
+            )
 
         # populate the class attribute
         self._read_selected_attributes()
@@ -202,9 +217,13 @@ class JaxRecorder:
                 "ntk" in self._selected_properties,
                 "entropy" in self._selected_properties,
                 "eigenvalues" in self._selected_properties,
+                "trace" in self._selected_properties,
             ]
         ):
             self._compute_ntk = True
+
+        if "loss_derivative" in self._selected_properties:
+            self._loss_derivative_fn = LossDerivative(self._loss_fn)
 
     def update_recorder(self, epoch: int, model: JaxModel):
         """
@@ -284,6 +303,52 @@ class JaxRecorder:
         """
         raise NotImplementedError("Not yet available in ZnRND.")
 
+    @property
+    def loss_fn(self):
+        """
+        The loss function property of a recorder.
+
+        Returns
+        -------
+        The loss function used in the recorder.
+        """
+        return self._loss_fn
+
+    @loss_fn.setter
+    def loss_fn(self, loss_fn: SimpleLoss):
+        """
+        Setting a loss function for a recorder.
+
+        Parameters
+        ----------
+        loss_fn : SimpleLoss
+                Loss function used for recording.
+        """
+        self._loss_fn = loss_fn
+
+    @property
+    def accuracy_fn(self):
+        """
+        The accuracy function property of a recorder.
+
+        Returns
+        -------
+        The accuracy function used in the recorder.
+        """
+        return self._accuracy_fn
+
+    @accuracy_fn.setter
+    def accuracy_fn(self, accuracy_fn: AccuracyFunction):
+        """
+        Setting an accuracy function for a recorder.
+
+        Parameters
+        ----------
+        accuracy_fn : AccuracyFunction
+                Accuracy function used for recording.
+        """
+        self._accuracy_fn = accuracy_fn
+
     def _update_loss(self, parsed_data: dict):
         """
         Update the loss array.
@@ -294,7 +359,7 @@ class JaxRecorder:
                 Data computed before the update to prevent repeated calculations.
         """
         self._loss_array.append(
-            self._model.loss_fn(parsed_data["predictions"], self._data_set["targets"])
+            self._loss_fn(parsed_data["predictions"], self._data_set["targets"])
         )
 
     def _update_accuracy(self, parsed_data: dict):
@@ -308,14 +373,12 @@ class JaxRecorder:
         """
         try:
             self._accuracy_array.append(
-                self._model.accuracy_fn(
-                    parsed_data["predictions"], self._data_set["targets"]
-                )
+                self._accuracy_fn(parsed_data["predictions"], self._data_set["targets"])
             )
-        except AttributeError:
+        except TypeError:
             logger.info(
-                "There is no accuracy function in the model class, switching this "
-                "recording option off."
+                "There is no accuracy function defined in the training procedure, "
+                "switching this recording option off."
             )
             self.accuracy = False
             self._read_selected_attributes()
@@ -359,6 +422,18 @@ class JaxRecorder:
         eigenvalues = calculator.compute_eigenvalues(normalize=False)
         self._eigenvalues_array.append(eigenvalues)
 
+    def _update_trace(self, parsed_data: dict):
+        """
+        Update the trace of the NTK.
+
+        Parameters
+        ----------
+        parsed_data : dict
+                Data computed before the update to prevent repeated calculations.
+        """
+        trace = onp.trace(parsed_data["ntk"])
+        self._trace_array.append(trace)
+
     def _update_loss_derivative(self, parsed_data):
         """
         Update the loss derivative array.
@@ -370,7 +445,7 @@ class JaxRecorder:
         parsed_data : dict
                 Data computed before the update to prevent repeated calculations.
         """
-        vector_loss_derivative = self._model.calculate_loss_derivative_jit(
+        vector_loss_derivative = self._loss_derivative_fn.calculate(
             parsed_data["predictions"], self._data_set["targets"]
         )
         loss_derivative = calculate_l_pq_norm(vector_loss_derivative)

@@ -8,8 +8,9 @@ Copyright Contributors to the Zincware Project.
 
 Description: Module for the implementation of random network distillation.
 """
+import logging
 import time
-from typing import Union
+from typing import List, Optional, Union
 
 import jax.numpy as np
 import numpy as onp
@@ -20,7 +21,10 @@ from znrnd.data import DataGenerator
 from znrnd.distance_metrics.distance_metric import DistanceMetric
 from znrnd.models import JaxModel
 from znrnd.point_selection import PointSelection
+from znrnd.training_strategies.simple_training import SimpleTraining
 from znrnd.visualization.tsne_visualizer import TSNEVisualizer
+
+logger = logging.getLogger(__name__)
 
 
 class RND(Agent):
@@ -40,16 +44,14 @@ class RND(Agent):
     def __init__(
         self,
         data_generator: DataGenerator,
-        target_network: JaxModel = None,
-        predictor_network: JaxModel = None,
+        target_network: JaxModel,
+        predictor_network: JaxModel,
+        training_strategy: SimpleTraining,
         distance_metric: DistanceMetric = None,
         point_selector: PointSelection = None,
         visualizer: TSNEVisualizer = None,
-        epochs_latest_data: int = 0,
-        epochs_all_data: int = 50,
         tolerance: int = 100,
         seed_point: list = None,
-        disable_loading_bar: bool = False,
     ):
         """
         Constructor for the RND class.
@@ -60,6 +62,8 @@ class RND(Agent):
                 Model class for the target network
         predictor_network : Jax_Model
                 Model class for the predictor.
+        training_strategy : SimpleTraining
+                Training strategy for training the predictor model.
         distance_metric : SimilarityMeasures
                 Metric to use in the representation comparison
         data_generator : objector
@@ -69,30 +73,23 @@ class RND(Agent):
                 Class to select points from the data pool.
         visualizer : TSNEVisualizer
                 Class for the representation visualization.
-        epochs_latest_data: int
-                Number of epochs to train the latest added data per recursion.
-        epochs_all_data: int
-                Number of epochs to train all data per recursion.
         tolerance : int
                 Number of stationary iterations to go through before ending the
                 run.
         seed_point : list
                 Choose to start with an initial point as seed point
-        disable_loading_bar : bool
-                Disable the output visualization of the loading par.
         """
         # User defined attributes.
         self.target = target_network
         self.predictor = predictor_network
+        self.training_strategy = training_strategy
+        self.training_strategy.model = self.predictor
         self.metric = distance_metric
         self.data_generator = data_generator
         self.point_selector = point_selector
         self.tolerance = tolerance
         self.seed_point = seed_point
         self.visualizer = visualizer
-        self.epochs_latest_data = epochs_latest_data
-        self.epochs_all_data = epochs_all_data
-        self.disable_loading_bar = disable_loading_bar
 
         self.historical_length: int = 0
         self.target_set: list = []
@@ -100,22 +97,30 @@ class RND(Agent):
         self.iterations: int = 0
         self.stationary_iterations: int = 0
         self.metric_results = None
-        self.metric_results_storage: list = []
-        self.target_size: int = None
+        self.target_size: Optional[int] = None
+        self.epochs: Optional[Union[int, List[int]]] = None
+        self.batch_size: Optional[Union[int, List[int]]] = None
+        self.training_kwargs: Optional[dict] = None
 
         # Run the class initialization
-        self._set_defaults()
+        self._check_and_update_defaults()
 
-    def _set_defaults(self):
+    def _check_and_update_defaults(self):
         """
-        Set the default parameters if necessary.
+        Set the default arguments if necessary and check for model correct model
+        inputs.
 
-        Returns
-        -------
         Updates the class state for the following:
            * self.point_selector (default = greedy selection)
            * self.metric (default = cosine similarity)
-           * Models (default = dense model.)
+           * self.visualizer (default = TSNE visualization)
+
+        Checks whether the model input in the training strategy is None.
+        Giving feedback otherwise.
+
+        Returns
+        -------
+        Updates defaults and gives feedback if necessary.
         """
         if self.point_selector is None:
             self.point_selector = znrnd.point_selection.GreedySelection()
@@ -123,6 +128,13 @@ class RND(Agent):
             self.metric = znrnd.similarity_measures.CosineSim()
         if self.visualizer is None:
             self.visualizer = TSNEVisualizer()
+        if self.training_strategy.model is not None:
+            logger.info(
+                "The model defined in the training strategy will be ignored. "
+                "The defined training strategy will operate on the predictor "
+                "model. \n "
+                "You can set the model in the training strategy to None. "
+            )
 
     def compute_distance(self, points: np.ndarray) -> np.ndarray:
         """
@@ -202,12 +214,12 @@ class RND(Agent):
             domain = np.array(self.target_set)
             codomain = self.target(domain)
             dataset = {"inputs": domain, "targets": codomain}
-            self.predictor.train_model_recursively(
+            self.training_strategy.train_model(
                 train_ds=dataset,
                 test_ds=dataset,
-                disable_loading_bar=self.disable_loading_bar,
-                epochs_latest_data=self.epochs_latest_data,
-                epochs_all_data=self.epochs_all_data,
+                epochs=self.epochs,
+                batch_size=self.batch_size,
+                **self.training_kwargs,
             )
 
     def _seed_process(self, visualize: bool):
@@ -237,19 +249,6 @@ class RND(Agent):
         self.target_indices.append(seed_number)
         if visualize:
             self.update_visualization(reference=False)
-
-    def _store_metrics(self):
-        """
-        Storage of metric calculations
-
-        Returns
-        -------
-        updates the metric storage.
-        """
-        if len(self.target_set) == self.historical_length:
-            pass
-        else:
-            self.metric_results_storage.append(np.sort(self.metric_results)[-3:])
 
     def _evaluate_agent(self) -> bool:
         """
@@ -327,10 +326,17 @@ class RND(Agent):
         seed_randomly: bool = False,
         visualize: bool = False,
         report: bool = False,
-        store_metrics: bool = False,
+        epochs: Union[int, list] = None,
+        batch_size: Union[int, list] = None,
+        **training_kwargs,
     ):
         """
         Run the random network distillation methods and build the target set.
+
+        This method runs the process of constructing a target set by training the
+        predictor model using the train_model method of the training strategy.
+        Depending on the training strategy, besides epochs and batch_size additional
+        kwargs can be used by writing them into training_kwargs.
 
         Parameters
         ----------
@@ -343,8 +349,19 @@ class RND(Agent):
                 If true, a t-SNE visualization will be performed on the final models.
         report : bool (default=True)
                 If true, print a report about the RND performance.
-        store_metrics : bool (default=True)
-                If true, store the RND metrics.
+        epochs : Optional[Union[int, List[int]]]
+                Epochs to train the predictor model. This argument is passed to the
+                train_model method. The defaults are set in the individual training
+                strategy.
+        batch_size : Optional[Union[int, List[int]]]
+                Size of the batch to use in training. This argument is passed to the
+                train_model method. The defaults are set in the individual training
+                strategy.
+        training_kwargs: dict
+                Additional kwargs (besides epochs and batch_size) used for the
+                train_model method of the according training strategy.
+                These kwargs are passed to the train_model method. The defaults are set
+                in the individual training strategy.
 
         Returns
         -------
@@ -353,6 +370,10 @@ class RND(Agent):
         """
         # Allow for optional target_sizes.
         self.target_size = target_size
+        self.epochs = epochs
+        self.batch_size = batch_size
+        self.training_kwargs = training_kwargs
+
         start = time.time()
         if seed_randomly:
             self._seed_process(visualize=visualize)
@@ -364,8 +385,6 @@ class RND(Agent):
 
         while not criteria:
             self._choose_points()
-            if store_metrics:
-                self._store_metrics()
             self._retrain_network()
 
             criteria = self._evaluate_agent()

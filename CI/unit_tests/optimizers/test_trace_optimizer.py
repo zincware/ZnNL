@@ -23,12 +23,14 @@ Summary
 -------
 Module for testing the trace optimizer
 """
+import os
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
 import jax.numpy as np
 from neural_tangents import stax
 
-from znrnd.accuracy_functions import LabelAccuracy
 from znrnd.data import MNISTGenerator
-from znrnd.loss_functions import CrossEntropyLoss
 from znrnd.models import NTModel
 from znrnd.optimizers import TraceOptimizer
 
@@ -74,13 +76,10 @@ class TestTraceOptimizer:
         )
         # Define the model
         model = NTModel(
-            loss_fn=CrossEntropyLoss(),
             optimizer=optimizer,
             input_shape=(1, 28, 28, 1),
             nt_module=network,
-            accuracy_fn=LabelAccuracy(),
             batch_size=5,
-            training_threshold=0.01,
         )
 
         # Get theoretical values

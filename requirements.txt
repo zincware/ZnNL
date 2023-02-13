@@ -5,6 +5,7 @@ flake8==5.0.4
 black==22.8.0
 ipython
 numpydoc
+optax
 sphinx_copybutton
 sphinx_rtd_theme
 nbsphinx

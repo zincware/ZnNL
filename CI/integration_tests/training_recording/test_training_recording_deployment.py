@@ -64,10 +64,10 @@ class TestRecorderDeployment:
         )
 
         # Set the class assigned recorders
-        cls.train_recorder = rnd.model_recording.JaxRecorder(
+        cls.train_recorder = rnd.training_recording.JaxRecorder(
             loss=True, accuracy=True, update_rate=1, chunk_size=11, name="trainer"
         )
-        cls.test_recorder = rnd.model_recording.JaxRecorder(
+        cls.test_recorder = rnd.training_recording.JaxRecorder(
             loss=True, accuracy=True, ntk=True, update_rate=5
         )
 
@@ -75,20 +75,24 @@ class TestRecorderDeployment:
         cls.production_model = rnd.models.NTModel(
             nt_module=network,
             optimizer=optax.adam(learning_rate=0.01),
-            loss_fn=rnd.loss_functions.CrossEntropyLoss(),
             input_shape=(1, 28, 28, 1),
-            accuracy_fn=rnd.accuracy_functions.LabelAccuracy(),
         )
 
         cls.train_recorder.instantiate_recorder(data_set=cls.data_generator.train_ds)
         cls.test_recorder.instantiate_recorder(data_set=cls.data_generator.test_ds)
 
+        # Define training strategy
+        cls.training_strategy = rnd.training_strategies.SimpleTraining(
+            model=cls.production_model,
+            loss_fn=rnd.loss_functions.CrossEntropyLoss(),
+            accuracy_fn=rnd.accuracy_functions.LabelAccuracy(),
+            recorders=[cls.train_recorder, cls.test_recorder],
+        )
         # Train the model with the recorders
-        cls.batch_wise_metrics = cls.production_model.train_model(
+        cls.batch_wise_metrics = cls.training_strategy.train_model(
             train_ds=cls.data_generator.train_ds,
             test_ds=cls.data_generator.test_ds,
             batch_size=5,
-            recorders=[cls.train_recorder, cls.test_recorder],
             epochs=10,
         )
 
@@ -126,12 +130,20 @@ class TestRecorderDeployment:
             train_recorder.instantiate_recorder(
                 train_recorder._data_set, overwrite=True
             )
+
+            # Define the training strategy
+            training_strategy = rnd.training_strategies.SimpleTraining(
+                model=new_model,
+                loss_fn=rnd.loss_functions.CrossEntropyLoss(),
+                accuracy_fn=rnd.accuracy_functions.LabelAccuracy(),
+                recorders=[train_recorder],
+            )
+
             # Retrain the model.
-            new_model.train_model(
+            training_strategy.train_model(
                 train_ds=self.data_generator.train_ds,
                 test_ds=self.data_generator.test_ds,
                 batch_size=5,
-                recorders=[train_recorder],
                 epochs=20,
             )
 
@@ -190,12 +202,19 @@ class TestRecorderDeployment:
             train_recorder.instantiate_recorder(
                 train_recorder._data_set, overwrite=True
             )
+            # Define the training strategy
+            training_strategy = rnd.training_strategies.SimpleTraining(
+                model=new_model,
+                loss_fn=rnd.loss_functions.CrossEntropyLoss(),
+                accuracy_fn=rnd.accuracy_functions.LabelAccuracy(),
+                recorders=[train_recorder],
+            )
+
             # Retrain the model.
-            new_model.train_model(
+            training_strategy.train_model(
                 train_ds=self.data_generator.train_ds,
                 test_ds=self.data_generator.test_ds,
                 batch_size=5,
-                recorders=[train_recorder],
                 epochs=20,
             )
 
