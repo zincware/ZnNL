@@ -117,7 +117,6 @@ class JaxRecorder:
 
     # Class helpers
     update_rate: int = 1
-    # loss_fn and accuracy_fn are instantiated in the training strategy.
     _loss_fn: SimpleLoss = None
     _accuracy_fn: AccuracyFunction = None
     _selected_properties: list = None
@@ -303,6 +302,52 @@ class JaxRecorder:
 
         """
         raise NotImplementedError("Not yet available in ZnRND.")
+
+    @property
+    def loss_fn(self):
+        """
+        The loss function property of a recorder.
+
+        Returns
+        -------
+        The loss function used in the recorder.
+        """
+        return self._loss_fn
+
+    @loss_fn.setter
+    def loss_fn(self, loss_fn: SimpleLoss):
+        """
+        Setting a loss function for a recorder.
+
+        Parameters
+        ----------
+        loss_fn : SimpleLoss
+                Loss function used for recording.
+        """
+        self._loss_fn = loss_fn
+
+    @property
+    def accuracy_fn(self):
+        """
+        The accuracy function property of a recorder.
+
+        Returns
+        -------
+        The accuracy function used in the recorder.
+        """
+        return self._accuracy_fn
+
+    @accuracy_fn.setter
+    def accuracy_fn(self, accuracy_fn: AccuracyFunction):
+        """
+        Setting an accuracy function for a recorder.
+
+        Parameters
+        ----------
+        accuracy_fn : AccuracyFunction
+                Accuracy function used for recording.
+        """
+        self._accuracy_fn = accuracy_fn
 
     def _update_loss(self, parsed_data: dict):
         """
