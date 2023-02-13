@@ -11,7 +11,9 @@ Description: Decorator used for training a model.
 import functools
 import inspect
 import logging
-from typing import Callable
+from typing import Callable, TYPE_CHECKING
+if TYPE_CHECKING:
+    from znrnd.training_strategies.simple_training import SimpleTraining
 
 import numpy as onp
 
@@ -48,7 +50,7 @@ def train_func(train_fn: Callable):
     """
 
     @functools.wraps(train_fn)
-    def wrapper(trainer, *args, **kwargs):
+    def wrapper(trainer: 'SimpleTraining', *args, **kwargs):
         """
         Wrapper function of the train_func decorator.
 
@@ -56,13 +58,15 @@ def train_func(train_fn: Callable):
 
         Parameters
         ----------
-        trainer : Todo
+        trainer : SimpleTraining
                 Training strategy in which the decorator is used for the train_model
                 method.
         args : tuple
                 Arguments put into train_fn.
+                For more details see the docstring of the wrapped function.
         kwargs : dict
                 Keyword arguments put into the train_fn.
+                For more details see the docstring of the wrapped function.
 
         Returns
         -------
