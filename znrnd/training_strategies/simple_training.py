@@ -33,7 +33,15 @@ class SimpleTraining:
     """
     Class for training a model using a simple training strategy.
 
-    This class is parent to other training strategies.
+    This class is parent to other training strategies and defines the most basic type
+    of training strategy.
+
+    In this strategy, all training data is trained for a given number epochs and a batch
+    size.
+    Each data point is assumed to be equally important for the training. Every data
+    point is trained once in each epoch. The order of the batches is randomly generated.
+
+    This training strategy focuses on learning distributions based on i.i.d. data.
     """
 
     def __init__(
