@@ -346,7 +346,7 @@ class LossAwareReservoir(SimpleTraining):
         # If reservoir is empty, only train on latest points
         if batch_size == 0:
             latest_data = {
-                k: v[-self.latest_points:, ...] for k, v in train_ds.items()
+                k: v[-self.latest_points :, ...] for k, v in train_ds.items()
             }
             state, metrics = self._train_step(state, latest_data)
             batch_metrics = [metrics]
