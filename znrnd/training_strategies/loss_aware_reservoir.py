@@ -58,19 +58,19 @@ class LossAwareReservoir(SimpleTraining):
     In addition, the user can select a number of latest_points.
     Background:
     In continual learning, new data is trained when it is available.
-    In order to no forget about previously seen data, some old data can be added
+    In order to not forget about previously seen data, some old data can be added
     to each batch. The selection of old data is tackled by the loss aware reservoir.
     The latest_points define how many points at the end of the data set have not been
     trained, i.e. are not part of the previously seen data.
-    Already seen points, can be selected into the reservoir, based on their loss.
-    A batch the consists of [latest_points, reservoir_batch].
+    Already seen points, can be put into the reservoir, based on their loss.
+    A batch then consists of [latest_points, reservoir_batch].
     From another point of view, it is regular training of the reservoir, adding the
     latest_points to each batch.
 
     The latest_points are mostly used in recursive training procedures.
     Applying to RND: latest_points = 1, as RND adds one point after each training.
 
-    Besides, the latest points, this class manipulates the probability of training a
+    Aside from the latest points, this class manipulates the probability of training a
     point by scaling it with the loss.
 
     This training strategy focuses on training of data with strong initial differences
