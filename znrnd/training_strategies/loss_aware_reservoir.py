@@ -214,19 +214,14 @@ class LossAwareReservoir(SimpleTraining):
         data : List[int]
                 List of data indices with additional entries at the beginning.
         """
-        data = np.concatenate(
-            [
-                np.repeat(
-                    np.arange(
-                        self.train_data_size - self.latest_points,
-                        self.train_data_size,
-                    ),
-                    freq,
-                ),
-                data_idx,
-            ],
-            axis=0,
+        # Get the indices of the latest points
+        idx_latest_points = np.arange(
+            self.train_data_size - self.latest_points, self.train_data_size
         )
+        # Select the latest points multiple times.
+        idx_latest_points = np.repeat(idx_latest_points, freq)
+        # Append the latest points to the data.
+        data = np.concatenate([idx_latest_points, data_idx], axis=0)
         return data
 
     def _compute_distance(self, dataset: dict) -> np.ndarray:
