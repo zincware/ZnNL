@@ -44,6 +44,18 @@ class TestLossAwareReservoir:
     Integration test suite for the loss aware reservoir training strategy.
     """
 
+    @classmethod
+    def setup_class(cls):
+        """
+        Create data for the tests.
+        """
+
+        raw_x = np.linspace(1, 0, 11)
+        x = np.expand_dims(raw_x, axis=-1)
+        y = np.zeros_like(x)
+        cls.train_ds = {"inputs": x, "targets": y}
+        cls.test_ds = {"inputs": x, "targets": y}
+
     def test_comparison_to_simple_training(self):
         """
         Test the equivalence of loss aware reservoir and simple training.
@@ -54,13 +66,6 @@ class TestLossAwareReservoir:
         generated the same number of keys. Given the same seed they have to be
         identical when calling them again.
         """
-
-        # Create data as they will be put into the reservoir
-        raw_x = np.linspace(0, 1, 11)[::-1]
-        x = np.expand_dims(raw_x, axis=-1)
-        y = np.zeros_like(x)
-        train_ds = {"inputs": x, "targets": y}
-        test_ds = train_ds
 
         model = NTModel(
             nt_module=stax.serial(stax.Dense(5), stax.Relu(), stax.Dense(1)),
@@ -77,8 +82,8 @@ class TestLossAwareReservoir:
             latest_points=0,
         )
         reservoir_out = lar_trainer.train_model(
-            train_ds=train_ds,
-            test_ds=test_ds,
+            train_ds=self.train_ds,
+            test_ds=self.test_ds,
             epochs=3,
         )
         lar_rng = lar_trainer.rng()
@@ -89,8 +94,8 @@ class TestLossAwareReservoir:
             disable_loading_bar=True,
         )
         simple_out = simple_trainer.train_model(
-            train_ds=train_ds,
-            test_ds=test_ds,
+            train_ds=self.train_ds,
+            test_ds=self.test_ds,
             epochs=3,
         )
         simple_rng = simple_trainer.rng()
@@ -109,13 +114,6 @@ class TestLossAwareReservoir:
         points (but without shuffling the data).
         """
 
-        # Create data as they will be put into the reservoir
-        raw_x = np.linspace(0, 1, 11)[::-1]
-        x = np.expand_dims(raw_x, axis=-1)
-        y = np.zeros_like(x)
-        train_ds = {"inputs": x, "targets": y}
-        test_ds = train_ds
-
         model = NTModel(
             nt_module=stax.serial(stax.Dense(5), stax.Relu(), stax.Dense(1)),
             optimizer=optax.adam(learning_rate=0.001),
@@ -131,8 +129,8 @@ class TestLossAwareReservoir:
             latest_points=11,
         )
         reservoir_out = lar_trainer.train_model(
-            train_ds=train_ds,
-            test_ds=test_ds,
+            train_ds=self.train_ds,
+            test_ds=self.test_ds,
             epochs=5,
         )
         simple_trainer = SimpleTraining(
@@ -142,8 +140,8 @@ class TestLossAwareReservoir:
             disable_loading_bar=True,
         )
         simple_out = simple_trainer.train_model(
-            train_ds=train_ds,
-            test_ds=test_ds,
+            train_ds=self.train_ds,
+            test_ds=self.test_ds,
             epochs=5,
         )
 
