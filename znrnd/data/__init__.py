@@ -15,6 +15,7 @@ from znrnd.data.mnist import MNISTGenerator
 from znrnd.data.points_on_a_circle import PointsOnCircle
 from znrnd.data.points_on_a_lattice import PointsOnLattice
 
+
 __all__ = [
     ConfinedParticles.__name__,
     DataGenerator.__name__,
