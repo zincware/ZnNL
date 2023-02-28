@@ -26,9 +26,12 @@ Summary
 Module for the neural tangents infinite width network models.
 """
 import logging
-from typing import Callable, List, Optional, Union
+from typing import Callable, List, Optional, Tuple, Union
 
+import jax
 import jax.numpy as np
+import numpy as onp
+from flax.training.train_state import TrainState
 from tqdm import trange
 
 from znrnd.accuracy_functions.accuracy_function import AccuracyFunction
@@ -50,9 +53,25 @@ class LossAwareReservoir(SimpleTraining):
     Instead of training on the whole data set, this strategy trains on a reservoir of
     data. The reservoir consists has a maximum size N and is dynamically updated.
     The update is performed by evaluating the loss for each point inside the training
-    data. The N points with the biggest loss are put into the reservoir.
+    data. The N points with the biggest loss are selected into the reservoir.
 
-    This manipulates the probability of training a point by scaling it with the loss.
+    In addition, the user can select a number of latest_points.
+    Background:
+    In continual learning, new data is trained when it is available.
+    In order to not forget about previously seen data, some old data can be added
+    to each batch. The selection of old data is tackled by the loss aware reservoir.
+    The latest_points define how many points at the end of the data set have not been
+    trained, i.e. are not part of the previously seen data.
+    Already seen points, can be put into the reservoir, based on their loss.
+    A batch then consists of [latest_points, reservoir_batch].
+    From another point of view, it is regular training of the reservoir, adding the
+    latest_points to each batch.
+
+    The latest_points are mostly used in recursive training procedures.
+    Applying to RND: latest_points = 1, as RND adds one point after each training.
+
+    Aside from the latest points, this class manipulates the probability of training a
+    point by scaling it with the loss.
 
     This training strategy focuses on training of data with strong initial differences
     in the loss. This strategy aims to equalize strong loss differences without
@@ -67,6 +86,7 @@ class LossAwareReservoir(SimpleTraining):
         seed: int = None,
         reservoir_size: int = 500,
         reservoir_metric: Optional[DistanceMetric] = None,
+        latest_points: int = 1,
         recursive_mode: RecursiveMode = None,
         disable_loading_bar: bool = False,
         recorders: List["JaxRecorder"] = None,
@@ -97,6 +117,11 @@ class LossAwareReservoir(SimpleTraining):
                 reservoir.
                 As default the distance metric underlying the loss function chosen for
                 training the model is use.
+        latest_points : int (default = 1)
+                Number of points defined to be added to the train data set lastly.
+                These points will not be selected into the reservoir and are trained in
+                every epoch. Selecting latest_points a training batch consist of
+                [latest_points, reservoir_batch].
         recursive_mode : RecursiveMode
                 Defining the recursive mode that can be used in training.
                 If the recursive mode is used, the training will be performed until a
@@ -121,38 +146,83 @@ class LossAwareReservoir(SimpleTraining):
         # Define loss aware reservoir of training data
         self.reservoir = None
         self.reservoir_size = reservoir_size
+        self.latest_points = latest_points
         # Define distance metric used to select data into the reservoir
         if reservoir_metric:
             self.reservoir_metric = reservoir_metric
         else:
             self.reservoir_metric = loss_fn.metric
 
-    def _update_reservoir(self, train_ds) -> dict:
+    def _update_reservoir(self, train_ds: dict) -> List[int]:
         """
         Updates the reservoir in the following steps:
 
-        * Compute distance of representations of the training set
+        * Exclude latest_points from the train_data
+        * Compute distance of representations of the remaining training set
         * Sort the training set according to the distance
-        * Update the reservoir with the sorted training set
 
-        The reservoir is a dictionary, similar to the train_ds, containing points based
-        on a selection.
+        The reservoir is a list of indices based on the selection.
         The points are selected by comparing their losses. The n points with the biggest
         loss are put into the reservoir, with n being the reservoir length.
 
+        Parameters
+        ----------
+        train_ds : dict
+                Train data set
+
         Returns
         -------
-        Loss aware reservoir : dict
+        Loss aware reservoir : List[int]
         """
-        distances = self._compute_distance(train_ds)
-        max_size = self.reservoir_size
+        # Exclude the latest_points from train_ds
+        if self.latest_points == 0:
+            old_data = train_ds
+        else:
+            old_data = {k: v[: -self.latest_points, ...] for k, v in train_ds.items()}
 
-        # Return the whole train data if reservoir can cover them all
-        if max_size >= self.train_data_size:
-            return train_ds
-        # If the reservoir is smaller than the train data select data via the loss
-        sorted_idx = np.argsort(distances)[::-1][:max_size]
-        return {k: v[sorted_idx, ...] for k, v in train_ds.items()}
+        distances = self._compute_distance(old_data)
+
+        # Return the old train data indices if the reservoir can cover them all
+        if self.reservoir_size >= self.train_data_size - self.latest_points:
+            return np.arange(self.train_data_size - self.latest_points)
+        # If the reservoir is smaller than the train, data select data via the loss
+        return np.argsort(distances)[::-1][: self.reservoir_size]
+
+    def _append_latest_points(self, data_idx: List[int], freq: int = 1):
+        """
+        Append indices of the latest data points to a list of indices.
+
+        The latest data points are located at the end of the training data.
+        Therefore, they are accessed via the size of the train data set and the number
+        of the latest points.
+        They are placed at the beginning of the returned data.
+
+        The latest_data is not shuffled before appending, as the default is
+        latest_points=1, which will lead to an unnecessary overhead in most cases.
+
+        Parameters
+        ----------
+        data_idx : List[int]
+                List of ints denoting the indices in the train_ds argument in the
+                .train_model method.
+        freq : int (default = 1)
+                Defining how often the latest indices are appended to the data_idx.
+                freq > 1 only used for the trace optimizer.
+
+        Returns
+        -------
+        data : List[int]
+                List of data indices with additional entries at the beginning.
+        """
+        # Get the indices of the latest points
+        idx_latest_points = np.arange(
+            self.train_data_size - self.latest_points, self.train_data_size
+        )
+        # Select the latest points multiple times.
+        idx_latest_points = np.repeat(idx_latest_points, freq)
+        # Append the latest points to the data.
+        data = np.concatenate([idx_latest_points, data_idx], axis=0)
+        return data
 
     def _compute_distance(self, dataset: dict) -> np.ndarray:
         """
@@ -193,21 +263,36 @@ class LossAwareReservoir(SimpleTraining):
         """
         if self.model is None:
             raise KeyError(
-                "self.model = None \n"
+                f"self.model = {self.model}. "
                 "If the training strategy should operate on a model, a model"
                 "must be given."
                 "Pass the model in the construction."
             )
 
+        # Set defaults
         if not kwargs["epochs"]:
             kwargs["epochs"] = 50
         if not kwargs["batch_size"]:
             kwargs["batch_size"] = len(kwargs["train_ds"]["targets"])
 
-        if self.reservoir_size < kwargs["batch_size"]:
-            kwargs["batch_size"] = self.reservoir_size
-            if len(kwargs["train_ds"]["targets"]) < self.reservoir_size:
-                kwargs["batch_size"] = len(kwargs["train_ds"]["targets"])
+        # Raise error if less data available than latest points chosen.
+        if self.latest_points > len(kwargs["train_ds"]["targets"]):
+            raise (
+                AttributeError(
+                    "len(train_ds) < latest_points. "
+                    "More latest points chosen than data available. "
+                )
+            )
+
+        # Check for adapting the batch_size
+        sizes = (
+            len(kwargs["train_ds"]["targets"]) - self.latest_points,
+            self.reservoir_size,
+            kwargs["batch_size"],
+        )
+        new_batch_size = min(sizes)
+        if new_batch_size != kwargs["batch_size"]:
+            kwargs["batch_size"] = new_batch_size
             logger.info(
                 "The size of the train data is smaller than the batch size. Setting"
                 " the batch size equal to the train data size of"
@@ -215,6 +300,73 @@ class LossAwareReservoir(SimpleTraining):
             )
 
         return kwargs
+
+    def _train_epoch(
+        self, state: TrainState, train_ds: dict, batch_size: int
+    ) -> Tuple[TrainState, dict]:
+        """
+        Train for a single epoch.
+
+        This is the customized method of training a single epoch using the loss aware
+        reservoir training strategy.
+        The method performs the following steps:
+
+        * Updating the reservoir
+        * Shuffling the data
+        * Batching the data
+        * Appending the latest points for each batch
+        * Running an optimization step on each batch
+        * Computing the metrics for the batch
+        * Returning an updated optimizer, state, and metrics dictionary.
+
+        Parameters
+        ----------
+        state : TrainState
+                Current state of the model.
+        train_ds : dict
+                Dataset on which to train.
+        batch_size : int
+                Size of each batch.
+
+        Returns
+        -------
+        state : TrainState
+                State of the model after the epoch.
+        metrics : Tuple[TrainState, dict]
+                Tuple of train state and metrics for current state.
+        """
+        # Update the reservoir
+        self.reservoir = self._update_reservoir(train_ds=train_ds)
+
+        # If reservoir is empty, only train on latest points
+        if batch_size == 0:
+            latest_data = {
+                k: v[-self.latest_points :, ...] for k, v in train_ds.items()
+            }
+            state, metrics = self._train_step(state, latest_data)
+            batch_metrics = [metrics]
+        else:
+            batches_per_epoch = len(self.reservoir) // batch_size
+            # Prepare the shuffle.
+            permutations = jax.random.permutation(self.rng(), self.reservoir)
+            permutations = np.array_split(permutations, batches_per_epoch)
+
+            # Step over items in batch and append the latest points to each batch
+            batch_metrics = []
+            for permutation in permutations:
+                permutation = self._append_latest_points(permutation)
+                batch = {k: v[permutation, ...] for k, v in train_ds.items()}
+                state, metrics = self._train_step(state, batch)
+                batch_metrics.append(metrics)
+
+        # Get the metrics off device for printing.
+        batch_metrics_np = jax.device_get(batch_metrics)
+        epoch_metrics_np = {
+            k: onp.mean([metrics[k] for metrics in batch_metrics_np])
+            for k in batch_metrics_np[0]
+        }
+
+        return state, epoch_metrics_np
 
     @train_func
     def train_model(
@@ -235,8 +387,10 @@ class LossAwareReservoir(SimpleTraining):
                 Test dataset with inputs and targets.
         epochs : Optional[int] (default = 50)
                 Number of epochs to train over.
-        batch_size : int (default = 1)
-                Size of the batch to use in training.
+        batch_size : int (default = len(train_ds))
+                Size of a training batch of the reservoir. The latest_points are not
+                taken into account in the batch_size as they are added additionally
+                to each batch.
 
         Returns
         -------
@@ -257,7 +411,6 @@ class LossAwareReservoir(SimpleTraining):
         train_losses = []
         train_accuracy = []
         for i in loading_bar:
-            self.reservoir = self._update_reservoir(train_ds)
             # Update the recorder properties
             if self.recorders is not None:
                 for item in self.recorders:
@@ -265,16 +418,25 @@ class LossAwareReservoir(SimpleTraining):
 
             loading_bar.set_description(f"Epoch: {i}")
 
+            # Update the trace optimizer
             if isinstance(self.model.optimizer, TraceOptimizer):
+                # Update the reservoir
+                self.reservoir = self._update_reservoir(train_ds)
+                # Compute the number of batches
+                batches_per_epoch = len(self.reservoir) // batch_size
+                # Create the data set used for the trace optimizer
+                full_dataset_idx = self._append_latest_points(
+                    data_idx=self.reservoir, freq=batches_per_epoch
+                )
                 state = self.model.optimizer.apply_optimizer(
                     model_state=state,
-                    data_set=self.reservoir["inputs"],
+                    data_set=train_ds["inputs"][full_dataset_idx],
                     ntk_fn=self.model.compute_ntk,
                     epoch=i,
                 )
 
             state, train_metrics = self._train_epoch(
-                state=state, train_ds=self.reservoir, batch_size=batch_size
+                state=state, train_ds=train_ds, batch_size=batch_size
             )
             self.review_metric = self._evaluate_model(state.params, test_ds)
             train_losses.append(train_metrics["loss"])

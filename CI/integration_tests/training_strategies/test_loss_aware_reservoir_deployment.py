@@ -21,7 +21,7 @@ If you use this module please cite us with:
 
 Summary
 -------
-Test for the model recording module.
+Test for the loss aware reservoir training strategy.
 """
 import os
 
@@ -31,9 +31,8 @@ import copy
 
 import numpy as np
 import optax
-from jax import random
 from neural_tangents import stax
-from numpy.testing import assert_array_equal
+from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 from znrnd.loss_functions import MeanPowerLoss
 from znrnd.models import NTModel
@@ -45,56 +44,28 @@ class TestLossAwareReservoir:
     Integration test suite for the loss aware reservoir training strategy.
     """
 
-    def test_reservoir_sorting(self):
+    @classmethod
+    def setup_class(cls):
         """
-        Test the sorting of the reservoir.
-
-        This test asserts if
-            * the size of the reservoir is the selected one
-            * the reservoir sorts correctly
+        Create data for the tests.
         """
 
-        # Create linearly spaced data from -1 to 1 and shuffle them
-        key1, key2 = random.split(random.PRNGKey(1), 2)
-        raw_x = random.permutation(key1, np.linspace(0, 1, 11), axis=0)
+        raw_x = np.linspace(1, 0, 11)
         x = np.expand_dims(raw_x, axis=-1)
         y = np.zeros_like(x)
-        train_ds = {"inputs": x, "targets": y}
-        test_ds = train_ds
-
-        # Use a linear network (without activation function) to test the selection
-        model = NTModel(
-            nt_module=stax.serial(stax.Dense(128), stax.Dense(1)),
-            optimizer=optax.adam(learning_rate=0.001),
-            input_shape=(1, 1),
-        )
-
-        trainer = LossAwareReservoir(
-            model=model,
-            loss_fn=MeanPowerLoss(order=2),
-            reservoir_size=4,
-            disable_loading_bar=True,
-        )
-
-        # Test if a smaller reservoir selects the correctly sorted points
-        _ = trainer.train_model(train_ds=train_ds, test_ds=test_ds, epochs=1)
-        selection_idx = np.argsort(np.abs(raw_x))[::-1][:4]
-        assert_array_equal(trainer.reservoir["inputs"], x[selection_idx])
+        cls.train_ds = {"inputs": x, "targets": y}
+        cls.test_ds = {"inputs": x, "targets": y}
 
     def test_comparison_to_simple_training(self):
         """
-        Test the comparison to simple training strategy.
+        Test the equivalence of loss aware reservoir and simple training.
 
         The loss aware reservoir has to be identical to simple training for choosing the
         reservoir big enough to capture the whole training data.
+        Also compare the random number generators after training. They should have
+        generated the same number of keys. Given the same seed they have to be
+        identical when calling them again.
         """
-
-        # Create data as they will be put into the reservoir
-        raw_x = np.linspace(0, 1, 11)[::-1]
-        x = np.expand_dims(raw_x, axis=-1)
-        y = np.zeros_like(x)
-        train_ds = {"inputs": x, "targets": y}
-        test_ds = train_ds
 
         model = NTModel(
             nt_module=stax.serial(stax.Dense(5), stax.Relu(), stax.Dense(1)),
@@ -102,17 +73,65 @@ class TestLossAwareReservoir:
             input_shape=(1, 1),
         )
 
-        recursive_trainer = LossAwareReservoir(
+        lar_trainer = LossAwareReservoir(
             model=copy.deepcopy(model),
             loss_fn=MeanPowerLoss(order=2),
             reservoir_size=500,
             seed=17,
             disable_loading_bar=True,
+            latest_points=0,
         )
-        reservoir_out = recursive_trainer.train_model(
-            train_ds=train_ds,
-            test_ds=test_ds,
+        reservoir_out = lar_trainer.train_model(
+            train_ds=self.train_ds,
+            test_ds=self.test_ds,
             epochs=3,
+        )
+        lar_rng = lar_trainer.rng()
+        simple_trainer = SimpleTraining(
+            model=copy.deepcopy(model),
+            loss_fn=MeanPowerLoss(order=2),
+            seed=17,
+            disable_loading_bar=True,
+        )
+        simple_out = simple_trainer.train_model(
+            train_ds=self.train_ds,
+            test_ds=self.test_ds,
+            epochs=3,
+        )
+        simple_rng = simple_trainer.rng()
+
+        assert simple_out == reservoir_out
+        assert_array_equal(simple_rng, lar_rng)
+
+    def test_comparison_to_simple_training_latest_points(self):
+        """
+        Test the equivalence of loss aware reservoir and simple training using only the
+        latest points.
+
+        Using latest_points, the user can select points that will be trained in every
+        epoch.
+        Selecting all data into latest_points will lead to a simple training of those
+        points (but without shuffling the data).
+        """
+
+        model = NTModel(
+            nt_module=stax.serial(stax.Dense(5), stax.Relu(), stax.Dense(1)),
+            optimizer=optax.adam(learning_rate=0.001),
+            input_shape=(1, 1),
+        )
+
+        lar_trainer = LossAwareReservoir(
+            model=copy.deepcopy(model),
+            loss_fn=MeanPowerLoss(order=2),
+            reservoir_size=500,
+            seed=17,
+            disable_loading_bar=True,
+            latest_points=11,
+        )
+        reservoir_out = lar_trainer.train_model(
+            train_ds=self.train_ds,
+            test_ds=self.test_ds,
+            epochs=5,
         )
         simple_trainer = SimpleTraining(
             model=copy.deepcopy(model),
@@ -121,8 +140,10 @@ class TestLossAwareReservoir:
             disable_loading_bar=True,
         )
         simple_out = simple_trainer.train_model(
-            train_ds=train_ds,
-            test_ds=test_ds,
-            epochs=3,
+            train_ds=self.train_ds,
+            test_ds=self.test_ds,
+            epochs=5,
         )
-        assert simple_out == reservoir_out
+
+        for key in simple_out.keys():
+            assert_array_almost_equal(simple_out[key], reservoir_out[key])

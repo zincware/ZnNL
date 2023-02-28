@@ -286,7 +286,7 @@ class SimpleTraining:
         """
         if self.model is None:
             raise KeyError(
-                "self.model = None. "
+                f"self.model = {self.model}. "
                 "If the training strategy should operate on a model, a model"
                 "must be given."
                 "Pass the model in the construction."

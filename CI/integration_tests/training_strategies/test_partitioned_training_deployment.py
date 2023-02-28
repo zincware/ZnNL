@@ -43,6 +43,17 @@ class TestPartitionedSelection:
     Integration test suite for the partitioned training strategy.
     """
 
+    @classmethod
+    def setup_class(cls):
+        """
+        Create data for the tests.
+        """
+        key1, key2 = random.split(random.PRNGKey(1), 2)
+        x = random.normal(key1, (3, 8))
+        y = random.normal(key1, (3, 1))
+        cls.train_ds = {"inputs": x, "targets": y}
+        cls.test_ds = {"inputs": x, "targets": y}
+
     def test_metric_length(self):
         """
         Test the length of the metric output when training with the partitioned training
@@ -53,11 +64,6 @@ class TestPartitionedSelection:
         the length of this metric.
         The length has to be adjustable by the number of epochs.
         """
-        key1, key2 = random.split(random.PRNGKey(1), 2)
-        x = random.normal(key1, (3, 8))
-        y = random.normal(key1, (3, 1))
-        train_ds = {"inputs": x, "targets": y}
-        test_ds = train_ds
 
         model = NTModel(
             nt_module=stax.serial(stax.Dense(5), stax.Relu(), stax.Dense(1)),
@@ -73,15 +79,15 @@ class TestPartitionedSelection:
 
         # Check if default train for 200 epochs
         batch_metric = trainer.train_model(
-            train_ds=train_ds,
-            test_ds=test_ds,
+            train_ds=self.train_ds,
+            test_ds=self.test_ds,
         )
         assert len(batch_metric["train_losses"]) == 200
 
         # Check optional kwargs
         batch_metric = trainer.train_model(
-            train_ds=train_ds,
-            test_ds=test_ds,
+            train_ds=self.train_ds,
+            test_ds=self.test_ds,
             epochs=[2, 5],
             train_ds_selection=[[-1], slice(1, -1, 3)],
         )
@@ -94,12 +100,6 @@ class TestPartitionedSelection:
         The partitioned training has to be identical to simple training for selecting
         train_ds_selection=[slice(None, None, None)]
         """
-
-        key1, key2 = random.split(random.PRNGKey(1), 2)
-        x = random.normal(key1, (3, 8))
-        y = random.normal(key1, (3, 1))
-        train_ds = {"inputs": x, "targets": y}
-        test_ds = train_ds
 
         model = NTModel(
             nt_module=stax.serial(stax.Dense(5), stax.Relu(), stax.Dense(1)),
@@ -114,8 +114,8 @@ class TestPartitionedSelection:
             disable_loading_bar=True,
         )
         partitioned_out = partitioned_trainer.train_model(
-            train_ds=train_ds,
-            test_ds=test_ds,
+            train_ds=self.train_ds,
+            test_ds=self.test_ds,
             epochs=[3],
             train_ds_selection=[slice(None, None, None)],
             batch_size=[2],
@@ -127,6 +127,6 @@ class TestPartitionedSelection:
             disable_loading_bar=True,
         )
         simple_out = simple_trainer.train_model(
-            train_ds=train_ds, test_ds=test_ds, epochs=3, batch_size=2
+            train_ds=self.train_ds, test_ds=self.test_ds, epochs=3, batch_size=2
         )
         assert simple_out == partitioned_out
