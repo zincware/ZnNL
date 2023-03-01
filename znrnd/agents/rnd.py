@@ -92,7 +92,6 @@ class RND(Agent):
         self.visualizer = visualizer
 
         self.historical_length: int = 0
-        self.target_set: list = []
         self.target_indices: list = []
         self.iterations: int = 0
         self.stationary_iterations: int = 0
@@ -180,11 +179,19 @@ class RND(Agent):
         data = self.fetch_data(-1)  # get all points in the pool.
         distances = self.compute_distance(np.array(data))
         points = self.point_selector.select_points(distances)
-        selected_points = data[points]
-        self._update_target_set([selected_points])
-        self.target_indices.append(int(points))
+        self._update_target_indices(points)
 
-    def _update_target_set(self, points: Union[np.ndarray, None]):
+    def get_data_set(self, indices: list) -> onp.array:
+        """
+        Get a subset of data in the data pool based on indices
+
+        Returns
+        -------
+        Target and residual set.
+        """
+        return self.data_generator.data_pool[onp.array(indices)]
+
+    def _update_target_indices(self, points: Union[np.ndarray, None]):
         """
         Add point/s to the target set.
 
@@ -197,21 +204,32 @@ class RND(Agent):
         -------
         If there are new points the class is updated, if not, nothing happens.
         """
-        self.historical_length = len(self.target_set)
+        self.historical_length = len(self.target_indices)
         if points is None:
-            return
+            pass
         else:
-            for item in points:
-                self.target_set.append(list(item))
+            self.target_indices.extend([points.tolist()])
+
+    def get_residual_indices(self) -> list:
+        """
+        Get residual indices, i.e. all indices denoting points, which are not in the
+        target set.
+
+        Returns
+        -------
+        List of residual indices.
+        """
+        num_points = len(self.data_generator.data_pool)
+        return list(set(range(num_points)) - set(self.target_indices))
 
     def _retrain_network(self):
         """
         Re-train the predictor network.
         """
-        if self.historical_length == len(self.target_set):
+        if self.historical_length == len(self.target_indices):
             pass
         else:
-            domain = np.array(self.target_set)
+            domain = self.get_data_set(self.target_indices)
             codomain = self.target(domain)
             dataset = {"inputs": domain, "targets": codomain}
             self.training_strategy.train_model(
@@ -244,7 +262,7 @@ class RND(Agent):
             seed_number = onp.random.randint(0, len(self.data_generator))
             seed_point = self.data_generator.take_index(seed_number)
 
-        self._update_target_set(np.array(seed_point))
+        self._update_target_indices(np.array(seed_point))
         self._retrain_network()
         self.target_indices.append(seed_number)
         if visualize:
@@ -263,12 +281,12 @@ class RND(Agent):
 
         # Check if the target set is the correct size
         if self.target_size is not None:
-            if len(self.target_set) >= self.target_size:
+            if len(self.target_indices) >= self.target_size:
                 condition = True
 
         # Check if timeout condition is met
         if self.historical_length > 0:
-            if len(self.target_set) == self.historical_length:
+            if len(self.target_indices) == self.historical_length:
                 if self.stationary_iterations >= self.tolerance:
                     condition = True
                 else:
@@ -317,7 +335,7 @@ class RND(Agent):
         print("----------------")
         print(f"Run time: {time_elapsed / 60: 0.2f} m")
         print(f"Size of point cloud: {len(self.data_generator)}")
-        print(f"Number of points chosen: {len(self.target_set)}")
+        print(f"Number of points chosen: {len(self.target_indices)}")
         print(f"Seed points: {self.seed_point}\n")
 
     def build_dataset(
@@ -399,4 +417,4 @@ class RND(Agent):
         if report:
             self._report_performance(stop - start)
 
-        return np.array(self.target_set)
+        return self.get_data_set(self.target_indices)
