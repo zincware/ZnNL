@@ -21,6 +21,7 @@ from znrnd.data import DataGenerator
 from znrnd.distance_metrics.distance_metric import DistanceMetric
 from znrnd.models import JaxModel
 from znrnd.point_selection import PointSelection
+from znrnd.training_recording.jax_recording import JaxRecorder
 from znrnd.training_strategies.simple_training import SimpleTraining
 from znrnd.visualization.tsne_visualizer import TSNEVisualizer
 
@@ -52,6 +53,8 @@ class RND(Agent):
         visualizer: TSNEVisualizer = None,
         tolerance: int = 100,
         seed_point: list = None,
+        forward_recorder: JaxRecorder = False,
+        backward_recorder: JaxRecorder = False,
     ):
         """
         Constructor for the RND class.
@@ -78,6 +81,16 @@ class RND(Agent):
                 run.
         seed_point : list
                 Choose to start with an initial point as seed point
+        forward_recorder : JaxRecorder
+                Record the forward transfer during the RND process.
+                The recorder is instantiated with a placeholder data set, as it will be
+                re-instantiated with the residual data set.
+        backward_recorder : JaxRecorder
+                Record the backward transfer during the RND process.
+                The recorder is instantiated with a placeholder data set that is never
+                been used
+                as it will be
+                re-instantiated with the target data set.
         """
         # User defined attributes.
         self.target = target_network
@@ -103,6 +116,10 @@ class RND(Agent):
 
         # Run the class initialization
         self._check_and_update_defaults()
+
+        # Record the RND process
+        self.forward_recorder = forward_recorder
+        self.backward_recorder = backward_recorder
 
     def _check_and_update_defaults(self):
         """
@@ -134,6 +151,47 @@ class RND(Agent):
                 "model. \n "
                 "You can set the model in the training strategy to None. "
             )
+
+    def create_rnd_data_set(self, data: np.ndarray) -> dict:
+        """
+        Create a data set, which contains inputs and labels.
+
+        The inputs are given and the labels are created with the target network.
+
+        Parameters
+        ----------
+        data : np.ndarray
+                Data to create the data set with.
+
+        Returns
+        -------
+        data_set: dict
+                Data set containing input and targets.
+        """
+        data_set = {"inputs": data, "targets": self.target(data)}
+        return data_set
+
+    def _instantiate_recorders(self):
+        """
+        Instantiate the recorders with the current data of the target and residual set.
+
+        For the backward only the points that already have been trained are selected.
+        The backward recorder is removed for training the first point and added
+        afterwards again.
+        """
+        if self.forward_recorder:
+            residual_data = self.get_data(self.get_residual_indices())
+            residual_data_set = self.create_rnd_data_set(residual_data)
+            self.forward_recorder.instantiate_recorder(data_set=residual_data_set)
+
+        if self.backward_recorder and len(self.target_indices[:-1]) > 0:
+            if self.backward_recorder not in self.training_strategy.recorders:
+                self.training_strategy.recorders.append(self.backward_recorder)
+            target_data = self.get_data(self.target_indices[:-1])
+            target_data_set = self.create_rnd_data_set(target_data)
+            self.backward_recorder.instantiate_recorder(data_set=target_data_set)
+        if self.backward_recorder and len(self.target_indices[:-1]) == 0:
+            self.training_strategy.recorders.remove(self.backward_recorder)
 
     def compute_distance(self, points: np.ndarray) -> np.ndarray:
         """
@@ -181,7 +239,7 @@ class RND(Agent):
         points = self.point_selector.select_points(distances)
         self._update_target_indices(points)
 
-    def get_data_set(self, indices: list) -> onp.array:
+    def get_data(self, indices: list) -> onp.array:
         """
         Get a subset of data in the data pool based on indices
 
@@ -209,6 +267,8 @@ class RND(Agent):
             pass
         else:
             self.target_indices.extend([points.tolist()])
+        if self.forward_recorder or self.backward_recorder:
+            self._instantiate_recorders()
 
     def get_residual_indices(self) -> list:
         """
@@ -229,7 +289,7 @@ class RND(Agent):
         if self.historical_length == len(self.target_indices):
             pass
         else:
-            domain = self.get_data_set(self.target_indices)
+            domain = self.get_data(self.target_indices)
             codomain = self.target(domain)
             dataset = {"inputs": domain, "targets": codomain}
             self.training_strategy.train_model(
@@ -417,4 +477,4 @@ class RND(Agent):
         if report:
             self._report_performance(stop - start)
 
-        return self.get_data_set(self.target_indices)
+        return self.get_data(self.target_indices)
