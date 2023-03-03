@@ -37,7 +37,11 @@ from znrnd.analysis.loss_fn_derivative import LossDerivative
 from znrnd.loss_functions import SimpleLoss
 from znrnd.models.jax_model import JaxModel
 from znrnd.training_recording.data_storage import DataStorage
-from znrnd.utils.matrix_utils import calculate_l_pq_norm
+from znrnd.utils.matrix_utils import (
+    calculate_l_pq_norm,
+    compute_magnitude_density,
+    normalize_gram_matrix,
+)
 
 logger = logging.getLogger(__name__)
 

@@ -48,13 +48,22 @@ class TestEntropyAnalysis:
         # Print the device being used.
         print(xla_bridge.get_backend().platform)
 
+    def test_shannon_entropy(self):
+        """
+        Test the Shannon entropy.
+        """
+        dist = np.array([0.2, 0.2, 0.2, 0.2, 0.2])
+        assert EntropyAnalysis.compute_shannon_entropy(dist) == np.log(5)
+
+        dist = np.array([0, 0, 0, 0, 1])
+        assert EntropyAnalysis.compute_shannon_entropy(dist) == 0
+
+        dist = np.array([0, 0, 0, 0.5, 0.5])
+        assert EntropyAnalysis.compute_shannon_entropy(dist) == np.log(2)
+
     def test_von_neumann_entropy(self):
         """
         Test the computation of the von-Neumann entropy.
-
-        Returns
-        -------
-
         """
         matrix = np.eye(2) * 0.5
 
