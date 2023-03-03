@@ -56,6 +56,8 @@ class TestModelRecording:
             accuracy=True,
             ntk=True,
             entropy=True,
+            mag_entropy=True,
+            cov_entropy=True,
             eigenvalues=True,
             trace=True,
             loss_derivative=True,
@@ -91,6 +93,8 @@ class TestModelRecording:
                 accuracy=False,
                 ntk=False,
                 entropy=False,
+                mag_entropy=False,
+                cov_entropy=False,
                 eigenvalues=False,
             )
             recorder.instantiate_recorder(data_set=self.dummy_data_set)

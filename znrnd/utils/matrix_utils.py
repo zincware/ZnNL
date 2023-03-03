@@ -86,7 +86,27 @@ def normalize_gram_matrix(gram_matrix: np.ndarray):
 
     normalizing_matrix = np.sqrt(repeated_diagonals * repeated_diagonals.T)
 
-    return covariance_matrix / normalizing_matrix
+    return gram_matrix / normalizing_matrix
+
+
+def compute_magnitude_density(gram_matrix: np.ndarray) -> np.ndarray:
+    """
+    Method for computing the normalized magnitude density of each component of a gram
+    matrix.
+
+    Parameters
+    ----------
+    gram_matrix : np.ndarray
+            Covariance matrix to calculate the magnitude distribution of.
+
+    Returns
+    -------
+    magnitude_density: np.ndarray
+            Magnitude density of the individual entries.
+    """
+    magnitudes = np.sqrt(np.diagonal(gram_matrix))
+    density = magnitudes / magnitudes.sum()
+    return density
 
 
 def calculate_l_pq_norm(matrix: np.ndarray, p: int = 2, q: int = 2):

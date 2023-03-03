@@ -103,6 +103,14 @@ class JaxRecorder:
     entropy: bool = False
     _entropy_array: list = None
 
+    # Covariance Entropy of the model
+    cov_entropy: bool = False
+    _cov_entropy_array: list = None
+
+    # Covariance Entropy of the model
+    mag_entropy: bool = False
+    _mag_entropy_array: list = None
+
     # Model eigenvalues
     eigenvalues: bool = False
     _eigenvalues_array: list = None
@@ -216,6 +224,8 @@ class JaxRecorder:
             [
                 "ntk" in self._selected_properties,
                 "entropy" in self._selected_properties,
+                "mag_entropy" in self._selected_properties,
+                "cov_entropy" in self._selected_properties,
                 "eigenvalues" in self._selected_properties,
                 "trace" in self._selected_properties,
             ]
@@ -268,6 +278,8 @@ class JaxRecorder:
                     )
                     self.ntk = False
                     self.entropy = False
+                    self.mag_entropy = False
+                    self.cov_entropy = False
                     self.eigenvalues = False
                     self._read_selected_attributes()
 
@@ -408,6 +420,41 @@ class JaxRecorder:
             effective=False, normalize_eig=True
         )
         self._entropy_array.append(entropy)
+
+    def _update_cov_entropy(self, parsed_data: dict):
+        """
+        Update the entropy of the covariance NTK.
+
+        The covariance ntk is defined as the of cosine similarities. For this each
+        entry of the NTK is re-scaled by the gradient amplitudes.
+
+        Parameters
+        ----------
+        parsed_data : dict
+                Data computed before the update to prevent repeated calculations.
+        """
+        cov_ntk = normalize_gram_matrix(parsed_data["ntk"])
+        calculator = EntropyAnalysis(matrix=cov_ntk)
+        entropy = calculator.compute_von_neumann_entropy(
+            effective=False, normalize_eig=True
+        )
+        self._cov_entropy_array.append(entropy)
+
+    def _update_mag_entropy(self, parsed_data: dict):
+        """
+        Update magnitude entropy of the NTK.
+
+        The magnitude entropy is defined as the entropy of the normalized gradient
+        magnitudes.
+
+        Parameters
+        ----------
+        parsed_data : dict
+                Data computed before the update to prevent repeated calculations.
+        """
+        magnitude_dist = compute_magnitude_density(gram_matrix=parsed_data["ntk"])
+        entropy = EntropyAnalysis.compute_shannon_entropy(magnitude_dist)
+        self._mag_entropy_array.append(entropy)
 
     def _update_eigenvalues(self, parsed_data: dict):
         """
