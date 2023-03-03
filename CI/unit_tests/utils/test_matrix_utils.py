@@ -79,7 +79,7 @@ class TestMatrixUtils:
         for i in range(4):
             covariance_matrix[i, i] = i + 3
 
-        normalized_matrix = normalize_covariance_matrix(covariance_matrix)
+        normalized_matrix = normalize_gram_matrix(covariance_matrix)
 
         # Assert diagonals are 1
         assert_array_equal(

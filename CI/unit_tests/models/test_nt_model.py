@@ -74,8 +74,8 @@ class TestNTModule:
             trace_axes=(),
         )
 
-        ntk_1 = nt_model_1.compute_ntk(x1, normalize=False)["empirical"]
-        ntk_2 = nt_model_2.compute_ntk(x1, normalize=False)["empirical"]
+        ntk_1 = nt_model_1.compute_ntk(x1)["empirical"]
+        ntk_2 = nt_model_2.compute_ntk(x1)["empirical"]
 
         assert ntk_1.shape == (3, 3)
         assert ntk_2.shape == (3, 3, 5, 5)

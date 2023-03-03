@@ -18,7 +18,6 @@ import optax
 from flax.training.train_state import TrainState
 
 from znrnd.optimizers.trace_optimizer import TraceOptimizer
-from znrnd.utils import normalize_covariance_matrix
 from znrnd.utils.prng import PRNGKey
 
 
@@ -139,7 +138,6 @@ class JaxModel:
         self,
         x_i: np.ndarray,
         x_j: np.ndarray = None,
-        normalize: bool = True,
         infinite: bool = False,
     ):
         """
@@ -151,8 +149,6 @@ class JaxModel:
                 Dataset for which to compute the NTK matrix.
         x_j : np.ndarray (optional)
                 Dataset for which to compute the NTK matrix.
-        normalize : bool (default = True)
-                If true, divide each row by its max value.
         infinite : bool (default = False)
                 If true, compute the infinite width limit as well.
 
@@ -168,15 +164,10 @@ class JaxModel:
         if infinite:
             try:
                 infinite_ntk = self.kernel_fn(x_i, x_j, "ntk")
-                if normalize:
-                    infinite_ntk = normalize_covariance_matrix(infinite_ntk)
             except AttributeError:
                 raise NotImplementedError("Infinite NTK not available for this model.")
         else:
             infinite_ntk = None
-
-        if normalize:
-            empirical_ntk = normalize_covariance_matrix(empirical_ntk)
 
         return {"empirical": empirical_ntk, "infinite": infinite_ntk}
 

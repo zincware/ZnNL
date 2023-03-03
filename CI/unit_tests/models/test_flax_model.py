@@ -69,7 +69,7 @@ class TestFlaxModule:
 
         key1, key2 = random.split(random.PRNGKey(1), 2)
         x = random.normal(key1, (3, 8))
-        ntk = model.compute_ntk(x, normalize=False)["empirical"]
+        ntk = model.compute_ntk(x)["empirical"]
         assert ntk.shape == (3, 3)
 
     def test_infinite_failure(self):
@@ -87,4 +87,4 @@ class TestFlaxModule:
         x = random.normal(key1, (3, 8))
 
         with pytest.raises(NotImplementedError):
-            model.compute_ntk(x, normalize=False, infinite=True)
+            model.compute_ntk(x, infinite=True)

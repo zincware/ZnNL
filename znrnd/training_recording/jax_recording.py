@@ -258,7 +258,7 @@ class JaxRecorder:
             if self._compute_ntk:
                 try:
                     ntk = self._model.compute_ntk(
-                        self._data_set["inputs"], normalize=False, infinite=False
+                        self._data_set["inputs"], infinite=False
                     )
                     parsed_data["ntk"] = ntk["empirical"]
                 except NotImplementedError:

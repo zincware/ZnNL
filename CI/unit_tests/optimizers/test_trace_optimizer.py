@@ -83,7 +83,7 @@ class TestTraceOptimizer:
         )
 
         # Get theoretical values
-        ntk = model.compute_ntk(data.train_ds["inputs"], normalize=False)["empirical"]
+        ntk = model.compute_ntk(data.train_ds["inputs"])["empirical"]
         expected_lr = scale_factor / np.trace(ntk)
 
         # Compute actual values
