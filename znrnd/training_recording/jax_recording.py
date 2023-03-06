@@ -72,6 +72,12 @@ class JaxRecorder:
             If true, the ntk will be recorded. Warning, large overhead.
     entropy : bool (default=False)
             If true, entropy will be recorded. Warning, large overhead.
+    covariance_entropy : bool
+            If true, the entropy of the covariance ntk will be recorded.
+            Warning, large overhead.
+    magnitude_entropy : bool
+            If true, the entropy of the gradient magnitudes of the ntk will be recorded.
+            Warning, large overhead.
     eigenvalues : bool (default=False)
             If true, eigenvalues will be recorded. Warning, large overhead.
     loss_derivative : bool (default=False)
