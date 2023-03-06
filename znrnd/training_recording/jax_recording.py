@@ -108,12 +108,12 @@ class JaxRecorder:
     _entropy_array: list = None
 
     # Covariance Entropy of the model
-    cov_entropy: bool = False
-    _cov_entropy_array: list = None
+    covariance_entropy: bool = False
+    _covariance_entropy_array: list = None
 
-    # Covariance Entropy of the model
-    mag_entropy: bool = False
-    _mag_entropy_array: list = None
+    # Magnitude Entropy of the model
+    magnitude_entropy: bool = False
+    _magnitude_entropy_array: list = None
 
     # Model eigenvalues
     eigenvalues: bool = False
@@ -228,8 +228,8 @@ class JaxRecorder:
             [
                 "ntk" in self._selected_properties,
                 "entropy" in self._selected_properties,
-                "mag_entropy" in self._selected_properties,
-                "cov_entropy" in self._selected_properties,
+                "magnitude_entropy" in self._selected_properties,
+                "covariance_entropy" in self._selected_properties,
                 "eigenvalues" in self._selected_properties,
                 "trace" in self._selected_properties,
             ]
@@ -282,8 +282,8 @@ class JaxRecorder:
                     )
                     self.ntk = False
                     self.entropy = False
-                    self.mag_entropy = False
-                    self.cov_entropy = False
+                    self.magnitude_entropy = False
+                    self.covariance_entropy = False
                     self.eigenvalues = False
                     self._read_selected_attributes()
 
@@ -425,7 +425,7 @@ class JaxRecorder:
         )
         self._entropy_array.append(entropy)
 
-    def _update_cov_entropy(self, parsed_data: dict):
+    def _update_covariance_entropy(self, parsed_data: dict):
         """
         Update the entropy of the covariance NTK.
 
@@ -442,9 +442,9 @@ class JaxRecorder:
         entropy = calculator.compute_von_neumann_entropy(
             effective=False, normalize_eig=True
         )
-        self._cov_entropy_array.append(entropy)
+        self._covariance_entropy_array.append(entropy)
 
-    def _update_mag_entropy(self, parsed_data: dict):
+    def _update_magnitude_entropy(self, parsed_data: dict):
         """
         Update magnitude entropy of the NTK.
 
@@ -458,7 +458,7 @@ class JaxRecorder:
         """
         magnitude_dist = compute_magnitude_density(gram_matrix=parsed_data["ntk"])
         entropy = EntropyAnalysis.compute_shannon_entropy(magnitude_dist)
-        self._mag_entropy_array.append(entropy)
+        self._magnitude_entropy_array.append(entropy)
 
     def _update_eigenvalues(self, parsed_data: dict):
         """
