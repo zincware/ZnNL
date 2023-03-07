@@ -55,7 +55,7 @@ class RND(Agent):
         seed_point: list = None,
         forward_recorder: JaxRecorder = False,
         backward_recorder: JaxRecorder = False,
-        point_recorder: JaxRecorder = False
+        point_recorder: JaxRecorder = False,
     ):
         """
         Constructor for the RND class.
