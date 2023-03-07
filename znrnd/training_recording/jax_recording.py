@@ -70,12 +70,18 @@ class JaxRecorder:
             If true, accuracy will be recorded.
     ntk : bool (default=False)
             If true, the ntk will be recorded. Warning, large overhead.
+    covariance_ntk : bool (default = False)
+            If true, the covariance of the ntk will be recorded.
+            Warning, large overhead.
+    magnitude_ntk : bool (default = False)
+            If true, gradient magnitudes of the ntk will be recorded.
+            Warning, large overhead.
     entropy : bool (default=False)
             If true, entropy will be recorded. Warning, large overhead.
-    covariance_entropy : bool
+    covariance_entropy : bool (default=False)
             If true, the entropy of the covariance ntk will be recorded.
             Warning, large overhead.
-    magnitude_entropy : bool
+    magnitude_entropy : bool (default=False)
             If true, the entropy of the gradient magnitudes of the ntk will be recorded.
             Warning, large overhead.
     eigenvalues : bool (default=False)
@@ -108,6 +114,14 @@ class JaxRecorder:
     # NTK Matrix
     ntk: bool = False
     _ntk_array: list = None
+
+    # Covariance NTK Matrix
+    covariance_ntk: bool = False
+    _covariance_ntk_array: list = None
+
+    # Magnitude NTK array
+    magnitude_ntk: bool = False
+    _magnitude_ntk_array: list = None
 
     # Entropy of the model
     entropy: bool = False
@@ -233,6 +247,8 @@ class JaxRecorder:
         if any(
             [
                 "ntk" in self._selected_properties,
+                "covariance_ntk" in self._selected_properties,
+                "magnitude_ntk" in self._selected_properties,
                 "entropy" in self._selected_properties,
                 "magnitude_entropy" in self._selected_properties,
                 "covariance_entropy" in self._selected_properties,
@@ -287,6 +303,8 @@ class JaxRecorder:
                         "it from this recorder."
                     )
                     self.ntk = False
+                    self.covariance_ntk = False
+                    self.magnitude_ntk = False
                     self.entropy = False
                     self.magnitude_entropy = False
                     self.covariance_entropy = False
@@ -415,6 +433,30 @@ class JaxRecorder:
                 Data computed before the update to prevent repeated calculations.
         """
         self._ntk_array.append(parsed_data["ntk"])
+
+    def _update_covariance_ntk(self, parsed_data: dict):
+        """
+        Update the covariance ntk array.
+
+        Parameters
+        ----------
+        parsed_data : dict
+                Data computed before the update to prevent repeated calculations.
+        """
+        cov_ntk = normalize_gram_matrix(parsed_data["ntk"])
+        self._covariance_ntk_array.append(cov_ntk)
+
+    def _update_magnitude_ntk(self, parsed_data: dict):
+        """
+        Update the magnitude ntk array.
+
+        Parameters
+        ----------
+        parsed_data : dict
+                Data computed before the update to prevent repeated calculations.
+        """
+        magnitude_dist = compute_magnitude_density(gram_matrix=parsed_data["ntk"])
+        self._covariance_ntk_array.append(magnitude_dist)
 
     def _update_entropy(self, parsed_data: dict):
         """
