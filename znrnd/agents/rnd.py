@@ -199,7 +199,7 @@ class RND(Agent):
             self.training_strategy.recorders.remove(self.backward_recorder)
 
         if self.point_recorder:
-            new_point_idx = self.get_data(self.target_indices[-1])
+            new_point_idx = self.get_data(self.target_indices[-1:])
             new_point = self.create_rnd_data_set(new_point_idx)
             self.point_recorder.instantiate_recorder(data_set=new_point)
 
