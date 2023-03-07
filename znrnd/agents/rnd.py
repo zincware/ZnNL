@@ -55,6 +55,7 @@ class RND(Agent):
         seed_point: list = None,
         forward_recorder: JaxRecorder = False,
         backward_recorder: JaxRecorder = False,
+        point_recorder: JaxRecorder = False
     ):
         """
         Constructor for the RND class.
@@ -88,9 +89,12 @@ class RND(Agent):
         backward_recorder : JaxRecorder
                 Record the backward transfer during the RND process.
                 The recorder is instantiated with a placeholder data set that is never
-                been used
-                as it will be
-                re-instantiated with the target data set.
+                been used as it will be re-instantiated with the target data set.
+        point_recorder : JaxRecorder
+                Record the loss of the lastly added point in the target set during the
+                RND process.
+                The recorder is instantiated with a placeholder data set that is never
+                been used as it will be re-instantiated with the target data set.
         """
         # User defined attributes.
         self.target = target_network
@@ -120,6 +124,7 @@ class RND(Agent):
         # Record the RND process
         self.forward_recorder = forward_recorder
         self.backward_recorder = backward_recorder
+        self.point_recorder = point_recorder
 
     def _check_and_update_defaults(self):
         """
@@ -175,7 +180,7 @@ class RND(Agent):
         """
         Instantiate the recorders with the current data of the target and residual set.
 
-        For the backward only the points that already have been trained are selected.
+        For backward, only the points that already have been trained are selected.
         The backward recorder is removed for training the first point and added
         afterwards again.
         """
@@ -192,6 +197,11 @@ class RND(Agent):
             self.backward_recorder.instantiate_recorder(data_set=target_data_set)
         if self.backward_recorder and len(self.target_indices[:-1]) == 0:
             self.training_strategy.recorders.remove(self.backward_recorder)
+
+        if self.point_recorder:
+            new_point_idx = self.get_data([-1])
+            new_point = self.create_rnd_data_set(new_point_idx)
+            self.point_recorder.instantiate_recorder(data_set=new_point)
 
     def compute_distance(self, points: np.ndarray) -> np.ndarray:
         """
@@ -267,7 +277,7 @@ class RND(Agent):
             pass
         else:
             self.target_indices.extend([points.tolist()])
-        if self.forward_recorder or self.backward_recorder:
+        if self.forward_recorder or self.backward_recorder or self.point_recorder:
             self._instantiate_recorders()
 
     def get_residual_indices(self) -> list:
