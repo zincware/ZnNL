@@ -204,8 +204,8 @@ class PartitionedTraining(SimpleTraining):
 
         # Check for adapting the batch_sizes
         for i, selection in enumerate(kwargs["train_ds_selection"]):
-            if len(kwargs["train_ds"][selection]) < kwargs["batch_size"][i]:
-                kwargs["batch_size"][i] = len(kwargs["train_ds"][selection])
+            if len(kwargs["train_ds"]["targets"][selection]) < kwargs["batch_size"][i]:
+                kwargs["batch_size"][i] = len(kwargs["train_ds"]["targets"][selection])
                 logger.info(
                     f"The size of the train data in slice {i} is smaller than the batch"
                     " size. Setting the batch size equal to the train data size of"
