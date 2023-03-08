@@ -24,6 +24,10 @@ If you use this module please cite us with:
 Summary
 -------
 """
+import os
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
 import jax.numpy as np
 import pytest
 from jax.lib import xla_bridge
@@ -54,12 +58,16 @@ class TestEntropyAnalysis:
         """
         dist = np.array([0.2, 0.2, 0.2, 0.2, 0.2])
         assert EntropyAnalysis.compute_shannon_entropy(dist) == np.log(5)
+        assert EntropyAnalysis.compute_shannon_entropy(dist, normalize=True) == 1
 
         dist = np.array([0, 0, 0, 0, 1])
         assert EntropyAnalysis.compute_shannon_entropy(dist) == 0
+        assert EntropyAnalysis.compute_shannon_entropy(dist, normalize=True) == 0
 
         dist = np.array([0, 0, 0, 0.5, 0.5])
         assert EntropyAnalysis.compute_shannon_entropy(dist) == np.log(2)
+        s = EntropyAnalysis.compute_shannon_entropy(dist, normalize=True)
+        assert s == np.log(2) / np.log(5)
 
     def test_von_neumann_entropy(self):
         """

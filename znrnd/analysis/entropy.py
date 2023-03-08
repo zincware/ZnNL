@@ -57,7 +57,7 @@ class EntropyAnalysis:
         )
 
     @staticmethod
-    def compute_shannon_entropy(dist: np.ndarray) -> float:
+    def compute_shannon_entropy(dist: np.ndarray, normalize: bool = False) -> float:
         """
         Compute the Shannon entropy of a given probability distribution.
 
@@ -68,14 +68,23 @@ class EntropyAnalysis:
         ----------
         dist : np.ndarray
                 Array to calculate the entropy of.
+        normalize : bool (default = False)
+                If true, the Shannon entropy is normalized by re-scaling to the maximum
+                entropy. The method will return a value between 0 and 1.
+
         Returns
         -------
         Entropy of the distribution
         """
-        log_values = np.log(dist)
-        mask = np.logical_not(np.isinf(log_values))
-        scaled_values = -1 * dist[mask] * log_values[mask]
-        return scaled_values.sum()
+        mask = np.nonzero(dist)
+        scaled_values = -1 * dist[mask] * np.log(dist[mask])
+        entropy = scaled_values.sum()
+
+        if normalize:
+            scale_factor = np.log(len(dist))
+            entropy /= scale_factor
+
+        return entropy
 
     def compute_von_neumann_entropy(
         self, effective: bool = True, normalize_eig: bool = True
