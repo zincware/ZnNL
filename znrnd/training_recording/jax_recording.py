@@ -456,7 +456,7 @@ class JaxRecorder:
                 Data computed before the update to prevent repeated calculations.
         """
         magnitude_dist = compute_magnitude_density(gram_matrix=parsed_data["ntk"])
-        self._covariance_ntk_array.append(magnitude_dist)
+        self._magnitude_ntk_array.append(magnitude_dist)
 
     def _update_entropy(self, parsed_data: dict):
         """
