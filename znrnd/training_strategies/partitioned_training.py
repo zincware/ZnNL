@@ -28,7 +28,7 @@ Module for the neural tangents infinite width network models.
 import logging
 from typing import Callable, List, Union
 
-import numpy as onp
+import jax.numpy as np
 from tqdm import trange
 
 from znrnd.accuracy_functions.accuracy_function import AccuracyFunction
@@ -108,7 +108,7 @@ class PartitionedTraining(SimpleTraining):
         )
 
     @staticmethod
-    def _select_partition(train_ds: dict, data_slice: Union[list, slice]):
+    def _select_partition(train_ds: dict, data_slice: Union[np.array, slice]):
         """
         Select a partitions
 
@@ -120,16 +120,15 @@ class PartitionedTraining(SimpleTraining):
         ----------
         train_ds : dict
                 Train dataset with inputs and targets.
-        data_slice : Union[list, slice]
-                Slice to select from train_ds
+        data_slice : Union[np.array, slice]
+                Slice to select from train_ds. It can either be a np.array or a slice
+                defining the indices.
 
         Returns
         -------
         partition : dict
         Selected partition of data.
         """
-        if type(data_slice) is list:
-            data_slice = onp.array(data_slice)
         return {k: v[data_slice, ...] for k, v in train_ds.items()}
 
     def update_training_kwargs(self, **kwargs):
@@ -141,7 +140,7 @@ class PartitionedTraining(SimpleTraining):
             * Set default value for epochs (default = [150, 50])
             * set default value for the batch size (default = 1)
             * Set default value for train_ds_selection if necessary
-                (default = [[-1], slice(1, None, None)])
+                (default = [slice(-1, None, None), slice(None, None, None)])
             * Check that epochs, batch_size and train_ds_selection are of similar
                 length and of type list.
 
@@ -172,7 +171,10 @@ class PartitionedTraining(SimpleTraining):
         if not kwargs["batch_size"]:
             kwargs["batch_size"] = [1, 1]
         if not kwargs["train_ds_selection"]:
-            kwargs["train_ds_selection"] = [[-1], slice(1, None, None)]
+            kwargs["train_ds_selection"] = [
+                slice(-1, None, None),
+                slice(None, None, None),
+            ]
 
         # Check type list
         def raise_key_list_error(key):
@@ -242,9 +244,10 @@ class PartitionedTraining(SimpleTraining):
         epochs : list (default = [150, 50])
                 Number of epochs to train over.
                 Each epoch defines a training phase.
-        train_ds_selection : list (default = [[-1], slice(1, None, None)])
-                Indices or slices selecting training data.
-                Each slice or index defines a training phase.
+        train_ds_selection : list
+                             (default = [slice(-1, None, None), slice(None, None, None)])
+                The train is selected by a np.array of indices or slices.
+                Each slice or array defines a training phase.
         batch_size : list (default = [1, 1])
                 Size of the batch to use in training.
 
@@ -261,7 +264,7 @@ class PartitionedTraining(SimpleTraining):
 
         loading_bar = trange(
             1,
-            onp.sum(epochs) + 1,
+            np.sum(epochs) + 1,
             ncols=100,
             unit="batch",
             disable=self.disable_loading_bar,
