@@ -216,7 +216,7 @@ class TestLossAwareReservoir:
 
     def test_update_training_kwargs(self):
         """
-        est the parameter adaption of the training strategy when executing the
+        Test the parameter adaption of the training strategy when executing the
         training.
 
         When calling the train_model method, parameters get adapted if necessary.
