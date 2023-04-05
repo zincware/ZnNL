@@ -1,5 +1,5 @@
 """
-ZnRND: A Zincwarecode package.
+ZnNL: A Zincwarecode package.
 
 License
 -------
@@ -23,7 +23,6 @@ If you use this module please cite us with:
 
 Summary
 -------
-TSNE visualizer for the RND.
 """
 import numpy as np
 import plotly.graph_objects as go

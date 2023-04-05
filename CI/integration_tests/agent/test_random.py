@@ -1,5 +1,5 @@
 """
-ZnRND: A zincwarecode package.
+ZnNL: A Zincwarecode package.
 
 License
 -------
@@ -9,7 +9,7 @@ available at https://www.eclipse.org/legal/epl-v20.html
 
 SPDX-License-Identifier: EPL-2.0
 
-Copyright Contributors to the zincwarecode Project.
+Copyright Contributors to the Zincwarecode Project.
 
 Contact Information
 -------------------
@@ -23,5 +23,4 @@ If you use this module please cite us with:
 
 Summary
 -------
-Test the random data selection agent.
 """

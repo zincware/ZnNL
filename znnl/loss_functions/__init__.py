@@ -1,5 +1,5 @@
 """
-ZnRND: A Zincwarecode package.
+ZnNL: A Zincwarecode package.
 
 License
 -------
@@ -23,7 +23,6 @@ If you use this module please cite us with:
 
 Summary
 -------
-Package containing custom loss functions.
 """
 from znnl.loss_functions.absolute_angle_difference import AngleDistanceLoss
 from znnl.loss_functions.cosine_distance import CosineDistanceLoss
