@@ -136,7 +136,7 @@ class TestLossAwareReservoir:
         )
 
         # Test if a smaller reservoir selects the correctly sorted points
-        trainer.train_data_size = len(train_ds["inputs"])
+        trainer.train_data_size = train_ds["inputs"].shape[0]
         reservoir = trainer._update_reservoir(train_ds=train_ds)
         selection_idx = np.argsort(np.abs(raw_x))[::-1][:4]
         assert_array_equal(reservoir, selection_idx)
