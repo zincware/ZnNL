@@ -35,3 +35,16 @@ class AngleDistanceLoss(SimpleLoss):
         """
         super(AngleDistanceLoss, self).__init__()
         self.metric = AngularDistance()
+    
+    def __name__(self) -> str:
+        """
+        The name of the analsyis module.
+
+        This name should be as detailed as possible.
+
+        Returns
+        -------
+        name : str
+                A string representation of the name.
+        """
+        return "AngleDistanceLoss"

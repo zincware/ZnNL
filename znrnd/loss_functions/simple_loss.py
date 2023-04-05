@@ -23,14 +23,15 @@ Summary
 -------
 Module for the simple loss for TensorFlow.
 """
-from abc import ABC
-
+from typing import Union
 import jax.numpy as np
 
 from znrnd.distance_metrics.distance_metric import DistanceMetric
 
+from znrnd.utils import AnalysisModule
 
-class SimpleLoss(ABC):
+
+class SimpleLoss(AnalysisModule):
     """
     Class for the simple loss.
 
@@ -39,12 +40,47 @@ class SimpleLoss(ABC):
     metric : DistanceMetric
     """
 
+    def __signature__(self, data_set: dict) -> tuple:
+        """
+        Signature of the output of the loss.
+
+        Returns
+        -------
+        signature : tuple
+                In this case, the output is always (1, )
+        """
+        return (1, )
+    
+    def compute_fn(self, data_set: dict) -> Union[np.ndarray, float]:
+        """
+        Compute function for the loss methods.
+
+        In this case, they can just call the __call__ method of the 
+        loss function. 
+
+        Parameters
+        ----------
+        data_set : dict
+                Data set on which to compute the loss.
+
+        Returns
+        -------
+        loss : float
+                The float loss value.
+        
+        Notes
+        -----
+        This method should take over all call methods throughout the code.
+        For this, we would need a cleanout of classes so it should be done 
+        at a later stage.
+        """
+        return super().compute_fn(data_set)
+
     def __init__(self):
         """
         Constructor for the simple loss parent class.
         """
-        super().__init__()
-        self.metric: DistanceMetric = None
+        self.metric: DistanceMetric = None        
 
     def __call__(self, point_1: np.array, point_2: np.array) -> float:
         """

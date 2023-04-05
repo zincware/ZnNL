@@ -35,3 +35,9 @@ class CosineDistanceLoss(SimpleLoss):
         """
         super(CosineDistanceLoss, self).__init__()
         self.metric = CosineDistance()
+
+    def __name__(self):
+        """
+        Name of the class.
+        """
+        return "CosineDistanceLoss"

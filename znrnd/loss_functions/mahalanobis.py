@@ -35,3 +35,16 @@ class MahalanobisLoss(SimpleLoss):
         """
         super(MahalanobisLoss, self).__init__()
         self.metric = mahalanobis.MahalanobisDistance()
+
+    def __name__(self) -> str:
+        """
+        The name of the analsyis module.
+
+        This name should be as detailed as possible.
+
+        Returns
+        -------
+        name : str
+                A string representation of the name.
+        """
+        return "MahalanobisLoss"

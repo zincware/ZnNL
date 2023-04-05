@@ -40,3 +40,16 @@ class LPNormLoss(SimpleLoss):
         """
         super(LPNormLoss, self).__init__()
         self.metric = LPNorm(order=order)
+
+    def __name__(self) -> str:
+        """
+        The name of the analsyis module.
+
+        This name should be as detailed as possible.
+
+        Returns
+        -------
+        name : str
+                A string representation of the name.
+        """
+        return f"LPNormLoss_L{self.order}"

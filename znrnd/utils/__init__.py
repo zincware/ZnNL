@@ -26,9 +26,11 @@ Summary
 """
 from znrnd.utils.matrix_utils import compute_eigensystem, normalize_covariance_matrix
 from znrnd.utils.prng import PRNGKey
+from znrnd.utils.analysis_module import AnalysisModule
 
 __all__ = [
     compute_eigensystem.__name__,
     normalize_covariance_matrix.__name__,
+    AnalysisModule.__name__,
     PRNGKey.__name__,
 ]
