@@ -16,7 +16,7 @@ html_static_path = []
 
 # -- Experiment information ---------------------------------------------------
 
-project = "ZnRND"
+project = "ZnNL"
 copyright = "2021, Zincwarecode"
 author = "Zincwarecode"
 
@@ -122,30 +122,19 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, "PyRND.tex", "PyRND Documentation", "Contributors", "manual"),
+    (master_doc, "ZnNL.tex", "ZnNL Documentation", "Contributors", "manual"),
 ]
 
-
-# -- Options for manual page output ---------------------------------------
-
-# One entry per manual page. List of tuples
-# (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, "PyRND", "PyRND Documentation", [author], 1)]
-
-
-# -- Options for Texinfo output -------------------------------------------
-
-# Grouping the document tree into Texinfo files. List of tuples
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
     (
         master_doc,
-        "PyRND",
-        "PyRND Documentation",
+        "ZnNL",
+        "ZnNL Documentation",
         author,
-        "PyRND",
-        "Package to perform random network distillation.",
+        "ZnNL",
+        "Neural learning in Python",
         "Miscellaneous",
     ),
 ]
