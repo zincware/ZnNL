@@ -31,6 +31,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 import jax.numpy as np
 import numpy as onp
 from numpy.testing import assert_array_almost_equal
+
 from znnl.utils.matrix_utils import compute_magnitude_density, normalize_gram_matrix
 
 
