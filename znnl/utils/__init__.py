@@ -27,7 +27,6 @@ Summary
 from znnl.utils.matrix_utils import compute_eigensystem, normalize_gram_matrix
 from znnl.utils.prng import PRNGKey
 
-
 __all__ = [
     compute_eigensystem.__name__,
     normalize_gram_matrix.__name__,

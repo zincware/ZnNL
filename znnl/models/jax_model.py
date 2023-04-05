@@ -3,12 +3,10 @@ This program and the accompanying materials are made available under the terms
 of the Eclipse Public License v2.0 which accompanies this distribution, and is
 available at https://www.eclipse.org/legal/epl-v20.html
 SPDX-License-Identifier: EPL-2.0
-
 Copyright Contributors to the Zincware Project.
-
 Description: Parent class for the Jax-based models.
 """
-from typing import TYPE_CHECKING, Callable, List, Sequence, Tuple, Union
+from typing import Callable, Sequence, Union
 
 import jax
 import jax.numpy as np
@@ -36,7 +34,6 @@ class JaxModel:
     ):
         """
         Construct a znrnd model.
-
         Parameters
         ----------
         optimizer : Callable
@@ -79,7 +76,6 @@ class JaxModel:
     ):
         """
         Initialize a model.
-
         Parameters
         ----------
         seed : int, default None
@@ -97,11 +93,17 @@ class JaxModel:
     ) -> TrainState:
         """
         Create a training state of the model.
-
         Returns
         -------
-        initial state of model to then be trained.znrnd
+        initial state of model to then be trained.
+        Notes
+        -----
+        TODO: Make the TrainState class passable by the user as it can track custom
+              model properties.
         """
+        params = self._init_params(kernel_init, bias_init)
+
+        # Set dummy optimizer for case of trace optimizer.
         if isinstance(self.optimizer, TraceOptimizer):
             optimizer = optax.sgd(1.0)
         else:
@@ -112,14 +114,12 @@ class JaxModel:
     def _ntk_apply_fn(self, params: dict, inputs: np.ndarray):
         """
         Apply function used in the NTK computation.
-
         Parameters
         ----------
         params: dict
                 Contains the model parameters to use for the model computation.
         inputs : np.ndarray
                 Feature vector on which to apply the model.
-
         Returns
         -------
         The apply function used in the NTK computation.
@@ -134,7 +134,6 @@ class JaxModel:
     ):
         """
         Compute the NTK matrix for the model.
-
         Parameters
         ----------
         x_i : np.ndarray
@@ -143,7 +142,6 @@ class JaxModel:
                 Dataset for which to compute the NTK matrix.
         infinite : bool (default = False)
                 If true, compute the infinite width limit as well.
-
         Returns
         -------
         NTK : dict
@@ -166,12 +164,10 @@ class JaxModel:
     def __call__(self, feature_vector: np.ndarray):
         """
         Call the network.
-
         Parameters
         ----------
         feature_vector : np.ndarray
                 Feature vector on which to apply operation.
-
         Returns
         -------
         output of the model.
