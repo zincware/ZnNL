@@ -1,5 +1,5 @@
 """
-ZnRND: A zincwarecode package.
+ZnNL: A Zincwarecode package.
 
 License
 -------
@@ -9,7 +9,7 @@ available at https://www.eclipse.org/legal/epl-v20.html
 
 SPDX-License-Identifier: EPL-2.0
 
-Copyright Contributors to the zincwarecode Project.
+Copyright Contributors to the Zincwarecode Project.
 
 Contact Information
 -------------------
@@ -23,7 +23,6 @@ If you use this module please cite us with:
 
 Summary
 -------
-Unit tests for the matrix utils module.
 """
 import os
 
@@ -33,7 +32,7 @@ import jax.numpy as np
 import numpy as onp
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 
-from znrnd.utils.matrix_utils import (
+from znnl.utils.matrix_utils import (
     compute_eigensystem,
     compute_magnitude_density,
     normalize_gram_matrix,

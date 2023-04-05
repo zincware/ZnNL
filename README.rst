@@ -1,16 +1,16 @@
 |zincware|
 
-ZnRND
-=====
-A Python library for the implementation of the RND data filtering process.
+ZnNL
+====
+A Python library for stuyding neural learning.
 
 Installation
 ------------
 
 .. code-block:: bash
 
-   git clone https://github.com/zincware/ZnRND.git
-   cd ZnRND
+   git clone https://github.com/zincware/ZnNL.git
+   cd ZnNL
    pip install .
 
 Documentation

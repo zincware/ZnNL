@@ -1,5 +1,5 @@
 """
-ZnRND: A Zincwarecode package.
+ZnNL: A Zincwarecode package.
 
 License
 -------
@@ -23,7 +23,6 @@ If you use this module please cite us with:
 
 Summary
 -------
-Test the data generator module.
 """
 import os
 
@@ -32,7 +31,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 import jax.numpy as np
 from numpy.testing import assert_array_equal, assert_raises
 
-from znrnd.data import DataGenerator
+from znnl.data import DataGenerator
 
 
 class TestDataGenerator:

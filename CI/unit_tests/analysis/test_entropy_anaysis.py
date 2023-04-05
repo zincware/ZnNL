@@ -1,5 +1,5 @@
 """
-ZnRND: A zincwarecode package.
+ZnNL: A Zincwarecode package.
 
 License
 -------
@@ -9,7 +9,7 @@ available at https://www.eclipse.org/legal/epl-v20.html
 
 SPDX-License-Identifier: EPL-2.0
 
-Copyright Contributors to the zincwarecode Project.
+Copyright Contributors to the Zincwarecode Project.
 
 Contact Information
 -------------------
@@ -32,7 +32,7 @@ import jax.numpy as np
 import pytest
 from jax.lib import xla_bridge
 
-from znrnd.analysis import EntropyAnalysis
+from znnl.analysis import EntropyAnalysis
 
 
 class TestEntropyAnalysis:
