@@ -37,7 +37,11 @@ from znnl.analysis.loss_fn_derivative import LossDerivative
 from znnl.loss_functions import SimpleLoss
 from znnl.models.jax_model import JaxModel
 from znnl.training_recording.data_storage import DataStorage
-from znnl.utils.matrix_utils import calculate_l_pq_norm
+from znnl.utils.matrix_utils import (
+    calculate_l_pq_norm,
+    compute_magnitude_density,
+    normalize_gram_matrix,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -66,8 +70,20 @@ class JaxRecorder:
             If true, accuracy will be recorded.
     ntk : bool (default=False)
             If true, the ntk will be recorded. Warning, large overhead.
+    covariance_ntk : bool (default = False)
+            If true, the covariance of the ntk will be recorded.
+            Warning, large overhead.
+    magnitude_ntk : bool (default = False)
+            If true, gradient magnitudes of the ntk will be recorded.
+            Warning, large overhead.
     entropy : bool (default=False)
             If true, entropy will be recorded. Warning, large overhead.
+    covariance_entropy : bool (default=False)
+            If true, the entropy of the covariance ntk will be recorded.
+            Warning, large overhead.
+    magnitude_entropy : bool (default=False)
+            If true, the entropy of the gradient magnitudes of the ntk will be recorded.
+            Warning, large overhead.
     eigenvalues : bool (default=False)
             If true, eigenvalues will be recorded. Warning, large overhead.
     loss_derivative : bool (default=False)
@@ -99,9 +115,25 @@ class JaxRecorder:
     ntk: bool = False
     _ntk_array: list = None
 
+    # Covariance NTK Matrix
+    covariance_ntk: bool = False
+    _covariance_ntk_array: list = None
+
+    # Magnitude NTK array
+    magnitude_ntk: bool = False
+    _magnitude_ntk_array: list = None
+
     # Entropy of the model
     entropy: bool = False
     _entropy_array: list = None
+
+    # Covariance Entropy of the model
+    covariance_entropy: bool = False
+    _covariance_entropy_array: list = None
+
+    # Magnitude Entropy of the model
+    magnitude_entropy: bool = False
+    _magnitude_entropy_array: list = None
 
     # Model eigenvalues
     eigenvalues: bool = False
@@ -215,7 +247,11 @@ class JaxRecorder:
         if any(
             [
                 "ntk" in self._selected_properties,
+                "covariance_ntk" in self._selected_properties,
+                "magnitude_ntk" in self._selected_properties,
                 "entropy" in self._selected_properties,
+                "magnitude_entropy" in self._selected_properties,
+                "covariance_entropy" in self._selected_properties,
                 "eigenvalues" in self._selected_properties,
                 "trace" in self._selected_properties,
             ]
@@ -258,7 +294,7 @@ class JaxRecorder:
             if self._compute_ntk:
                 try:
                     ntk = self._model.compute_ntk(
-                        self._data_set["inputs"], normalize=False, infinite=False
+                        self._data_set["inputs"], infinite=False
                     )
                     parsed_data["ntk"] = ntk["empirical"]
                 except NotImplementedError:
@@ -267,7 +303,11 @@ class JaxRecorder:
                         "it from this recorder."
                     )
                     self.ntk = False
+                    self.covariance_ntk = False
+                    self.magnitude_ntk = False
                     self.entropy = False
+                    self.magnitude_entropy = False
+                    self.covariance_entropy = False
                     self.eigenvalues = False
                     self._read_selected_attributes()
 
@@ -394,6 +434,30 @@ class JaxRecorder:
         """
         self._ntk_array.append(parsed_data["ntk"])
 
+    def _update_covariance_ntk(self, parsed_data: dict):
+        """
+        Update the covariance ntk array.
+
+        Parameters
+        ----------
+        parsed_data : dict
+                Data computed before the update to prevent repeated calculations.
+        """
+        cov_ntk = normalize_gram_matrix(parsed_data["ntk"])
+        self._covariance_ntk_array.append(cov_ntk)
+
+    def _update_magnitude_ntk(self, parsed_data: dict):
+        """
+        Update the magnitude ntk array.
+
+        Parameters
+        ----------
+        parsed_data : dict
+                Data computed before the update to prevent repeated calculations.
+        """
+        magnitude_dist = compute_magnitude_density(gram_matrix=parsed_data["ntk"])
+        self._magnitude_ntk_array.append(magnitude_dist)
+
     def _update_entropy(self, parsed_data: dict):
         """
         Update the entropy array.
@@ -408,6 +472,41 @@ class JaxRecorder:
             effective=False, normalize_eig=True
         )
         self._entropy_array.append(entropy)
+
+    def _update_covariance_entropy(self, parsed_data: dict):
+        """
+        Update the entropy of the covariance NTK.
+
+        The covariance ntk is defined as the of cosine similarities. For this each
+        entry of the NTK is re-scaled by the gradient amplitudes.
+
+        Parameters
+        ----------
+        parsed_data : dict
+                Data computed before the update to prevent repeated calculations.
+        """
+        cov_ntk = normalize_gram_matrix(parsed_data["ntk"])
+        calculator = EntropyAnalysis(matrix=cov_ntk)
+        entropy = calculator.compute_von_neumann_entropy(
+            effective=False, normalize_eig=True
+        )
+        self._covariance_entropy_array.append(entropy)
+
+    def _update_magnitude_entropy(self, parsed_data: dict):
+        """
+        Update magnitude entropy of the NTK.
+
+        The magnitude entropy is defined as the entropy of the normalized gradient
+        magnitudes.
+
+        Parameters
+        ----------
+        parsed_data : dict
+                Data computed before the update to prevent repeated calculations.
+        """
+        magnitude_dist = compute_magnitude_density(gram_matrix=parsed_data["ntk"])
+        entropy = EntropyAnalysis.compute_shannon_entropy(magnitude_dist)
+        self._magnitude_entropy_array.append(entropy)
 
     def _update_eigenvalues(self, parsed_data: dict):
         """

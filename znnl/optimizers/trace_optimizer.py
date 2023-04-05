@@ -83,7 +83,7 @@ class TraceOptimizer:
         # Check if the update should be performed.
         if epoch % self.rescale_interval == 0:
             # Compute the ntk trace.
-            ntk = ntk_fn(data_set, normalize=False)["empirical"]
+            ntk = ntk_fn(data_set)["empirical"]
             trace = np.trace(ntk)
 
             # Create the new optimizer.

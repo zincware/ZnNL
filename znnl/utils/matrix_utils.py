@@ -68,7 +68,7 @@ def compute_eigensystem(matrix: np.ndarray, normalize: bool = False, clip: bool 
     return eigenvalues[::-1].sort(), eigenvectors
 
 
-def normalize_covariance_matrix(covariance_matrix: np.ndarray):
+def normalize_gram_matrix(gram_matrix: np.ndarray):
     """
     Method for normalizing a covariance matrix.
 
@@ -78,15 +78,35 @@ def normalize_covariance_matrix(covariance_matrix: np.ndarray):
             A normalized covariance matrix, i.e, the matrix given if all of its inputs
             had been normalized.
     """
-    order = np.shape(covariance_matrix)[0]
+    order = np.shape(gram_matrix)[0]
 
-    diagonals = np.diagonal(covariance_matrix)
+    diagonals = np.diagonal(gram_matrix)
 
     repeated_diagonals = np.repeat(diagonals[None, :], order, axis=0)
 
     normalizing_matrix = np.sqrt(repeated_diagonals * repeated_diagonals.T)
 
-    return covariance_matrix / normalizing_matrix
+    return gram_matrix / normalizing_matrix
+
+
+def compute_magnitude_density(gram_matrix: np.ndarray) -> np.ndarray:
+    """
+    Method for computing the normalized magnitude density of each component of a gram
+    matrix.
+
+    Parameters
+    ----------
+    gram_matrix : np.ndarray
+            Covariance matrix to calculate the magnitude distribution of.
+
+    Returns
+    -------
+    magnitude_density: np.ndarray
+            Magnitude density of the individual entries.
+    """
+    magnitudes = np.sqrt(np.diagonal(gram_matrix))
+    density = magnitudes / magnitudes.sum()
+    return density
 
 
 def calculate_l_pq_norm(matrix: np.ndarray, p: int = 2, q: int = 2):

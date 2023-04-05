@@ -25,11 +25,19 @@ Summary
 -------
 Unit tests for the matrix utils module.
 """
+import os
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
 import jax.numpy as np
 import numpy as onp
-from numpy.testing import assert_array_equal
+from numpy.testing import assert_array_almost_equal, assert_array_equal
 
-from znnl.utils.matrix_utils import compute_eigensystem, normalize_covariance_matrix
+from znnl.utils.matrix_utils import (
+    compute_eigensystem,
+    compute_magnitude_density,
+    normalize_gram_matrix,
+)
 
 
 class TestMatrixUtils:
@@ -79,7 +87,7 @@ class TestMatrixUtils:
         for i in range(4):
             covariance_matrix[i, i] = i + 3
 
-        normalized_matrix = normalize_covariance_matrix(covariance_matrix)
+        normalized_matrix = normalize_gram_matrix(covariance_matrix)
 
         # Assert diagonals are 1
         assert_array_equal(
@@ -121,3 +129,24 @@ class TestMatrixUtils:
         )
         truth_array = covariance_matrix[row] / multiplier
         assert_array_equal(normalized_matrix[row], truth_array)
+
+    def test_compute_magnitude_density(self):
+        """
+        Test that the magnitude density is correctly computed.
+
+            * Compute a gram matrix
+            * Compute magnitude density
+            * Compare to norm of vectors
+        """
+        # Create a random array
+        array = onp.random.random((7, 10))
+        # Compute a scalar product matrix of the array
+        matrix = np.einsum("ij, kj -> ik", array, array)
+        # Compute the density of array amplitudes
+        array_norm = onp.linalg.norm(array, ord=2, axis=1)
+        array_norm_density = array_norm / array_norm.sum()
+
+        # Evaluate the magnitude density with the function that is to be tested
+        mag_density = compute_magnitude_density(matrix)
+
+        assert_array_almost_equal(array_norm_density, mag_density)

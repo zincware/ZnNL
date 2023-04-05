@@ -24,11 +24,12 @@ If you use this module please cite us with:
 Summary
 -------
 """
-from znnl.utils.matrix_utils import compute_eigensystem, normalize_covariance_matrix
+from znnl.utils.matrix_utils import compute_eigensystem, normalize_gram_matrix
 from znnl.utils.prng import PRNGKey
+
 
 __all__ = [
     compute_eigensystem.__name__,
-    normalize_covariance_matrix.__name__,
+    normalize_gram_matrix.__name__,
     PRNGKey.__name__,
 ]

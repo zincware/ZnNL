@@ -18,7 +18,6 @@ import optax
 from flax.training.train_state import TrainState
 
 from znnl.optimizers.trace_optimizer import TraceOptimizer
-from znnl.utils import normalize_covariance_matrix
 from znnl.utils.prng import PRNGKey
 
 
@@ -101,16 +100,8 @@ class JaxModel:
 
         Returns
         -------
-        initial state of model to then be trained.
-
-        Notes
-        -----
-        TODO: Make the TrainState class passable by the user as it can track custom
-              model properties.
+        initial state of model to then be trained.znrnd
         """
-        params = self._init_params(kernel_init, bias_init)
-
-        # Set dummy optimizer for case of trace optimizer.
         if isinstance(self.optimizer, TraceOptimizer):
             optimizer = optax.sgd(1.0)
         else:
@@ -139,7 +130,6 @@ class JaxModel:
         self,
         x_i: np.ndarray,
         x_j: np.ndarray = None,
-        normalize: bool = True,
         infinite: bool = False,
     ):
         """
@@ -151,8 +141,6 @@ class JaxModel:
                 Dataset for which to compute the NTK matrix.
         x_j : np.ndarray (optional)
                 Dataset for which to compute the NTK matrix.
-        normalize : bool (default = True)
-                If true, divide each row by its max value.
         infinite : bool (default = False)
                 If true, compute the infinite width limit as well.
 
@@ -168,15 +156,10 @@ class JaxModel:
         if infinite:
             try:
                 infinite_ntk = self.kernel_fn(x_i, x_j, "ntk")
-                if normalize:
-                    infinite_ntk = normalize_covariance_matrix(infinite_ntk)
             except AttributeError:
                 raise NotImplementedError("Infinite NTK not available for this model.")
         else:
             infinite_ntk = None
-
-        if normalize:
-            empirical_ntk = normalize_covariance_matrix(empirical_ntk)
 
         return {"empirical": empirical_ntk, "infinite": infinite_ntk}
 
