@@ -30,9 +30,9 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 import jax.numpy as np
 from neural_tangents import stax
 
-from znrnd.data import MNISTGenerator
-from znrnd.models import NTModel
-from znrnd.optimizers import TraceOptimizer
+from znnl.data import MNISTGenerator
+from znnl.models import NTModel
+from znnl.optimizers import TraceOptimizer
 
 
 class TestTraceOptimizer:

@@ -30,7 +30,7 @@ from itertools import combinations
 import jax.random
 from numpy.testing import assert_array_equal, assert_raises
 
-from znrnd.utils import PRNGKey
+from znnl.utils import PRNGKey
 
 
 class TestPRNG:

@@ -26,8 +26,8 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 import jax.numpy as np
 from numpy.testing import assert_array_equal
 
-from znrnd.distance_metrics.cosine_distance import CosineDistance
-from znrnd.point_selection import GreedySelection
+from znnl.distance_metrics.cosine_distance import CosineDistance
+from znnl.point_selection import GreedySelection
 
 
 class Agent:

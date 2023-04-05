@@ -32,9 +32,9 @@ from jax import random
 from neural_tangents import stax
 from numpy.testing import assert_raises
 
-from znrnd.loss_functions import MeanPowerLoss
-from znrnd.models import NTModel
-from znrnd.training_strategies import PartitionedTraining
+from znnl.loss_functions import MeanPowerLoss
+from znnl.models import NTModel
+from znnl.training_strategies import PartitionedTraining
 
 
 class TestPartitionedSelection:

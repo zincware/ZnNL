@@ -26,7 +26,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 import jax.numpy as np
 from numpy.testing import assert_array_almost_equal
 
-from znrnd.distance_metrics.angular_distance import AngularDistance
+from znnl.distance_metrics.angular_distance import AngularDistance
 
 
 class TestAngularDistance:

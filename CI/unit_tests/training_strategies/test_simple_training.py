@@ -30,8 +30,8 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 from jax import random
 from numpy.testing import assert_raises
 
-from znrnd.loss_functions import MeanPowerLoss
-from znrnd.training_strategies import SimpleTraining
+from znnl.loss_functions import MeanPowerLoss
+from znnl.training_strategies import SimpleTraining
 
 
 class TestSimpleTraining:

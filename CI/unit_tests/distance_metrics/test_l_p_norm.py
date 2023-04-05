@@ -27,7 +27,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 import jax.numpy as np
 from numpy.testing import assert_almost_equal, assert_array_almost_equal
 
-from znrnd.distance_metrics.l_p_norm import LPNorm
+from znnl.distance_metrics.l_p_norm import LPNorm
 
 
 class TestLPNorm:

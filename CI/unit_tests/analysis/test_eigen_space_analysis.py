@@ -34,7 +34,7 @@ that the Wigner semi-circle rule and Wigner surmise are met for this data.
 import jax.random as random
 from jax.lib import xla_bridge
 
-from znrnd.analysis import EigenSpaceAnalysis
+from znnl.analysis import EigenSpaceAnalysis
 
 
 class TestEigenspaceAnalysis:

@@ -38,7 +38,7 @@ import optax
 from neural_tangents import stax
 from numpy import testing
 
-import znrnd as rnd
+import znnl as rnd
 
 
 class TestRecorderDeployment:

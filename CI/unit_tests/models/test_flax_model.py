@@ -34,7 +34,7 @@ import pytest
 from flax import linen as nn
 from jax import random
 
-from znrnd.models import FlaxModel
+from znnl.models import FlaxModel
 
 
 class FlaxTestModule(nn.Module):

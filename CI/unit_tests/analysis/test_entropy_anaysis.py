@@ -28,7 +28,7 @@ import jax.numpy as np
 import pytest
 from jax.lib import xla_bridge
 
-from znrnd.analysis import EntropyAnalysis
+from znnl.analysis import EntropyAnalysis
 
 
 class TestEntropyAnalysis:

@@ -33,7 +33,7 @@ import optax
 from jax import random
 from neural_tangents import stax
 
-from znrnd.models import NTModel
+from znnl.models import NTModel
 
 
 class TestNTModule:

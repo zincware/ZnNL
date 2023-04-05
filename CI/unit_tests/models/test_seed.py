@@ -35,9 +35,9 @@ from flax import linen as nn
 from jax.flatten_util import ravel_pytree
 from neural_tangents import stax
 
-from znrnd.loss_functions import MeanPowerLoss
-from znrnd.models import FlaxModel, NTModel
-from znrnd.training_strategies import SimpleTraining
+from znnl.loss_functions import MeanPowerLoss
+from znnl.models import FlaxModel, NTModel
+from znnl.training_strategies import SimpleTraining
 
 
 class TestNTModelSeed:

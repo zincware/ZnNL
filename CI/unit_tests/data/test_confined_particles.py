@@ -30,7 +30,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 import jax.numpy as np
 import pytest
 
-from znrnd.data.confined_particles import ConfinedParticles
+from znnl.data.confined_particles import ConfinedParticles
 
 
 class TestConfinedParticles:

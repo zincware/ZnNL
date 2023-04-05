@@ -29,7 +29,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 import numpy as np
 
-from znrnd.data.points_on_a_lattice import PointsOnLattice
+from znnl.data.points_on_a_lattice import PointsOnLattice
 
 
 class TestPointsOnLattice:
