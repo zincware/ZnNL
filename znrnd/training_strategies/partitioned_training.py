@@ -35,7 +35,6 @@ from znrnd.accuracy_functions.accuracy_function import AccuracyFunction
 from znrnd.models.jax_model import JaxModel
 from znrnd.optimizers.trace_optimizer import TraceOptimizer
 from znrnd.training_recording import JaxRecorder
-from znrnd.training_strategies.recursive_mode import RecursiveMode
 from znrnd.training_strategies.simple_training import SimpleTraining
 from znrnd.training_strategies.training_decorator import train_func
 
@@ -66,7 +65,6 @@ class PartitionedTraining(SimpleTraining):
         loss_fn: Callable,
         accuracy_fn: AccuracyFunction = None,
         seed: int = None,
-        recursive_mode: RecursiveMode = None,
         disable_loading_bar: bool = False,
         recorders: List["JaxRecorder"] = None,
     ):
@@ -87,11 +85,6 @@ class PartitionedTraining(SimpleTraining):
                 Funktion class for computing the accuracy of model and given data.
         seed : int (default = None)
                 Random seed for the RNG. Uses a random int if not specified.
-        recursive_mode : RecursiveMode
-                Defining the recursive mode that can be used in training.
-                If the recursive mode is used, the training will be performed until a
-                condition is fulfilled.
-                The loss value at which point you consider the model trained.
         disable_loading_bar : bool
                 Disable the output visualization of the loading bar.
         recorders : List[JaxRecorder]
@@ -102,7 +95,6 @@ class PartitionedTraining(SimpleTraining):
             loss_fn=loss_fn,
             accuracy_fn=accuracy_fn,
             seed=seed,
-            recursive_mode=recursive_mode,
             disable_loading_bar=disable_loading_bar,
             recorders=recorders,
         )
@@ -304,7 +296,7 @@ class PartitionedTraining(SimpleTraining):
             state, train_metrics = self._train_epoch(
                 state=state, train_ds=train_data, batch_size=batch_size[training_phase]
             )
-            self.review_metric = self._evaluate_model(state.params, test_ds)
+            self.review_metric = self.evaluate_model(state.params, test_ds)
             train_losses.append(train_metrics["loss"])
 
             # Update the loading bar

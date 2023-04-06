@@ -39,7 +39,6 @@ from znrnd.distance_metrics import DistanceMetric
 from znrnd.models.jax_model import JaxModel
 from znrnd.optimizers.trace_optimizer import TraceOptimizer
 from znrnd.training_recording import JaxRecorder
-from znrnd.training_strategies.recursive_mode import RecursiveMode
 from znrnd.training_strategies.simple_training import SimpleTraining
 from znrnd.training_strategies.training_decorator import train_func
 
@@ -87,7 +86,6 @@ class LossAwareReservoir(SimpleTraining):
         reservoir_size: int = 500,
         reservoir_metric: Optional[DistanceMetric] = None,
         latest_points: int = 1,
-        recursive_mode: RecursiveMode = None,
         disable_loading_bar: bool = False,
         recorders: List["JaxRecorder"] = None,
     ):
@@ -122,11 +120,6 @@ class LossAwareReservoir(SimpleTraining):
                 These points will not be selected into the reservoir and are trained in
                 every epoch. Selecting latest_points a training batch consist of
                 [latest_points, reservoir_batch].
-        recursive_mode : RecursiveMode
-                Defining the recursive mode that can be used in training.
-                If the recursive mode is used, the training will be performed until a
-                condition is fulfilled.
-                The loss value at which point you consider the model trained.
         disable_loading_bar : bool
                 Disable the output visualization of the loading bar.
         recorders : List[JaxRecorder]
@@ -137,7 +130,6 @@ class LossAwareReservoir(SimpleTraining):
             loss_fn=loss_fn,
             accuracy_fn=accuracy_fn,
             seed=seed,
-            recursive_mode=recursive_mode,
             disable_loading_bar=disable_loading_bar,
             recorders=recorders,
         )
@@ -440,7 +432,7 @@ class LossAwareReservoir(SimpleTraining):
             state, train_metrics = self._train_epoch(
                 state=state, train_ds=train_ds, batch_size=batch_size
             )
-            self.review_metric = self._evaluate_model(state.params, test_ds)
+            self.review_metric = self.evaluate_model(state.params, test_ds)
             train_losses.append(train_metrics["loss"])
 
             # Update the loading bar

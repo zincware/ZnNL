@@ -97,9 +97,8 @@ def train_func(train_fn: Callable):
 
         # Recursive use of train_fn
         if recursive_mode and recursive_mode.use_recursive_mode:
-            # Set the default for perturbing the model in recursive training.
-            if recursive_mode.perturb_fn is None:
-                recursive_mode.perturb_fn = trainer.model.init_model
+            # Instantiate recursive mode
+            recursive_mode.instantiate_recursive_mode(trainer)
 
             condition = False
             counter = 0
@@ -115,9 +114,7 @@ def train_func(train_fn: Callable):
                 kwargs["epochs"] = (
                     recursive_mode.scale_factor * kwargs["epochs"]
                 ).astype(int)
-                condition = recursive_mode.update_recursive_condition(
-                    trainer.review_metric["loss"]
-                )
+                condition = recursive_mode.update_fn(kwargs["train_ds"])
 
                 # Re-initialize the network if it is simply not converging.
                 if counter % recursive_mode.break_counter == 0:
