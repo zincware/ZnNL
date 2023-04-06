@@ -50,7 +50,6 @@ class SimpleTraining:
         loss_fn: Callable,
         accuracy_fn: AccuracyFunction = None,
         seed: int = None,
-        recursive_mode: RecursiveMode = None,
         disable_loading_bar: bool = False,
         recorders: List["JaxRecorder"] = None,
     ):
@@ -70,10 +69,6 @@ class SimpleTraining:
                 Funktion class for computing the accuracy of model and given data.
         seed : int (default = None)
                 Random seed for the RNG. Uses a random int if not specified.
-        recursive_mode : RecursiveMode
-                Defining the recursive mode that can be used in training.
-                If the recursive mode is used, the training will be performed until a
-                condition is fulfilled.
         disable_loading_bar : bool
                 Disable the output visualization of the loading bar.
         recorders : List[JaxRecorder]
@@ -82,7 +77,6 @@ class SimpleTraining:
         self.model = model
         self.loss_fn = loss_fn
         self.accuracy_fn = accuracy_fn
-        self.recursive_mode = recursive_mode
 
         self.disable_loading_bar = disable_loading_bar
         self.recorders = recorders
@@ -90,6 +84,7 @@ class SimpleTraining:
         self.rng = PRNGKey(seed)
 
         self.review_metric = None
+        self.recursive_mode = None
 
         # Add the loss and accuracy function to the recorders and re-instantiate them
         if self.recorders is not None:
@@ -97,6 +92,23 @@ class SimpleTraining:
                 item.loss_fn = loss_fn
                 item.accuracy_fn = accuracy_fn
                 item.instantiate_recorder()
+
+    def set_recursive_mode(self, recursive_mode: RecursiveMode):
+        """
+
+        Parameters
+        ----------
+        recursive_mode : RecursiveMode
+                Defining the recursive mode that can be used in training.
+                If the recursive mode is used, the training will be performed until a
+                condition is fulfilled.
+
+        Returns
+        -------
+
+        """
+        self.recursive_mode = recursive_mode
+        self.recursive_mode.instantiate_recursive_mode(self)
 
     def _compute_metrics(self, predictions: np.ndarray, targets: np.ndarray):
         """
@@ -144,7 +156,7 @@ class SimpleTraining:
 
         return self._compute_metrics(predictions, batch["targets"])
 
-    def _evaluate_model(self, params: dict, test_ds: dict) -> dict:
+    def evaluate_model(self, params: dict, test_ds: dict) -> dict:
         """
         Evaluate the model.
 
@@ -368,7 +380,7 @@ class SimpleTraining:
             state, train_metrics = self._train_epoch(
                 state, train_ds, batch_size=batch_size
             )
-            self.review_metric = self._evaluate_model(state.params, test_ds)
+            self.review_metric = self.evaluate_model(state.params, test_ds)
             train_losses.append(train_metrics["loss"])
 
             # Update the loading bar
