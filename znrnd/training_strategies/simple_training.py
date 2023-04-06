@@ -144,7 +144,7 @@ class SimpleTraining:
 
         return self._compute_metrics(predictions, batch["targets"])
 
-    def _evaluate_model(self, params: dict, test_ds: dict) -> dict:
+    def evaluate_model(self, params: dict, test_ds: dict) -> dict:
         """
         Evaluate the model.
 
@@ -368,7 +368,7 @@ class SimpleTraining:
             state, train_metrics = self._train_epoch(
                 state, train_ds, batch_size=batch_size
             )
-            self.review_metric = self._evaluate_model(state.params, test_ds)
+            self.review_metric = self.evaluate_model(state.params, test_ds)
             train_losses.append(train_metrics["loss"])
 
             # Update the loading bar
