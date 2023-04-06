@@ -90,6 +90,7 @@ class TestRecursiveMode:
         """
         self.old_points_trainer.recursive_mode.use_recursive_mode = True
         self.old_points_trainer.recursive_mode.threshold = 0.001
+        self.old_points_trainer.recursive_mode.update_type = "threshold"
         _ = self.old_points_trainer.train_model(
             self.all_data,
             self.old_data,

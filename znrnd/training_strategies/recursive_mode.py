@@ -143,7 +143,7 @@ class RecursiveMode:
         self._metric_state = self._training_strategy.evaluate_model(
             self._training_strategy.model.model_state.params, dataset
         )
-        condition = self._metric_state <= self.threshold
+        condition = self._metric_state["loss"] <= self.threshold
         return condition
 
     def _update_fn_rnd(self, dataset) -> bool:
@@ -171,8 +171,14 @@ class RecursiveMode:
             condition = self._update_fn_threshold(dataset=dataset)
 
         else:
-            ds_1 = {"inputs": dataset["inputs"][-1:], "targets": dataset["targets"][-1:]}
-            ds_2 = {"inputs": dataset["inputs"][:-1], "targets": dataset["targets"][:-1]}
+            ds_1 = {
+                "inputs": dataset["inputs"][-1:],
+                "targets": dataset["targets"][-1:],
+            }
+            ds_2 = {
+                "inputs": dataset["inputs"][:-1],
+                "targets": dataset["targets"][:-1],
+            }
 
             metric_1 = self._training_strategy.evaluate_model(
                 self._training_strategy.model.model_state.params, ds_1
