@@ -166,19 +166,26 @@ class RecursiveMode:
                 Boolean that tells whether the condition is fulfilled.
 
         """
-        ds_1 = {"inputs": dataset["inputs"][-1:], "targets": dataset["targets"][-1:]}
-        ds_2 = {"inputs": dataset["inputs"][:-1], "targets": dataset["targets"][:-1]}
+        # Use just a threshold if the dataset contains a single point.
+        if dataset["targets"].shape[0] == 1:
+            condition = self._update_fn_threshold(dataset=dataset)
 
-        metric_1 = self._training_strategy.evaluate_model(
-            self._training_strategy.model.model_state.params, ds_1
-        )["loss"]
-        metric_2 = self._training_strategy.evaluate_model(
-            self._training_strategy.model.model_state.params, ds_2
-        )["loss"]
+        else:
+            ds_1 = {"inputs": dataset["inputs"][-1:], "targets": dataset["targets"][-1:]}
+            ds_2 = {"inputs": dataset["inputs"][:-1], "targets": dataset["targets"][:-1]}
 
-        condition_1 = metric_2 - metric_1 >= 0
-        condition_2 = metric_2 <= self.threshold
-        return np.logical_and(condition_1, condition_2)
+            metric_1 = self._training_strategy.evaluate_model(
+                self._training_strategy.model.model_state.params, ds_1
+            )["loss"]
+            metric_2 = self._training_strategy.evaluate_model(
+                self._training_strategy.model.model_state.params, ds_2
+            )["loss"]
+
+            condition_1 = metric_2 - metric_1 >= 0
+            condition_2 = metric_2 <= self.threshold
+            condition = np.logical_and(condition_1, condition_2)
+
+        return condition
 
     def perturb_training(self):
         """
