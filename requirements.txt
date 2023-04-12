@@ -19,7 +19,7 @@ flax
 tqdm
 pandas
 neural-tangents
-tensorflow-datasets==4.9.0
+tensorflow-datasets==4.8.0
 isort==5.10.1
 tensorflow
 pyyaml
