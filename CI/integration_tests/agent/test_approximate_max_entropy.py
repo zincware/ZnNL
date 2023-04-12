@@ -1,5 +1,5 @@
 """
-ZnRND: A zincwarecode package.
+ZnNL: A Zincwarecode package.
 
 License
 -------
@@ -9,7 +9,7 @@ available at https://www.eclipse.org/legal/epl-v20.html
 
 SPDX-License-Identifier: EPL-2.0
 
-Copyright Contributors to the zincwarecode Project.
+Copyright Contributors to the Zincwarecode Project.
 
 Contact Information
 -------------------
@@ -23,12 +23,11 @@ If you use this module please cite us with:
 
 Summary
 -------
-Test that the approximate max entropy set is reproduced.
 """
 import optax
 from neural_tangents import stax
 
-import znrnd
+import znnl
 
 
 class TestApproximateMaxEntropy:
@@ -44,16 +43,16 @@ class TestApproximateMaxEntropy:
         # Model preparation
         model = stax.serial(stax.Dense(12), stax.Relu(), stax.Dense(12))
 
-        target_network = znrnd.models.NTModel(
+        target_network = znnl.models.NTModel(
             nt_module=model,
             optimizer=optax.sgd(0.001),
             input_shape=(2,),
         )
 
         # Data generator preparation
-        data_generator = znrnd.data.PointsOnLattice()
+        data_generator = znnl.data.PointsOnLattice()
         data_generator.build_pool(10, 10)
 
-        cls.agent = znrnd.agents.ApproximateMaximumEntropy(
+        cls.agent = znnl.agents.ApproximateMaximumEntropy(
             samples=10, target_network=target_network, data_generator=data_generator
         )

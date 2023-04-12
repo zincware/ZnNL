@@ -1,5 +1,5 @@
 """
-ZnRND: A zincwarecode package.
+ZnNL: A Zincwarecode package.
 
 License
 -------
@@ -9,7 +9,7 @@ available at https://www.eclipse.org/legal/epl-v20.html
 
 SPDX-License-Identifier: EPL-2.0
 
-Copyright Contributors to the zincwarecode Project.
+Copyright Contributors to the Zincwarecode Project.
 
 Contact Information
 -------------------
@@ -23,7 +23,6 @@ If you use this module please cite us with:
 
 Summary
 -------
-Unit tests for the neural tangents model.
 """
 import os
 
@@ -33,7 +32,7 @@ import optax
 from jax import random
 from neural_tangents import stax
 
-from znrnd.models import NTModel
+from znnl.models import NTModel
 
 
 class TestNTModule:
@@ -74,8 +73,8 @@ class TestNTModule:
             trace_axes=(),
         )
 
-        ntk_1 = nt_model_1.compute_ntk(x1, normalize=False)["empirical"]
-        ntk_2 = nt_model_2.compute_ntk(x1, normalize=False)["empirical"]
+        ntk_1 = nt_model_1.compute_ntk(x1)["empirical"]
+        ntk_2 = nt_model_2.compute_ntk(x1)["empirical"]
 
         assert ntk_1.shape == (3, 3)
         assert ntk_2.shape == (3, 3, 5, 5)

@@ -1,5 +1,5 @@
 """
-ZnRND: A zincwarecode package.
+ZnNL: A Zincwarecode package.
 
 License
 -------
@@ -9,7 +9,7 @@ available at https://www.eclipse.org/legal/epl-v20.html
 
 SPDX-License-Identifier: EPL-2.0
 
-Copyright Contributors to the zincwarecode Project.
+Copyright Contributors to the Zincwarecode Project.
 
 Contact Information
 -------------------
@@ -23,7 +23,6 @@ If you use this module please cite us with:
 
 Summary
 -------
-Test that reinitialization of a model with a seed produces the same configuration.
 """
 import os
 
@@ -35,9 +34,9 @@ from flax import linen as nn
 from jax.flatten_util import ravel_pytree
 from neural_tangents import stax
 
-from znrnd.loss_functions import MeanPowerLoss
-from znrnd.models import FlaxModel, NTModel
-from znrnd.training_strategies import SimpleTraining
+from znnl.loss_functions import MeanPowerLoss
+from znnl.models import FlaxModel, NTModel
+from znnl.training_strategies import SimpleTraining
 
 
 class TestNTModelSeed:

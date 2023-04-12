@@ -1,5 +1,5 @@
 """
-ZnRND: A zincwarecode package.
+ZnNL: A Zincwarecode package.
 
 License
 -------
@@ -9,7 +9,7 @@ available at https://www.eclipse.org/legal/epl-v20.html
 
 SPDX-License-Identifier: EPL-2.0
 
-Copyright Contributors to the zincwarecode Project.
+Copyright Contributors to the Zincwarecode Project.
 
 Contact Information
 -------------------
@@ -23,7 +23,6 @@ If you use this module please cite us with:
 
 Summary
 -------
-Unit tests for the flax models.
 """
 import os
 
@@ -34,7 +33,7 @@ import pytest
 from flax import linen as nn
 from jax import random
 
-from znrnd.models import FlaxModel
+from znnl.models import FlaxModel
 
 
 class FlaxTestModule(nn.Module):
@@ -69,7 +68,7 @@ class TestFlaxModule:
 
         key1, key2 = random.split(random.PRNGKey(1), 2)
         x = random.normal(key1, (3, 8))
-        ntk = model.compute_ntk(x, normalize=False)["empirical"]
+        ntk = model.compute_ntk(x)["empirical"]
         assert ntk.shape == (3, 3)
 
     def test_infinite_failure(self):
@@ -87,4 +86,4 @@ class TestFlaxModule:
         x = random.normal(key1, (3, 8))
 
         with pytest.raises(NotImplementedError):
-            model.compute_ntk(x, normalize=False, infinite=True)
+            model.compute_ntk(x, infinite=True)

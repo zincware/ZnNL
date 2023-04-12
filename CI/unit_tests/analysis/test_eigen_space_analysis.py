@@ -1,5 +1,5 @@
 """
-ZnRND: A zincwarecode package.
+ZnNL: A Zincwarecode package.
 
 License
 -------
@@ -9,7 +9,7 @@ available at https://www.eclipse.org/legal/epl-v20.html
 
 SPDX-License-Identifier: EPL-2.0
 
-Copyright Contributors to the zincwarecode Project.
+Copyright Contributors to the Zincwarecode Project.
 
 Contact Information
 -------------------
@@ -23,18 +23,11 @@ If you use this module please cite us with:
 
 Summary
 -------
-Test the eigen space analysis tools
-
-Notes
------
-None of these tests enforce any of the surmises. You can look at the generated plots
-to confirm that they are true but we need to add some return on the methods and check
-that the Wigner semi-circle rule and Wigner surmise are met for this data.
 """
 import jax.random as random
 from jax.lib import xla_bridge
 
-from znrnd.analysis import EigenSpaceAnalysis
+from znnl.analysis import EigenSpaceAnalysis
 
 
 class TestEigenspaceAnalysis:

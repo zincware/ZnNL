@@ -1,12 +1,14 @@
 """
-ZnRND: A Zincwarecode package.
+ZnNL: A Zincwarecode package.
 
 License
 -------
 This program and the accompanying materials are made available under the terms
 of the Eclipse Public License v2.0 which accompanies this distribution, and is
 available at https://www.eclipse.org/legal/epl-v20.html
+
 SPDX-License-Identifier: EPL-2.0
+
 Copyright Contributors to the Zincwarecode Project.
 
 Contact Information
@@ -21,7 +23,6 @@ If you use this module please cite us with:
 
 Summary
 -------
-Test the angular distance module.
 """
 import os
 
@@ -33,7 +34,7 @@ import numpy as onp
 import scipy.spatial.distance
 from numpy.testing import assert_almost_equal, assert_array_almost_equal
 
-from znrnd.distance_metrics.mahalanobis_distance import MahalanobisDistance
+from znnl.distance_metrics.mahalanobis_distance import MahalanobisDistance
 
 
 class TestMahalanobisDistance:

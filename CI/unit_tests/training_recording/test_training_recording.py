@@ -1,12 +1,14 @@
 """
-ZnRND: A Zincwarecode package.
+ZnNL: A Zincwarecode package.
 
 License
 -------
 This program and the accompanying materials are made available under the terms
 of the Eclipse Public License v2.0 which accompanies this distribution, and is
 available at https://www.eclipse.org/legal/epl-v20.html
+
 SPDX-License-Identifier: EPL-2.0
+
 Copyright Contributors to the Zincwarecode Project.
 
 Contact Information
@@ -21,7 +23,6 @@ If you use this module please cite us with:
 
 Summary
 -------
-Test for the model recording module.
 """
 import tempfile
 from pathlib import Path
@@ -30,7 +31,7 @@ import h5py as hf
 import numpy as onp
 from numpy import testing
 
-from znrnd.training_recording import JaxRecorder
+from znnl.training_recording import JaxRecorder
 
 
 class TestModelRecording:
@@ -55,7 +56,11 @@ class TestModelRecording:
             loss=True,
             accuracy=True,
             ntk=True,
+            covariance_ntk=True,
+            magnitude_ntk=True,
             entropy=True,
+            magnitude_entropy=True,
+            covariance_entropy=True,
             eigenvalues=True,
             trace=True,
             loss_derivative=True,
@@ -90,7 +95,11 @@ class TestModelRecording:
                 loss=True,
                 accuracy=False,
                 ntk=False,
+                covariance_ntk=True,
+                magnitude_ntk=True,
                 entropy=False,
+                magnitude_entropy=False,
+                covariance_entropy=False,
                 eigenvalues=False,
             )
             recorder.instantiate_recorder(data_set=self.dummy_data_set)

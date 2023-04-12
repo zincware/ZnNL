@@ -1,12 +1,14 @@
 """
-ZnRND: A Zincwarecode package.
+ZnNL: A Zincwarecode package.
 
 License
 -------
 This program and the accompanying materials are made available under the terms
 of the Eclipse Public License v2.0 which accompanies this distribution, and is
 available at https://www.eclipse.org/legal/epl-v20.html
+
 SPDX-License-Identifier: EPL-2.0
+
 Copyright Contributors to the Zincwarecode Project.
 
 Contact Information
@@ -35,17 +37,17 @@ from jax import random
 from neural_tangents import stax
 from numpy.testing import assert_array_equal
 
-from znrnd.accuracy_functions import AccuracyFunction
-from znrnd.distance_metrics import DistanceMetric
-from znrnd.loss_functions import MeanPowerLoss
-from znrnd.models import JaxModel, NTModel
-from znrnd.training_recording import JaxRecorder
-from znrnd.training_strategies import (
+from znnl.accuracy_functions import AccuracyFunction
+from znnl.distance_metrics import DistanceMetric
+from znnl.loss_functions import MeanPowerLoss
+from znnl.models import JaxModel, NTModel
+from znnl.training_recording import JaxRecorder
+from znnl.training_strategies import (
     LossAwareReservoir,
     PartitionedTraining,
     RecursiveMode,
 )
-from znrnd.training_strategies.training_decorator import train_func
+from znnl.training_strategies.training_decorator import train_func
 
 
 class LarDecoratorTester(LossAwareReservoir):
