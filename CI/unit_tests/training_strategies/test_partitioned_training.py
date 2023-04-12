@@ -29,7 +29,7 @@ import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-from typing import Callable, List, Tuple, Union
+from typing import Callable, List, Union
 
 import jax.numpy as np
 import optax

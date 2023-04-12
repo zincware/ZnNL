@@ -29,7 +29,7 @@ import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Callable, List, Optional, Union
 
 import numpy as np
 import optax
@@ -44,7 +44,6 @@ from znnl.models import JaxModel, NTModel
 from znnl.training_recording import JaxRecorder
 from znnl.training_strategies import (
     LossAwareReservoir,
-    PartitionedTraining,
     RecursiveMode,
 )
 from znnl.training_strategies.training_decorator import train_func
