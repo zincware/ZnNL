@@ -19,8 +19,9 @@ flax
 tqdm
 pandas
 neural-tangents
-tensorflow-datasets==4.8.0
+tensorflow-datasets
 isort==5.10.1
 tensorflow
 pyyaml
 jupyter
+protobuf==3.20.*
