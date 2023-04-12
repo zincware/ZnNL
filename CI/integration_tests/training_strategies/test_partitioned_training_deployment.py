@@ -30,6 +30,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 import copy
 
+import jax.numpy as np
 import optax
 from jax import random
 from neural_tangents import stax
@@ -90,7 +91,7 @@ class TestPartitionedSelection:
             train_ds=self.train_ds,
             test_ds=self.test_ds,
             epochs=[2, 5],
-            train_ds_selection=[[-1], slice(1, -1, 3)],
+            train_ds_selection=[np.array([-1]), slice(1, -1, 3)],
         )
         assert len(batch_metric["train_losses"]) == 7
 

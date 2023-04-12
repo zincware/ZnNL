@@ -24,6 +24,7 @@ If you use this module please cite us with:
 Summary
 -------
 """
+import copy
 import logging
 import time
 from typing import List, Optional, Union
@@ -234,7 +235,7 @@ class RND(Agent):
                 train_ds=dataset,
                 test_ds=dataset,
                 epochs=self.epochs,
-                batch_size=self.batch_size,
+                batch_size=copy.deepcopy(self.batch_size),
                 **self.training_kwargs,
             )
 
