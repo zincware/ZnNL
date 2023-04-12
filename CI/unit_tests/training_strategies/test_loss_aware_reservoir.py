@@ -42,10 +42,7 @@ from znnl.distance_metrics import DistanceMetric
 from znnl.loss_functions import MeanPowerLoss
 from znnl.models import JaxModel, NTModel
 from znnl.training_recording import JaxRecorder
-from znnl.training_strategies import (
-    LossAwareReservoir,
-    RecursiveMode,
-)
+from znnl.training_strategies import LossAwareReservoir, RecursiveMode
 from znnl.training_strategies.training_decorator import train_func
 
 
