@@ -25,8 +25,10 @@ Summary
 -------
 """
 from znnl.loss_functions.absolute_angle_difference import AngleDistanceLoss
+from znnl.loss_functions.contrastive_loss import ContrastiveLoss, ExternalPotential
 from znnl.loss_functions.cosine_distance import CosineDistanceLoss
 from znnl.loss_functions.cross_entropy_loss import CrossEntropyLoss
+from znnl.loss_functions.exponential_repulsion_loss import ExponentialRepulsionLoss
 from znnl.loss_functions.l_p_norm import LPNormLoss
 from znnl.loss_functions.mahalanobis import MahalanobisLoss
 from znnl.loss_functions.mean_power_error import MeanPowerLoss
@@ -42,4 +44,7 @@ __all__ = [
     SimpleLoss.__name__,
     CrossEntropyLoss.__name__,
     WassersteinLoss.__name__,
+    ExponentialRepulsionLoss.__name__,
+    ContrastiveLoss.__name__,
+    ExternalPotential.__name__,
 ]
