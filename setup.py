@@ -42,7 +42,7 @@ with open("README.rst", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="ZnRND",
+    name="ZnNL",
     version="0.0.1",
     author="zincware",
     author_email="tovey.samuel@gmail.com",
@@ -56,6 +56,6 @@ setuptools.setup(
         "License :: OSI Approved :: Eclipse Public License 2.0 (EPL-2.0)",
         "Operating System :: OS Independent",
     ],
-    python_requires=">=3.8",
+    python_requires=">=3.10",
     install_requires=requirements,
 )
