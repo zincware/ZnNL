@@ -548,8 +548,7 @@ class JaxRecorder:
         vector_loss_derivative = self._loss_derivative_fn.calculate(
             parsed_data["predictions"], self._data_set["targets"]
         )
-        loss_derivative = calculate_l_pq_norm(vector_loss_derivative)
-        self._loss_derivative_array.append(loss_derivative)
+        self._loss_derivative_array.append(vector_loss_derivative)
 
     def gather_recording(self, selected_properties: list = None) -> dataclass:
         """
@@ -593,6 +592,7 @@ class JaxRecorder:
             db_data = self._data_storage.fetch_data(selected_properties)
             # Add db data to the selected data dict.
             for item, data in selected_data.items():
+                print(item)
                 selected_data[item] = onp.concatenate((db_data[item], data), axis=0)
 
         except FileNotFoundError:  # There is no database.
