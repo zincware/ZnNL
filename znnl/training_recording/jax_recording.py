@@ -90,6 +90,10 @@ class JaxRecorder:
             If true, the trace of the fisher matrix will be recorded. Requires the ntk
             and the loss derivative to be calculated.
             Warning, large overhead.
+    fisher_trace : bool (default=False)
+            If true, the trace of the fisher matrix will be recorded. Requires the ntk
+            and the loss derivative to be calculated.
+            Warning, large overhead.
     update_rate : int (default=1)
             How often the values are updated.
 
@@ -147,6 +151,10 @@ class JaxRecorder:
     # Loss derivative
     loss_derivative: bool = False
     _loss_derivative_array: list = None
+
+    # Fisher trace
+    fisher_trace: bool = False
+    _fisher_trace_array: list = None
 
     # Fisher trace
     fisher_trace: bool = False
@@ -249,6 +257,7 @@ class JaxRecorder:
             self._index_count = 0
 
         # Check if we need an NTK computation, update the class accordingly
+        # Check if we need an NTK computation, update the class accordingly
         if any(
             [
                 "ntk" in self._selected_properties,
@@ -263,6 +272,14 @@ class JaxRecorder:
             ]
         ):
             self._compute_ntk = True
+
+        # Check if we need a loss derivative computation, update the class accordingly
+        if any(
+            [
+                "fisher_trace" in self._selected_properties,
+            ]
+        ):
+            self._compute_loss_derivative = True
 
         # Check if we need a loss derivative computation, update the class accordingly
         if any(
@@ -305,6 +322,7 @@ class JaxRecorder:
             parsed_data["predictions"] = predictions
 
             # Compute ntk and loss derivative here to avoid repeated computation.
+            # Compute ntk and loss derivative here to avoid repeated computation.
             if self._compute_ntk:
                 try:
                     ntk = self._model.compute_ntk(
@@ -324,6 +342,11 @@ class JaxRecorder:
                     self.covariance_entropy = False
                     self.eigenvalues = False
                     self._read_selected_attributes()
+            if self._compute_loss_derivative:
+                vector_loss_derivative = self._loss_derivative_fn.calculate(
+                    parsed_data["predictions"], self._data_set["targets"]
+                )
+                parsed_data["loss_derivative"] = vector_loss_derivative
             if self._compute_loss_derivative:
                 vector_loss_derivative = self._loss_derivative_fn.calculate(
                     parsed_data["predictions"], self._data_set["targets"]
@@ -556,6 +579,16 @@ class JaxRecorder:
         """
         Update the loss derivative array.
 
+        Parameters
+        ----------
+        parsed_data : dict
+                Data computed before the update to prevent repeated calculations.
+        """
+        self._loss_derivative_array.append(parsed_data["loss_derivative"])
+
+    def _update_fisher_trace(self, parsed_data):
+        """
+        Update the fisher trace array.
         Parameters
         ----------
         parsed_data : dict
