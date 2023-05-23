@@ -29,6 +29,8 @@ from dataclasses import dataclass, make_dataclass
 from os import path
 from pathlib import Path
 
+import jax
+
 import numpy as onp
 
 from znnl.accuracy_functions.accuracy_function import AccuracyFunction
@@ -248,7 +250,7 @@ class JaxRecorder:
         if overwrite:
             self._index_count = 0
 
-        # Check if we need an NTK computation, update the class accordingly
+        # Check if we need an NTK computation, update the class accordingly.
         if any(
             [
                 "ntk" in self._selected_properties,
@@ -268,12 +270,11 @@ class JaxRecorder:
         if any(
             [
                 "fisher_trace" in self._selected_properties,
+                "loss_derivative" in self._selected_properties
             ]
         ):
             self._compute_loss_derivative = True
-
-        if "loss_derivative" in self._selected_properties:
-            self._loss_derivative_fn = LossDerivative(self._loss_fn)
+            self._loss_derivative_fn = LossDerivative(self._loss_fn)            
 
     def update_recorder(self, epoch: int, model: JaxModel):
         """
@@ -360,7 +361,7 @@ class JaxRecorder:
         -------
 
         """
-        raise NotImplementedError("Not yet available in ZnRND.")
+        raise NotImplementedError("Not yet available in ZnNL.")
 
     @property
     def loss_fn(self):
@@ -579,9 +580,20 @@ class JaxRecorder:
             assert len(ntk.shape) == 4
         except AssertionError:
             raise TypeError(
-                "The ntk needs to have 4 dimensions for the fisher trace calculation."
+                "The ntk needs to be rank 4 for the fisher trace calculation."
                 "Maybe you have set the model to trace over the output dimensions?"
             )
+        
+        def _inner_fn(a, b, c):
+
+            return a * b * c
+                
+        map_1 = jax.vmap(_inner_fn, in_axes=(None, 0, 0))
+        map_2 = jax.vmap(map_1, in_axes=(0, None, 0))
+        map_3 = jax.vmap(map_2, in_axes=(0, 0, 0))
+
+        fisher_trace = onp.sum(map_3(loss_derivative, loss_derivative, ))
+
 
         dataset_size = loss_derivative.shape[0]
         dimensionality = loss_derivative.shape[1]
