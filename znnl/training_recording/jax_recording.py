@@ -269,7 +269,7 @@ class JaxRecorder:
         if any(
             [
                 "fisher_trace" in self._selected_properties,
-                "loss_derivative" in self._selected_properties
+                "loss_derivative" in self._selected_properties,
             ]
         ):
             self._compute_loss_derivative = True
@@ -593,8 +593,9 @@ class JaxRecorder:
 
         dataset_size = loss_derivative.shape[0]
         indices = onp.arange(dataset_size)
-        fisher_trace = onp.sum(map_3(loss_derivative, loss_derivative,
-                                     ntk[indices, indices, :, :]))
+        fisher_trace = onp.sum(
+            map_3(loss_derivative, loss_derivative, ntk[indices, indices, :, :])
+        )
 
         self._fisher_trace_array.append(fisher_trace / dataset_size)
 
