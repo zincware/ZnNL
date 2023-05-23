@@ -39,6 +39,7 @@ from znnl.analysis.loss_fn_derivative import LossDerivative
 from znnl.loss_functions import SimpleLoss
 from znnl.models.jax_model import JaxModel
 from znnl.training_recording.data_storage import DataStorage
+from znnl.observables.fisher_trace import compute_fisher_trace
 from znnl.utils.matrix_utils import compute_magnitude_density, normalize_gram_matrix
 
 logger = logging.getLogger(__name__)
@@ -575,28 +576,11 @@ class JaxRecorder:
         loss_derivative = parsed_data["loss_derivative"]
         ntk = parsed_data["ntk"]
 
-        try:
-            assert len(ntk.shape) == 4
-        except AssertionError:
-            raise TypeError(
-                "The ntk needs to be rank 4 for the fisher trace calculation."
-                "Maybe you have set the model to trace over the output dimensions?"
+        fisher_trace = compute_fisher_trace(
+            loss_derivative=loss_derivative, ntk=ntk
             )
 
-        def _inner_fn(a, b, c):
-            return a * b * c
-
-        map_1 = jax.vmap(_inner_fn, in_axes=(None, 0, 0))
-        map_2 = jax.vmap(map_1, in_axes=(0, None, 0))
-        map_3 = jax.vmap(map_2, in_axes=(0, 0, 0))
-
-        dataset_size = loss_derivative.shape[0]
-        indices = onp.arange(dataset_size)
-        fisher_trace = onp.sum(
-            map_3(loss_derivative, loss_derivative, ntk[indices, indices, :, :])
-        )
-
-        self._fisher_trace_array.append(fisher_trace / dataset_size)
+        self._fisher_trace_array.append(fisher_trace)
 
     def gather_recording(self, selected_properties: list = None) -> dataclass:
         """
