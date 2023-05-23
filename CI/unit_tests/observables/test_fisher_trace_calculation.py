@@ -25,8 +25,9 @@ Summary
 -------
 """
 
-from znnl.observables.fisher_trace import compute_fisher_trace
 import numpy as np
+
+from znnl.observables.fisher_trace import compute_fisher_trace
 
 ntk = np.array(
     [

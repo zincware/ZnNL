@@ -37,8 +37,8 @@ from znnl.analysis.entropy import EntropyAnalysis
 from znnl.analysis.loss_fn_derivative import LossDerivative
 from znnl.loss_functions import SimpleLoss
 from znnl.models.jax_model import JaxModel
-from znnl.training_recording.data_storage import DataStorage
 from znnl.observables.fisher_trace import compute_fisher_trace
+from znnl.training_recording.data_storage import DataStorage
 from znnl.utils.matrix_utils import compute_magnitude_density, normalize_gram_matrix
 
 logger = logging.getLogger(__name__)

@@ -25,8 +25,8 @@ Summary
 -------
 Module for the computation of the Fisher trace.
 """
-import jax.numpy as np
 import jax
+import jax.numpy as np
 
 
 def compute_fisher_trace(loss_derivative: np.ndarray, ntk: np.ndarray) -> float:
