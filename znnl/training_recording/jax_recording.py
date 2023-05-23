@@ -38,6 +38,7 @@ from znnl.analysis.loss_fn_derivative import LossDerivative
 from znnl.loss_functions import SimpleLoss
 from znnl.models.jax_model import JaxModel
 from znnl.observables.fisher_trace import compute_fisher_trace
+from znnl.observables.tensornetwork_entropy import compute_tensornetwork_entropy
 from znnl.training_recording.data_storage import DataStorage
 from znnl.utils.matrix_utils import compute_magnitude_density, normalize_gram_matrix
 
@@ -90,6 +91,9 @@ class JaxRecorder:
     fisher_trace : bool (default=False)
             If true, the trace of the fisher matrix will be recorded. Requires the ntk
             and the loss derivative to be calculated.
+            Warning, large overhead.
+    tensornetwork_entropy : bool (default=False)
+            If true, the tensornetwork entropy will be recorded.
             Warning, large overhead.
     update_rate : int (default=1)
             How often the values are updated.
@@ -152,6 +156,10 @@ class JaxRecorder:
     # Fisher trace
     fisher_trace: bool = False
     _fisher_trace_array: list = None
+
+    # tensornetwork entropy
+    tensornetwork_entropy: bool = False
+    _tensornetwork_entropy_array: list = None
 
     # Class helpers
     update_rate: int = 1
@@ -261,6 +269,7 @@ class JaxRecorder:
                 "eigenvalues" in self._selected_properties,
                 "trace" in self._selected_properties,
                 "fisher_trace" in self._selected_properties,
+                "tensornetwork_entropy" in self._selected_properties,
             ]
         ):
             self._compute_ntk = True
@@ -578,6 +587,21 @@ class JaxRecorder:
         fisher_trace = compute_fisher_trace(loss_derivative=loss_derivative, ntk=ntk)
 
         self._fisher_trace_array.append(fisher_trace)
+
+    def _update_tensornetwork_entropy(self, parsed_data):
+        """
+        Update the tensornetwork entropy.
+        Parameters
+        ----------
+        parsed_data : dict
+                Data computed before the update to prevent repeated calculations.
+        """
+        ntk = parsed_data["ntk"]
+        targets = self._data_set["targets"]
+
+        tensornetwork_entropy = compute_tensornetwork_entropy(ntk=ntk, targets=targets)
+
+        self._tensornetwork_entropy_array.append(tensornetwork_entropy)
 
     def gather_recording(self, selected_properties: list = None) -> dataclass:
         """

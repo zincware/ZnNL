@@ -26,5 +26,6 @@ Summary
 Module for the observables.
 """
 from znnl.observables.fisher_trace import compute_fisher_trace
+from znnl.observables.tensornetwork_entropy import compute_tensornetwork_entropy
 
-__all__ = [compute_fisher_trace.__name__]
+__all__ = [compute_fisher_trace.__name__, compute_tensornetwork_entropy.__name__]
