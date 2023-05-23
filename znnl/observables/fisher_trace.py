@@ -37,7 +37,7 @@ def compute_fisher_trace(loss_derivative: np.ndarray, ntk: np.ndarray) -> float:
     ----------
     loss_derivative : np.ndarray (n_data_points, network_output)
             Loss derivative to use in the computation.
-    ntk : np.ndarray
+    ntk : np.ndarray (n_data_points, n_data_points, network_output, network_output)
             NTK of the network in one state.
 
     Returns
@@ -51,6 +51,7 @@ def compute_fisher_trace(loss_derivative: np.ndarray, ntk: np.ndarray) -> float:
         raise TypeError(
             "The ntk needs to be rank 4 for the fisher trace calculation."
             "Maybe you have set the model to trace over the output dimensions?"
+            "Try adding trace_axes=() to the models parameters."
         )
 
     def _inner_fn(a, b, c):
