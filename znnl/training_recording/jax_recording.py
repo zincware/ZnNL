@@ -589,16 +589,6 @@ class JaxRecorder:
     def _update_fisher_trace(self, parsed_data):
         """
         Update the fisher trace array.
-        Parameters
-        ----------
-        parsed_data : dict
-                Data computed before the update to prevent repeated calculations.
-        """
-        self._loss_derivative_array.append(parsed_data["loss_derivative"])
-
-    def _update_fisher_trace(self, parsed_data):
-        """
-        Update the fisher trace array.
 
         Parameters
         ----------
@@ -610,7 +600,7 @@ class JaxRecorder:
 
         try:
             assert len(ntk.shape) == 4
-        except (AssertionError):
+        except AssertionError:
             raise TypeError(
                 "The ntk needs to have 4 dimensions for the fisher trace calculation."
                 "Maybe you have set the model to trace over the output dimensions?"
@@ -622,8 +612,11 @@ class JaxRecorder:
         for i in range(dataset_size):
             for l1 in range(dimensionality):
                 for l2 in range(dimensionality):
-                    fisher_trace += loss_derivative[i, l1] * loss_derivative[i, l2] * \
-                        ntk[i, i, l1, l2]
+                    fisher_trace += (
+                        loss_derivative[i, l1]
+                        * loss_derivative[i, l2]
+                        * ntk[i, i, l1, l2]
+                    )
         self._fisher_trace_array.append(fisher_trace / dataset_size)
 
     def gather_recording(self, selected_properties: list = None) -> dataclass:
