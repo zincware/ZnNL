@@ -31,25 +31,10 @@ from znnl.observables.fisher_trace import compute_fisher_trace
 
 ntk = np.array(
     [
-        [
-            [[1, 2, 3],
-             [4, 5, 6],
-             [7, 8, 9]],
-            np.random.rand(3, 3)
-        ],
-        [
-            np.random.rand(3, 3),
-            [[2, 1, 3],
-             [1, 2, 3],
-             [3, 2, 1]]
-        ]
+        [[[1, 2, 3], [4, 5, 6], [7, 8, 9]], np.random.rand(3, 3)],
+        [np.random.rand(3, 3), [[2, 1, 3], [1, 2, 3], [3, 2, 1]]],
     ]
 )
-loss_derivative = np.array(
-    [
-        [5, 4, 3],
-        [2, 1, 0]
-    ]
-)
+loss_derivative = np.array([[5, 4, 3], [2, 1, 0]])
 
 assert compute_fisher_trace(loss_derivative=loss_derivative, ntk=ntk) == 638 / 2
