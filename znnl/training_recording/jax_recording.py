@@ -584,7 +584,6 @@ class JaxRecorder:
             )
 
         def _inner_fn(a, b, c):
-
             return a * b * c
 
         map_1 = jax.vmap(_inner_fn, in_axes=(None, 0, 0))
