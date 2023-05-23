@@ -38,11 +38,7 @@ from znnl.analysis.loss_fn_derivative import LossDerivative
 from znnl.loss_functions import SimpleLoss
 from znnl.models.jax_model import JaxModel
 from znnl.training_recording.data_storage import DataStorage
-from znnl.utils.matrix_utils import (
-    calculate_l_pq_norm,
-    compute_magnitude_density,
-    normalize_gram_matrix,
-)
+from znnl.utils.matrix_utils import compute_magnitude_density, normalize_gram_matrix
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +86,10 @@ class JaxRecorder:
     loss_derivative : bool (default=False)
             If true, the derivative of the loss function with respect to the network
             output will be recorded.
+    fisher_trace : bool (default=False)
+            If true, the trace of the fisher matrix will be recorded. Requires the ntk
+            and the loss derivative to be calculated.
+            Warning, large overhead.
     update_rate : int (default=1)
             How often the values are updated.
 
@@ -147,6 +147,10 @@ class JaxRecorder:
     # Loss derivative
     loss_derivative: bool = False
     _loss_derivative_array: list = None
+
+    # Fisher trace
+    fisher_trace: bool = False
+    _fisher_trace_array: list = None
 
     # Class helpers
     update_rate: int = 1
@@ -244,7 +248,7 @@ class JaxRecorder:
         if overwrite:
             self._index_count = 0
 
-        # Check if we need an NTK computation and update the class accordingly
+        # Check if we need an NTK computation, update the class accordingly
         if any(
             [
                 "ntk" in self._selected_properties,
@@ -255,9 +259,18 @@ class JaxRecorder:
                 "covariance_entropy" in self._selected_properties,
                 "eigenvalues" in self._selected_properties,
                 "trace" in self._selected_properties,
+                "fisher_trace" in self._selected_properties,
             ]
         ):
             self._compute_ntk = True
+
+        # Check if we need a loss derivative computation, update the class accordingly
+        if any(
+            [
+                "fisher_trace" in self._selected_properties,
+            ]
+        ):
+            self._compute_loss_derivative = True
 
         if "loss_derivative" in self._selected_properties:
             self._loss_derivative_fn = LossDerivative(self._loss_fn)
@@ -291,7 +304,7 @@ class JaxRecorder:
                 predictions = predictions[0]
             parsed_data["predictions"] = predictions
 
-            # Compute ntk here to avoid repeated computation.
+            # Compute ntk and loss derivative here to avoid repeated computation.
             if self._compute_ntk:
                 try:
                     ntk = self._model.compute_ntk(
@@ -311,6 +324,11 @@ class JaxRecorder:
                     self.covariance_entropy = False
                     self.eigenvalues = False
                     self._read_selected_attributes()
+            if self._compute_loss_derivative:
+                vector_loss_derivative = self._loss_derivative_fn.calculate(
+                    parsed_data["predictions"], self._data_set["targets"]
+                )
+                parsed_data["loss_derivative"] = vector_loss_derivative
 
             for item in self._selected_properties:
                 call_fn = getattr(self, f"_update_{item}")  # get the callable function
@@ -538,17 +556,42 @@ class JaxRecorder:
         """
         Update the loss derivative array.
 
-        The loss derivative is normalized by the L_pq matrix norm.
+        Parameters
+        ----------
+        parsed_data : dict
+                Data computed before the update to prevent repeated calculations.
+        """
+        self._loss_derivative_array.append(parsed_data["loss_derivative"])
+
+    def _update_fisher_trace(self, parsed_data):
+        """
+        Update the fisher trace array.
 
         Parameters
         ----------
         parsed_data : dict
                 Data computed before the update to prevent repeated calculations.
         """
-        vector_loss_derivative = self._loss_derivative_fn.calculate(
-            parsed_data["predictions"], self._data_set["targets"]
-        )
-        self._loss_derivative_array.append(vector_loss_derivative)
+        loss_derivative = parsed_data["loss_derivative"]
+        ntk = parsed_data["ntk"]
+
+        try:
+            assert len(ntk.shape) == 4
+        except (AssertionError):
+            raise TypeError(
+                "The ntk needs to have 4 dimensions for the fisher trace calculation."
+                "Maybe you have set the model to trace over the output dimensions?"
+            )
+
+        dataset_size = loss_derivative.shape[0]
+        dimensionality = loss_derivative.shape[1]
+        fisher_trace = 0
+        for i in range(dataset_size):
+            for l1 in range(dimensionality):
+                for l2 in range(dimensionality):
+                    fisher_trace += loss_derivative[i, l1] * loss_derivative[i, l2] * \
+                        ntk[i, i, l1, l2]
+        self._fisher_trace_array.append(fisher_trace / dataset_size)
 
     def gather_recording(self, selected_properties: list = None) -> dataclass:
         """
