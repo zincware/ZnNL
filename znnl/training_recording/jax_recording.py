@@ -30,7 +30,6 @@ from os import path
 from pathlib import Path
 
 import jax
-
 import numpy as onp
 
 from znnl.accuracy_functions.accuracy_function import AccuracyFunction
@@ -274,7 +273,7 @@ class JaxRecorder:
             ]
         ):
             self._compute_loss_derivative = True
-            self._loss_derivative_fn = LossDerivative(self._loss_fn)            
+            self._loss_derivative_fn = LossDerivative(self._loss_fn)
 
     def update_recorder(self, epoch: int, model: JaxModel):
         """
@@ -583,29 +582,20 @@ class JaxRecorder:
                 "The ntk needs to be rank 4 for the fisher trace calculation."
                 "Maybe you have set the model to trace over the output dimensions?"
             )
-        
+
         def _inner_fn(a, b, c):
 
             return a * b * c
-                
+
         map_1 = jax.vmap(_inner_fn, in_axes=(None, 0, 0))
         map_2 = jax.vmap(map_1, in_axes=(0, None, 0))
         map_3 = jax.vmap(map_2, in_axes=(0, 0, 0))
 
-        fisher_trace = onp.sum(map_3(loss_derivative, loss_derivative, ))
-
-
         dataset_size = loss_derivative.shape[0]
-        dimensionality = loss_derivative.shape[1]
-        fisher_trace = 0
-        for i in range(dataset_size):
-            for l1 in range(dimensionality):
-                for l2 in range(dimensionality):
-                    fisher_trace += (
-                        loss_derivative[i, l1]
-                        * loss_derivative[i, l2]
-                        * ntk[i, i, l1, l2]
-                    )
+        indices = onp.arange(dataset_size)
+        fisher_trace = onp.sum(map_3(loss_derivative, loss_derivative,
+                                     ntk[indices, indices, :, :]))
+
         self._fisher_trace_array.append(fisher_trace / dataset_size)
 
     def gather_recording(self, selected_properties: list = None) -> dataclass:
