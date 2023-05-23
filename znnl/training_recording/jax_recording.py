@@ -29,7 +29,6 @@ from dataclasses import dataclass, make_dataclass
 from os import path
 from pathlib import Path
 
-import jax
 import numpy as onp
 
 from znnl.accuracy_functions.accuracy_function import AccuracyFunction
@@ -576,9 +575,7 @@ class JaxRecorder:
         loss_derivative = parsed_data["loss_derivative"]
         ntk = parsed_data["ntk"]
 
-        fisher_trace = compute_fisher_trace(
-            loss_derivative=loss_derivative, ntk=ntk
-            )
+        fisher_trace = compute_fisher_trace(loss_derivative=loss_derivative, ntk=ntk)
 
         self._fisher_trace_array.append(fisher_trace)
 
