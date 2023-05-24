@@ -363,7 +363,7 @@ class JaxRecorder:
                 )
                 parsed_data["loss_derivative"] = vector_loss_derivative
             if self._compute_tensornetwork_matrix:
-                self.tensornetwork_matrix = compute_tensornetwork_matrix(
+                parsed_data["tensornetwork_matrix"] = compute_tensornetwork_matrix(
                     ntk=parsed_data["ntk"], targets=self._data_set["targets"]
                 )
 
@@ -616,7 +616,7 @@ class JaxRecorder:
         parsed_data : dict
                 Data computed before the update to prevent repeated calculations.
         """
-        entropy = compute_entropy(self.tensornetwork_matrix)
+        entropy = compute_entropy(parsed_data["tensornetwork_matrix"])
 
         self._tensornetwork_entropy_array.append(entropy)
 
@@ -628,7 +628,7 @@ class JaxRecorder:
         parsed_data : dict
                 Data computed before the update to prevent repeated calculations.
         """
-        entropy = compute_covariance_entropy(self.tensornetwork_matrix)
+        entropy = compute_covariance_entropy(parsed_data["tensornetwork_matrix"])
 
         self._tensornetwork_covariance_entropy_array.append(entropy)
 
@@ -640,7 +640,7 @@ class JaxRecorder:
         parsed_data : dict
                 Data computed before the update to prevent repeated calculations.
         """
-        entropy = compute_magnitude_entropy(self.tensornetwork_matrix)
+        entropy = compute_magnitude_entropy(parsed_data["tensornetwork_matrix"])
 
         self._tensornetwork_magnitude_entropy_array.append(entropy)
 

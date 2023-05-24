@@ -52,6 +52,6 @@ class TestTensornetworkMatrix:
         targets = np.array([2, 2, 1, 1])
 
         matrix = compute_tensornetwork_matrix(ntk=ntk, targets=targets)
-        correctmatrix = [[3.5, 0.5, 2.25, 1.25]]
+        correctmatrix = [[3.5, 0.5], [2.25, 1.25]]
 
         assert_almost_equal(matrix, correctmatrix)
