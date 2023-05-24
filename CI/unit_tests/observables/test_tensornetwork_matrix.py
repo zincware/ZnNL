@@ -23,21 +23,21 @@ If you use this module please cite us with:
 
 Summary
 -------
-This module tests the implementation of the tensornetwork entropy computation module.
+This module tests the implementation of the tensornetwork matrix computation module.
 """
 
 import numpy as np
 from numpy.testing import assert_almost_equal
 
-from znnl.observables.tensornetwork_entropy import compute_tensornetwork_matrix
+from znnl.observables.tensornetwork_matrix import compute_tensornetwork_matrix
 
 
-class TestTensornetworkEntropy:
+class TestTensornetworkMatrix:
     """
-    Class for testing the implementation of the fisher trace calculation
+    Class for testing the implementation of the tensornetwork matrix calculation
     """
 
-    def test_tensornetwork_entropy_computation(self):
+    def test_tensornetwork_matrix_computation(self):
         """
         Function tests if the fisher trace computation works correctly for an
         example which was calculated by hand before.
