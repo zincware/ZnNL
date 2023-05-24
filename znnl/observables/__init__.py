@@ -25,7 +25,16 @@ Summary
 -------
 Module for the observables.
 """
+from znnl.observables.covariance_entropy import compute_covariance_entropy
+from znnl.observables.entropy import compute_entropy
 from znnl.observables.fisher_trace import compute_fisher_trace
-from znnl.observables.tensornetwork_entropy import compute_tensornetwork_entropy
+from znnl.observables.magnitude_entropy import compute_magnitude_density
+from znnl.observables.tensornetwork_matrix import compute_tensornetwork_matrix
 
-__all__ = [compute_fisher_trace.__name__, compute_tensornetwork_entropy.__name__]
+__all__ = [
+    compute_fisher_trace.__name__,
+    compute_tensornetwork_matrix.__name__,
+    compute_entropy.__name__,
+    compute_magnitude_density.__name__,
+    compute_covariance_entropy.__name__,
+]

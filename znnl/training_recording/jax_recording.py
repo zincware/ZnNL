@@ -33,12 +33,14 @@ import numpy as onp
 
 from znnl.accuracy_functions.accuracy_function import AccuracyFunction
 from znnl.analysis.eigensystem import EigenSpaceAnalysis
-from znnl.analysis.entropy import EntropyAnalysis
 from znnl.analysis.loss_fn_derivative import LossDerivative
 from znnl.loss_functions import SimpleLoss
 from znnl.models.jax_model import JaxModel
+from znnl.observables.covariance_entropy import compute_covariance_entropy
+from znnl.observables.entropy import compute_entropy
 from znnl.observables.fisher_trace import compute_fisher_trace
-from znnl.observables.tensornetwork_entropy import compute_tensornetwork_entropy
+from znnl.observables.magnitude_entropy import compute_magnitude_entropy
+from znnl.observables.tensornetwork_matrix import compute_tensornetwork_matrix
 from znnl.training_recording.data_storage import DataStorage
 from znnl.utils.matrix_utils import compute_magnitude_density, normalize_gram_matrix
 
@@ -161,6 +163,14 @@ class JaxRecorder:
     tensornetwork_entropy: bool = False
     _tensornetwork_entropy_array: list = None
 
+    # tensornetwork covariance entropy
+    tensornetwork_covariance_entropy: bool = False
+    _tensornetwork_covariance_entropy_array: list = None
+
+    # tensornetwork entropy
+    tensornetwork_magnitude_entropy: bool = False
+    _tensornetwork_magnitude_entropy_array: list = None
+
     # Class helpers
     update_rate: int = 1
     _loss_fn: SimpleLoss = None
@@ -169,6 +179,7 @@ class JaxRecorder:
     _model: JaxModel = None
     _data_set: dict = None
     _compute_ntk: bool = False  # Helps to know if we can compute it once and share.
+    _compute_tensornetwork_matrix: bool = False
     _compute_loss_derivative: bool = False
     _loss_derivative_fn: LossDerivative = False
     _index_count: int = 0  # Helps to avoid problems with non-1 update rates.
@@ -270,6 +281,8 @@ class JaxRecorder:
                 "trace" in self._selected_properties,
                 "fisher_trace" in self._selected_properties,
                 "tensornetwork_entropy" in self._selected_properties,
+                "tensornetwork_covariance_entropy" in self._selected_properties,
+                "tensornetwork_magnitude_entropy" in self._selected_properties,
             ]
         ):
             self._compute_ntk = True
@@ -283,6 +296,17 @@ class JaxRecorder:
         ):
             self._compute_loss_derivative = True
             self._loss_derivative_fn = LossDerivative(self._loss_fn)
+
+        # Check if we need a tensornetwork matrix computation, update the class
+        # accordingly.
+        if any(
+            [
+                "tensornetwork_entropy" in self._selected_properties,
+                "tensornetwork_covariance_entropy" in self._selected_properties,
+                "tensornetwork_magnitude_entropy" in self._selected_properties,
+            ]
+        ):
+            self._compute_tensornetwork_matrix = True
 
     def update_recorder(self, epoch: int, model: JaxModel):
         """
@@ -313,7 +337,7 @@ class JaxRecorder:
                 predictions = predictions[0]
             parsed_data["predictions"] = predictions
 
-            # Compute ntk and loss derivative here to avoid repeated computation.
+            # Compute multiple required observables here to avoid repeated computation.
             if self._compute_ntk:
                 try:
                     ntk = self._model.compute_ntk(
@@ -338,6 +362,10 @@ class JaxRecorder:
                     parsed_data["predictions"], self._data_set["targets"]
                 )
                 parsed_data["loss_derivative"] = vector_loss_derivative
+            if self._compute_tensornetwork_matrix:
+                self.tensornetwork_matrix = compute_tensornetwork_matrix(
+                    ntk=parsed_data["ntk"], targets=self._data_set["targets"]
+                )
 
             for item in self._selected_properties:
                 call_fn = getattr(self, f"_update_{item}")  # get the callable function
@@ -495,10 +523,7 @@ class JaxRecorder:
         parsed_data : dict
                 Data computed before the update to prevent repeated calculations.
         """
-        calculator = EntropyAnalysis(matrix=parsed_data["ntk"])
-        entropy = calculator.compute_von_neumann_entropy(
-            effective=False, normalize_eig=True
-        )
+        entropy = compute_entropy(parsed_data["ntk"])
         self._entropy_array.append(entropy)
 
     def _update_covariance_entropy(self, parsed_data: dict):
@@ -513,11 +538,7 @@ class JaxRecorder:
         parsed_data : dict
                 Data computed before the update to prevent repeated calculations.
         """
-        cov_ntk = normalize_gram_matrix(parsed_data["ntk"])
-        calculator = EntropyAnalysis(matrix=cov_ntk)
-        entropy = calculator.compute_von_neumann_entropy(
-            effective=False, normalize_eig=True
-        )
+        entropy = compute_covariance_entropy(parsed_data["ntk"])
         self._covariance_entropy_array.append(entropy)
 
     def _update_magnitude_entropy(self, parsed_data: dict):
@@ -532,8 +553,7 @@ class JaxRecorder:
         parsed_data : dict
                 Data computed before the update to prevent repeated calculations.
         """
-        magnitude_dist = compute_magnitude_density(gram_matrix=parsed_data["ntk"])
-        entropy = EntropyAnalysis.compute_shannon_entropy(magnitude_dist)
+        entropy = compute_magnitude_entropy(parsed_data["ntk"])
         self._magnitude_entropy_array.append(entropy)
 
     def _update_eigenvalues(self, parsed_data: dict):
@@ -596,12 +616,33 @@ class JaxRecorder:
         parsed_data : dict
                 Data computed before the update to prevent repeated calculations.
         """
-        ntk = parsed_data["ntk"]
-        targets = self._data_set["targets"]
+        entropy = compute_entropy(self.tensornetwork_matrix)
 
-        tensornetwork_entropy = compute_tensornetwork_entropy(ntk=ntk, targets=targets)
+        self._tensornetwork_entropy_array.append(entropy)
 
-        self._tensornetwork_entropy_array.append(tensornetwork_entropy)
+    def _update_tensornetwork_covariance_entropy(self, parsed_data):
+        """
+        Update the tensornetwork covariance entropy.
+        Parameters
+        ----------
+        parsed_data : dict
+                Data computed before the update to prevent repeated calculations.
+        """
+        entropy = compute_covariance_entropy(self.tensornetwork_matrix)
+
+        self._tensornetwork_covariance_entropy_array.append(entropy)
+
+    def _update_tensornetwork_magnitude_entropy(self, parsed_data):
+        """
+        Update the tensornetwork magnitude entropy.
+        Parameters
+        ----------
+        parsed_data : dict
+                Data computed before the update to prevent repeated calculations.
+        """
+        entropy = compute_magnitude_entropy(self.tensornetwork_matrix)
+
+        self._tensornetwork_magnitude_entropy_array.append(entropy)
 
     def gather_recording(self, selected_properties: list = None) -> dataclass:
         """

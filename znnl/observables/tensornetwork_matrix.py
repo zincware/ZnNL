@@ -23,15 +23,15 @@ If you use this module please cite us with:
 
 Summary
 -------
-Module for the computation of the tensornetwork entropy.
+Module for the computation of the tensornetwork matrix.
 """
 
-import jax.numpy as np
+import numpy as np
 
 
-def compute_tensornetwork_entropy(ntk: np.ndarray, targets: np.ndarray):
+def compute_tensornetwork_matrix(ntk: np.ndarray, targets: np.ndarray):
     """
-    Function that calculates the tensornetwork entropy.
+    Function that calculates the tensornetwork matrix.
 
     Inputs
     ------
@@ -39,12 +39,14 @@ def compute_tensornetwork_entropy(ntk: np.ndarray, targets: np.ndarray):
 
     Returns
     -------
-    Returns the tensornetwork entropy.
+    Returns the tensornetwork matrix.
     """
     sortlist = np.argsort(targets)
     unique_targets, target_counts = np.unique(targets[sortlist], return_counts=True)
     n_targets = len(unique_targets)
-    sorted_ntk = ntk[sortlist, sortlist, ...]
+    # sorting of the ntk
+    sorted_ntk = ntk[sortlist, ...]
+    sorted_ntk = sorted_ntk[:, sortlist, ...]
 
     tensornetwork_matrix = np.empty(shape=(n_targets, n_targets))
     for i in range(n_targets):
@@ -55,10 +57,7 @@ def compute_tensornetwork_entropy(ntk: np.ndarray, targets: np.ndarray):
                 sorted_ntk[start1:end1, start2:end2, ...]
             )
 
-    eigenvalues = np.linalg.eigvals(tensornetwork_matrix)
-    entropy = np.sum(eigenvalues * np.log(eigenvalues))
-
-    return entropy
+    return tensornetwork_matrix
 
 
 def _get_start_and_end_value(i, target_counts):
@@ -67,10 +66,7 @@ def _get_start_and_end_value(i, target_counts):
     the number of data_points per target as an input and returns the start and
     end value of the whole ntk.
     """
-    if i - 1 < 0:
-        start = 0
-    else:
-        start = target_counts[i - 1]
-    end = target_counts[i]
+    start = np.sum(target_counts[:i])
+    end = np.sum(target_counts[: i + 1])
 
     return start, end
