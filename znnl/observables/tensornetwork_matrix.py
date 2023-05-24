@@ -51,7 +51,7 @@ def compute_tensornetwork_matrix(ntk: np.ndarray, targets: np.ndarray):
     sorted_ntk = ntk[sortlist, ...]
     sorted_ntk = sorted_ntk[:, sortlist, ...]
     if len(sorted_ntk.shape) == 4:
-        sorted_ntk = np.trace(sorted_ntk, axis1=2, axis2=3)
+        sorted_ntk = np.mean(sorted_ntk, axis=(2, 3))
 
     """
     this is a previous way of computating the matrix which is slower because of the
