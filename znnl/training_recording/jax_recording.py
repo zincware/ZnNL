@@ -97,6 +97,14 @@ class JaxRecorder:
     tensornetwork_entropy : bool (default=False)
             If true, the tensornetwork entropy will be recorded.
             Warning, large overhead.
+    tensornetwork_covariance_entropy : bool (default=False)
+            If true, the entropy of the covariance of the tensornetwork matrix will
+            be recorded.
+            Warning, large overhead.
+    tensornetwork_magnitude_entropy : bool (default=False)
+            If true, the entropy of the gradient magnitudes of the tensornetwork matrix
+            will be recorded.
+            Warning, large overhead.
     update_rate : int (default=1)
             How often the values are updated.
 
