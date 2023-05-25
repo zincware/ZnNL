@@ -31,6 +31,7 @@ from znnl.distance_metrics.hyper_sphere_distance import HyperSphere
 from znnl.distance_metrics.l_p_norm import LPNorm
 from znnl.distance_metrics.mahalanobis_distance import MahalanobisDistance
 from znnl.distance_metrics.order_n_difference import OrderNDifference
+from znnl.distance_metrics.cross_entropy_distance import CrossEntropyDistance
 
 __all__ = [
     DistanceMetric.__name__,
@@ -40,4 +41,5 @@ __all__ = [
     OrderNDifference.__name__,
     MahalanobisDistance.__name__,
     HyperSphere.__name__,
+    CrossEntropyDistance.__name__
 ]

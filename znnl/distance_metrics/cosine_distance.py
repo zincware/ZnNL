@@ -68,3 +68,14 @@ class CosineDistance(DistanceMetric):
         )
 
         return 1 - abs(np.divide(numerator, denominator))
+    
+    def __name__(self):
+        """
+        Name of the class.
+
+        Returns
+        -------
+        name : str
+                The name of the class.
+        """
+        return f"cosine_distance"

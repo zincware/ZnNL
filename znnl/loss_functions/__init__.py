@@ -30,7 +30,7 @@ from znnl.loss_functions.cross_entropy_loss import CrossEntropyLoss
 from znnl.loss_functions.l_p_norm import LPNormLoss
 from znnl.loss_functions.mahalanobis import MahalanobisLoss
 from znnl.loss_functions.mean_power_error import MeanPowerLoss
-from znnl.loss_functions.simple_loss import SimpleLoss
+from znnl.loss_functions.loss import Loss
 
 __all__ = [
     AngleDistanceLoss.__name__,
@@ -38,6 +38,6 @@ __all__ = [
     LPNormLoss.__name__,
     MahalanobisLoss.__name__,
     MeanPowerLoss.__name__,
-    SimpleLoss.__name__,
+    Loss.__name__,
     CrossEntropyLoss.__name__,
 ]

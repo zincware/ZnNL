@@ -73,3 +73,14 @@ class HyperSphere(DistanceMetric):
         return LPNorm(order=self.order)(point_1, point_2) * CosineDistance()(
             point_1, point_2
         )
+    
+    def __name__(self):
+        """
+        Name of the class.
+
+        Returns
+        -------
+        name : str
+                The name of the class.
+        """
+        return f"hyper_sphere_distance_{self.order}"

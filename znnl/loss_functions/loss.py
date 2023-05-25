@@ -24,16 +24,15 @@ If you use this module please cite us with:
 Summary
 -------
 """
-from abc import ABC
-
 import jax.numpy as np
 
 from znnl.distance_metrics.distance_metric import DistanceMetric
+from znnl.observables.observable import Observable
 
 
-class SimpleLoss(ABC):
+class Loss(Observable):
     """
-    Class for the simple loss.
+    Parent class for the loss.
 
     Attributes
     ----------
@@ -46,6 +45,28 @@ class SimpleLoss(ABC):
         """
         super().__init__()
         self.metric: DistanceMetric = None
+
+    def __name__(self) -> str:
+        """
+        Name of the class.
+
+        Returns
+        -------
+        name : str
+                The name of the class.
+        """
+        return "loss_parent"
+    
+    def __signature__(self) -> tuple:
+        """
+        Signature of the class.
+
+        Returns
+        -------
+        signature : tuple
+                For loss this should always be (1,)
+        """
+        return (1,)
 
     def __call__(self, point_1: np.array, point_2: np.array) -> float:
         """

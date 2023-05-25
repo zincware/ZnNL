@@ -25,10 +25,10 @@ Summary
 -------
 """
 from znnl.distance_metrics.angular_distance import AngularDistance
-from znnl.loss_functions.simple_loss import SimpleLoss
+from znnl.loss_functions.loss import Loss
 
 
-class AngleDistanceLoss(SimpleLoss):
+class AngleDistanceLoss(Loss):
     """
     Class for the mean power loss
     """
@@ -39,3 +39,14 @@ class AngleDistanceLoss(SimpleLoss):
         """
         super(AngleDistanceLoss, self).__init__()
         self.metric = AngularDistance()
+
+    def __name__(self):
+            """
+            Name of the class.
+
+            Returns
+            -------
+            name : str
+                    The name of the class.
+            """
+            return f"angle_distance_loss"

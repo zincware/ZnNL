@@ -26,11 +26,36 @@ Summary
 """
 import jax.numpy as np
 
+from znnl.observables.observable import Observable
 
-class DistanceMetric:
+
+class DistanceMetric(Observable):
     """
     Parent class for a ZnRND distance metric.
     """
+
+    def __name__(self) -> str:
+        """
+        Name of the class.
+
+        Returns
+        -------
+        name : str
+                The name of the class.
+        """
+        return "distance_metric"
+    
+    def __signature__(self) -> tuple:
+        """
+        Signature of the class.
+
+        Returns
+        -------
+        signature : tuple
+                The signature of the class.
+                For the distance metric, it is (1,).
+        """
+        return (1,)
 
     def __call__(self, point_1: np.ndarray, point_2: np.ndarray, **kwargs):
         """

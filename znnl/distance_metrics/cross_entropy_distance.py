@@ -24,29 +24,27 @@ If you use this module please cite us with:
 Summary
 -------
 """
-import znnl.distance_metrics.mahalanobis_distance as mahalanobis
-from znnl.loss_functions.loss import SimpleLoss
+import optax
+
+from znnl.distance_metrics.distance_metric import DistanceMetric
 
 
-class MahalanobisLoss(SimpleLoss):
+class CrossEntropyDistance(DistanceMetric):
     """
-    Class for the mean power loss
+    Class for the cross entropy distance
     """
 
-    def __init__(self):
+    def __call__(self, prediction, target):
         """
-        Constructor for the Mahalanobis loss class.
-        """
-        super(MahalanobisLoss, self).__init__()
-        self.metric = mahalanobis.MahalanobisDistance()
 
-    def __name__(self):
-        """
-        Name of the class.
+        Parameters
+        ----------
+        prediction (batch_size, n_classes)
+        target
 
         Returns
         -------
-        name : str
-                The name of the class.
+        Softmax cross entropy of the batch.
+
         """
-        return f"mahalanobis_loss"
+        return optax.softmax_cross_entropy(logits=prediction, labels=target)

@@ -25,7 +25,7 @@ Summary
 -------
 """
 from znnl.distance_metrics.l_p_norm import LPNorm
-from znnl.loss_functions.simple_loss import SimpleLoss
+from znnl.loss_functions.loss import SimpleLoss
 
 
 class LPNormLoss(SimpleLoss):
@@ -44,3 +44,14 @@ class LPNormLoss(SimpleLoss):
         """
         super(LPNormLoss, self).__init__()
         self.metric = LPNorm(order=order)
+
+    def __name__(self):
+        """
+        Name of the class.
+
+        Returns
+        -------
+        name : str
+                The name of the class.
+        """
+        return f"lp_norm_loss_{self.order}"
