@@ -531,7 +531,8 @@ class JaxRecorder:
         parsed_data : dict
                 Data computed before the update to prevent repeated calculations.
         """
-        entropy = compute_entropy(parsed_data["ntk"])
+        ntk = self._adjust_ntk_shape(parsed_data)
+        entropy = compute_entropy(ntk)
         self._entropy_array.append(entropy)
 
     def _update_covariance_entropy(self, parsed_data: dict):
@@ -546,7 +547,8 @@ class JaxRecorder:
         parsed_data : dict
                 Data computed before the update to prevent repeated calculations.
         """
-        entropy = compute_covariance_entropy(parsed_data["ntk"])
+        ntk = self._adjust_ntk_shape(parsed_data)
+        entropy = compute_covariance_entropy(ntk)
         self._covariance_entropy_array.append(entropy)
 
     def _update_magnitude_entropy(self, parsed_data: dict):
@@ -561,7 +563,14 @@ class JaxRecorder:
         parsed_data : dict
                 Data computed before the update to prevent repeated calculations.
         """
-        entropy = compute_magnitude_entropy(parsed_data["ntk"])
+        if len(parsed_data["ntk"].shape) == 4:
+            ntk = np.trace(parsed_data["ntk"], axis1=2, axis2=3)
+        elif len(parsed_data["ntk"].shape) == 2:
+            ntk = parsed_data["ntk"]
+        else:
+            raise TypeError("Unknown shape of the ntk. Should be of rank 2 or 4.")
+
+        entropy = compute_magnitude_entropy(ntk)
         self._magnitude_entropy_array.append(entropy)
 
     def _update_eigenvalues(self, parsed_data: dict):
@@ -573,6 +582,13 @@ class JaxRecorder:
         parsed_data : dict
                 Data computed before the update to prevent repeated calculations.
         """
+        if len(parsed_data["ntk"].shape) == 4:
+            ntk = np.trace(parsed_data["ntk"], axis1=2, axis2=3)
+        elif len(parsed_data["ntk"].shape) == 2:
+            ntk = parsed_data["ntk"]
+        else:
+            raise TypeError("Unknown shape of the ntk. Should be of rank 2 or 4.")
+
         calculator = EigenSpaceAnalysis(matrix=parsed_data["ntk"])
         eigenvalues = calculator.compute_eigenvalues(normalize=False)
         self._eigenvalues_array.append(eigenvalues)
@@ -720,3 +736,27 @@ class JaxRecorder:
         }
 
         return DataSet(**selected_data)
+
+    def _adjust_ntk_shape(self, parsed_data):
+        """
+        Traces the output dimension axes of the ntk for the functions that need
+        the ntk to be of rank 2.
+
+        Parameters
+        ----------
+        parsed_data : dict
+                Data computed before the update to prevent repeated calculations.
+
+        Returns
+        -------
+        Adjusted ntk (n_datapoints, n_datapoints)
+        """
+
+        if len(parsed_data["ntk"].shape) == 4:
+            ntk = np.trace(parsed_data["ntk"], axis1=2, axis2=3)
+        elif len(parsed_data["ntk"].shape) == 2:
+            ntk = parsed_data["ntk"]
+        else:
+            raise TypeError("Unknown shape of the ntk. Should be of rank 2 or 4.")
+
+        return ntk
