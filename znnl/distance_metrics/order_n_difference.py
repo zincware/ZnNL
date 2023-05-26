@@ -79,3 +79,14 @@ class OrderNDifference(DistanceMetric):
             return np.sum(np.power(diff, self.order), axis=1)
         else:
             raise ValueError(f"Invalid reduction operation: {self.reduce_operation}")
+
+    def __name__(self):
+        """
+        Name of the class.
+
+        Returns
+        -------
+        name : str
+                The name of the class.
+        """
+        return "order_{self.order}_difference_{self.reduce_operation}"

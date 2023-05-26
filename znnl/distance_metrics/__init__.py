@@ -26,6 +26,7 @@ Summary
 """
 from znnl.distance_metrics.angular_distance import AngularDistance
 from znnl.distance_metrics.cosine_distance import CosineDistance
+from znnl.distance_metrics.cross_entropy_distance import CrossEntropyDistance
 from znnl.distance_metrics.distance_metric import DistanceMetric
 from znnl.distance_metrics.hyper_sphere_distance import HyperSphere
 from znnl.distance_metrics.l_p_norm import LPNorm
@@ -40,4 +41,5 @@ __all__ = [
     OrderNDifference.__name__,
     MahalanobisDistance.__name__,
     HyperSphere.__name__,
+    CrossEntropyDistance.__name__,
 ]

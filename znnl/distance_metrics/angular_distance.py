@@ -50,6 +50,17 @@ class AngularDistance(DistanceMetric):
         else:
             raise ValueError("Invalid points input.")
 
+    def __name__(self):
+        """
+        Name of the class.
+
+        Returns
+        -------
+        name : str
+                The name of the class.
+        """
+        return "angular_distance"
+
     def __call__(self, point_1: np.ndarray, point_2: np.ndarray, **kwargs):
         """
         Call the distance metric.

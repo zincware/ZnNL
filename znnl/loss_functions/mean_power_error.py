@@ -25,10 +25,10 @@ Summary
 -------
 """
 from znnl.distance_metrics.order_n_difference import OrderNDifference
-from znnl.loss_functions.simple_loss import SimpleLoss
+from znnl.loss_functions.loss import Loss
 
 
-class MeanPowerLoss(SimpleLoss):
+class MeanPowerLoss(Loss):
     """
     Class for the mean power loss
     """
@@ -44,3 +44,14 @@ class MeanPowerLoss(SimpleLoss):
         """
         super(MeanPowerLoss, self).__init__()
         self.metric = OrderNDifference(order=order)
+
+    def __name__(self):
+        """
+        Name of the class.
+
+        Returns
+        -------
+        name : str
+                The name of the class.
+        """
+        return "mean_power_loss_{self.order}"

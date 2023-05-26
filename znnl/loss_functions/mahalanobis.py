@@ -25,7 +25,7 @@ Summary
 -------
 """
 import znnl.distance_metrics.mahalanobis_distance as mahalanobis
-from znnl.loss_functions.simple_loss import SimpleLoss
+from znnl.loss_functions.loss import SimpleLoss
 
 
 class MahalanobisLoss(SimpleLoss):
@@ -39,3 +39,14 @@ class MahalanobisLoss(SimpleLoss):
         """
         super(MahalanobisLoss, self).__init__()
         self.metric = mahalanobis.MahalanobisDistance()
+
+    def __name__(self):
+        """
+        Name of the class.
+
+        Returns
+        -------
+        name : str
+                The name of the class.
+        """
+        return "mahalanobis_loss"

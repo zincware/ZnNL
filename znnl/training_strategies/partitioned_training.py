@@ -88,8 +88,8 @@ class PartitionedTraining(SimpleTraining):
                 Random seed for the RNG. Uses a random int if not specified.
         recursive_mode : RecursiveMode
                 Defining the recursive mode that can be used in training.
-                If the recursive mode is used, the training will be performed until a
-                condition is fulfilled.
+                If the recursive mode is used, the training will be performed
+                until a condition is fulfilled.
                 The loss value at which point you consider the model trained.
         disable_loading_bar : bool
                 Disable the output visualization of the loading bar.
@@ -244,7 +244,7 @@ class PartitionedTraining(SimpleTraining):
                 Number of epochs to train over.
                 Each epoch defines a training phase.
         train_ds_selection : list
-                             (default = [slice(-1, None, None), slice(None, None, None)])
+                             default = [slice(-1, None, None), slice(None, None, None)]
                 The train is selected by a np.array of indices or slices.
                 Each slice or array defines a training phase.
         batch_size : list (default = [1, 1])

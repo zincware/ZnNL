@@ -24,33 +24,11 @@ If you use this module please cite us with:
 Summary
 -------
 """
-import optax
-
-from znnl.loss_functions.simple_loss import SimpleLoss
-
-
-class CrossEntropyDistance:
-    """
-    Class for the cross entropy distance
-    """
-
-    def __call__(self, prediction, target):
-        """
-
-        Parameters
-        ----------
-        prediction (batch_size, n_classes)
-        target
-
-        Returns
-        -------
-        Softmax cross entropy of the batch.
-
-        """
-        return optax.softmax_cross_entropy(logits=prediction, labels=target)
+from znnl.distance_metrics.cross_entropy_distance import CrossEntropyDistance
+from znnl.loss_functions.loss import Loss
 
 
-class CrossEntropyLoss(SimpleLoss):
+class CrossEntropyLoss(Loss):
     """
     Class for the cross entropy loss
     """
@@ -61,3 +39,14 @@ class CrossEntropyLoss(SimpleLoss):
         """
         super(CrossEntropyLoss, self).__init__()
         self.metric = CrossEntropyDistance()
+
+    def __name__(self):
+        """
+        Name of the class.
+
+        Returns
+        -------
+        name : str
+                The name of the class.
+        """
+        return "cross_entropy_loss"

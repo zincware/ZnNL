@@ -24,21 +24,15 @@ If you use this module please cite us with:
 Summary
 -------
 """
-from znnl.distance_metrics.angular_distance import AngularDistance
-from znnl.loss_functions.loss import Loss
+import optax
+
+from znnl.distance_metrics.distance_metric import DistanceMetric
 
 
-class AngleDistanceLoss(Loss):
+class CrossEntropyDistance(DistanceMetric):
     """
-    Class for the mean power loss
+    Class for the cross entropy distance
     """
-
-    def __init__(self):
-        """
-        Constructor for the mean power loss class.
-        """
-        super(AngleDistanceLoss, self).__init__()
-        self.metric = AngularDistance()
 
     def __name__(self):
         """
@@ -49,4 +43,19 @@ class AngleDistanceLoss(Loss):
         name : str
                 The name of the class.
         """
-        return "angle_distance_loss"
+        return "cross_entropy_distance"
+
+    def __call__(self, prediction, target):
+        """
+
+        Parameters
+        ----------
+        prediction (batch_size, n_classes)
+        target
+
+        Returns
+        -------
+        Softmax cross entropy of the batch.
+
+        """
+        return optax.softmax_cross_entropy(logits=prediction, labels=target)

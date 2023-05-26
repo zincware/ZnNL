@@ -25,10 +25,10 @@ Summary
 -------
 """
 from znnl.distance_metrics.cosine_distance import CosineDistance
-from znnl.loss_functions.simple_loss import SimpleLoss
+from znnl.loss_functions.loss import Loss
 
 
-class CosineDistanceLoss(SimpleLoss):
+class CosineDistanceLoss(Loss):
     """
     Class for the mean power loss
     """
@@ -39,3 +39,14 @@ class CosineDistanceLoss(SimpleLoss):
         """
         super(CosineDistanceLoss, self).__init__()
         self.metric = CosineDistance()
+
+    def __name__(self):
+        """
+        Name of the class.
+
+        Returns
+        -------
+        name : str
+                The name of the class.
+        """
+        return "cosine_distance_loss"
