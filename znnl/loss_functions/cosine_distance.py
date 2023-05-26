@@ -49,4 +49,4 @@ class CosineDistanceLoss(Loss):
         name : str
                 The name of the class.
         """
-        return f"cosine_distance_loss"
+        return "cosine_distance_loss"

@@ -69,7 +69,7 @@ class LPNorm(DistanceMetric):
                 Array of distances for each point.
         """
         return np.linalg.norm(point_1 - point_2, axis=1, ord=self.order)
-    
+
     def __name__(self):
         """
         Name of the class.

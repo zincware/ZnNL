@@ -28,9 +28,9 @@ from znnl.loss_functions.absolute_angle_difference import AngleDistanceLoss
 from znnl.loss_functions.cosine_distance import CosineDistanceLoss
 from znnl.loss_functions.cross_entropy_loss import CrossEntropyLoss
 from znnl.loss_functions.l_p_norm import LPNormLoss
+from znnl.loss_functions.loss import Loss
 from znnl.loss_functions.mahalanobis import MahalanobisLoss
 from znnl.loss_functions.mean_power_error import MeanPowerLoss
-from znnl.loss_functions.loss import Loss
 
 __all__ = [
     AngleDistanceLoss.__name__,

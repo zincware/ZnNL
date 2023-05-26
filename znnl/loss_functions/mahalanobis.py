@@ -49,4 +49,4 @@ class MahalanobisLoss(SimpleLoss):
         name : str
                 The name of the class.
         """
-        return f"mahalanobis_loss"
+        return "mahalanobis_loss"

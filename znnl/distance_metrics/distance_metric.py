@@ -44,7 +44,7 @@ class DistanceMetric(Observable):
                 The name of the class.
         """
         return "distance_metric"
-    
+
     def __signature__(self) -> tuple:
         """
         Signature of the class.

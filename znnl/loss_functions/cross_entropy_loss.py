@@ -24,10 +24,8 @@ If you use this module please cite us with:
 Summary
 -------
 """
-import optax
-
-from znnl.loss_functions.loss import Loss
 from znnl.distance_metrics.cross_entropy_distance import CrossEntropyDistance
+from znnl.loss_functions.loss import Loss
 
 
 class CrossEntropyLoss(Loss):
@@ -51,4 +49,4 @@ class CrossEntropyLoss(Loss):
         name : str
                 The name of the class.
         """
-        return f"cross_entropy_loss"
+        return "cross_entropy_loss"

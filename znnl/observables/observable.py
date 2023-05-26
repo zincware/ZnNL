@@ -46,7 +46,7 @@ class Observable:
                 The name of the observable.
         """
         raise NotImplementedError("Implemented in child class.")
-    
+
     @classmethod
     def __signature__(self, data_set: dict) -> tuple:
         """
@@ -63,7 +63,7 @@ class Observable:
                 The signature of the observable.
         """
         raise NotImplementedError("Implemented in child class.")
-    
+
     @classmethod
     def __call__(self, data_set: dict) -> Union[str, np.ndarray, float]:
         """
@@ -78,6 +78,6 @@ class Observable:
         -------
         value : Union[str, np.ndarray, float]
                 The value of the observable.
-            
+
         """
         raise NotImplementedError("Implemented in child class.")

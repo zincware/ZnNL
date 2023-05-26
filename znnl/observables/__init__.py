@@ -27,6 +27,4 @@ Module for ZnNL observables.
 """
 from znnl.observables.observable import Observable
 
-__all__ = [
-    Observable.__name__
-]
+__all__ = [Observable.__name__]

@@ -49,7 +49,7 @@ class AngularDistance(DistanceMetric):
             self.normalization = points / np.pi
         else:
             raise ValueError("Invalid points input.")
-        
+
     def __name__(self):
         """
         Name of the class.
@@ -59,7 +59,7 @@ class AngularDistance(DistanceMetric):
         name : str
                 The name of the class.
         """
-        return f"angular_distance"
+        return "angular_distance"
 
     def __call__(self, point_1: np.ndarray, point_2: np.ndarray, **kwargs):
         """

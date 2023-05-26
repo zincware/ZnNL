@@ -56,7 +56,7 @@ class Loss(Observable):
                 The name of the class.
         """
         return "loss_parent"
-    
+
     def __signature__(self) -> tuple:
         """
         Signature of the class.

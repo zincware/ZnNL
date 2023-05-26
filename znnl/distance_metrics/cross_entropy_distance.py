@@ -34,6 +34,17 @@ class CrossEntropyDistance(DistanceMetric):
     Class for the cross entropy distance
     """
 
+    def __name__(self):
+        """
+        Name of the class.
+
+        Returns
+        -------
+        name : str
+                The name of the class.
+        """
+        return "cross_entropy_distance"
+
     def __call__(self, prediction, target):
         """
 

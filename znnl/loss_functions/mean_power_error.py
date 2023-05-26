@@ -54,4 +54,4 @@ class MeanPowerLoss(Loss):
         name : str
                 The name of the class.
         """
-        return f"mean_power_loss_{self.order}"
+        return "mean_power_loss_{self.order}"

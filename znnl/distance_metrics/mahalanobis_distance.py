@@ -66,7 +66,7 @@ class MahalanobisDistance(DistanceMetric):
             distances.append(distance)
 
         return distances
-    
+
     def __name__(self):
         """
         Name of the class.
@@ -76,4 +76,4 @@ class MahalanobisDistance(DistanceMetric):
         name : str
                 The name of the class.
         """
-        return f"mahalanobis_distance"
+        return "mahalanobis_distance"

@@ -41,12 +41,12 @@ class AngleDistanceLoss(Loss):
         self.metric = AngularDistance()
 
     def __name__(self):
-            """
-            Name of the class.
+        """
+        Name of the class.
 
-            Returns
-            -------
-            name : str
-                    The name of the class.
-            """
-            return f"angle_distance_loss"
+        Returns
+        -------
+        name : str
+                The name of the class.
+        """
+        return "angle_distance_loss"
