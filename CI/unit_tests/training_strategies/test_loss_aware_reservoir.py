@@ -41,7 +41,7 @@ from numpy.testing import assert_array_equal
 from znnl.accuracy_functions import AccuracyFunction
 from znnl.distance_metrics import DistanceMetric
 from znnl.loss_functions import MeanPowerLoss
-from znnl.models import JaxModel, NTModel, FlaxModel
+from znnl.models import FlaxModel, JaxModel, NTModel
 from znnl.training_recording import JaxRecorder
 from znnl.training_strategies import LossAwareReservoir, RecursiveMode
 from znnl.training_strategies.training_decorator import train_func
@@ -111,7 +111,7 @@ class FlaxArchitecture(nn.Module):
         return x
 
 
-class TestPartitionedSelection:
+class TestLossAwareReservoir:
     """
     Unit test suite of the loss aware reservoir training strategy.
     """
@@ -155,7 +155,11 @@ class TestPartitionedSelection:
         train_ds = {"inputs": x, "targets": y}
 
         # Use a linear network (without activation function) to test the selection
-        model = self.nt_model
+        model = NTModel(
+            nt_module=stax.serial(stax.Dense(128), stax.Dense(1)),
+            optimizer=optax.adam(learning_rate=0.001),
+            input_shape=(1, 1),
+        )
 
         trainer = LossAwareReservoir(
             model=model,
