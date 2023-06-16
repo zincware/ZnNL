@@ -157,6 +157,7 @@ class LossAwareReservoir(SimpleTraining):
         Updates the reservoir in the following steps:
 
         * Exclude latest_points from the train_data
+        * Check whether the the reservoir will be empty or it can cover all data
         * Compute distance of representations of the remaining training set
         * Sort the training set according to the distance
 
@@ -179,13 +180,18 @@ class LossAwareReservoir(SimpleTraining):
         else:
             old_data = {k: v[: -self.latest_points, ...] for k, v in train_ds.items()}
 
-        distances = self._compute_distance(old_data)
-
+        # If the reservoir no old data is available, return an empty array
+        if old_data["inputs"].shape[0] == 0:
+            data_idx = np.array([])
         # Return the old train data indices if the reservoir can cover them all
-        if self.reservoir_size >= self.train_data_size - self.latest_points:
-            return np.arange(self.train_data_size - self.latest_points)
+        elif self.reservoir_size >= self.train_data_size - self.latest_points:
+            data_idx = np.arange(self.train_data_size - self.latest_points)
         # If the reservoir is smaller than the train, data select data via the loss
-        return np.argsort(distances)[::-1][: self.reservoir_size]
+        else:
+            distances = self._compute_distance(old_data)
+            data_idx = np.argsort(distances)[::-1][: self.reservoir_size]
+
+        return data_idx
 
     def _append_latest_points(self, data_idx: List[int], freq: int = 1):
         """
