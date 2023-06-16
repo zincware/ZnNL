@@ -30,15 +30,14 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 import numpy as np
 import optax
+from flax import linen as nn
 from jax import random
 from neural_tangents import stax
 from numpy.testing import assert_array_equal
-from flax import linen as nn
 
 from znnl.loss_functions import MeanPowerLoss
-from znnl.models import NTModel, FlaxModel
+from znnl.models import FlaxModel, NTModel
 from znnl.training_strategies import LossAwareReservoir
-
 
 
 class FlaxArchitecture(nn.Module):
