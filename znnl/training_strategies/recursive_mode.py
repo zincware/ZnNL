@@ -26,7 +26,8 @@ Summary
 """
 import logging
 from dataclasses import dataclass
-from typing import Callable
+from typing import Callable, Optional
+from flax.training.early_stopping import EarlyStopping
 
 logger = logging.getLogger(__name__)
 
@@ -38,17 +39,28 @@ class RecursiveMode:
 
     Each training strategy comes with a recursive mode, which is defined in this class.
 
+    The recursive mode trains a model until a condition is satisfied or the training is
+    considered to be stuck in a local minimum. In the latter case, the model is
+    perturbed and the training is repeated.
+
     Attributes
     ----------
     use_recursive_mode : bool (default = True)
             If True, the recursive mode is used.
-    threshold : float
+    min_delta : float (default = 1e-2)
+            Minimum change in the monitored loss value to qualify as an improvement.
+    patience : int (default = 1)
+            Number of updates with no improvement after which training will be stopped.
+            Defining the train_model method of the training strategy, an update is
+            performed after the defined number of epochs.
+            It is important to consider the number of epochs when setting the patience.
+    threshold : Optional[float]
             The loss value which defines the model to be trained.
     scale_factor : float (default = 1.1)
             Factor which is used to scale the number of epochs after one cycle of
             recursive training.
             The update is: epochs = scale_factor * epochs
-    break_condition : int
+    break_counter : int
             Maximum number of cycles that can be performed in recursive training,
             before accepting the model state to be stuck a local minimum.
             To get out of the local minimum the model is perturbed with perturb_fn.
@@ -57,14 +69,17 @@ class RecursiveMode:
             Calling the function will perturb the model.
             The default is set to re-initializing the model. This done inside the
             recursive_decorator function.
-
     """
 
     use_recursive_mode: bool = True
-    threshold: float = 0.01
+    min_delta: float = 1e-2
+    patience: int = 1
+    threshold: float = None
     scale_factor = float = 1.1
     break_counter: float = 10
     perturb_fn: Callable = None
+
+    early_stop = EarlyStopping(min_delta=min_delta, patience=patience)
 
     def update_recursive_condition(self, measure) -> bool:
         """
@@ -81,7 +96,13 @@ class RecursiveMode:
         If True, the training will be stopped.
         If False, the training continues.
         """
-        return measure <= self.threshold
+        _, self.early_stop = self.early_stop.update(measure)
+        early_stopping_condition = self.early_stop.should_stop
+        if self.threshold:
+            threshold_condition = measure <= self.threshold
+            return early_stopping_condition or threshold_condition
+        else:
+            return early_stopping_condition
 
     def perturb_training(self):
         """
