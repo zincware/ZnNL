@@ -27,6 +27,7 @@ Summary
 import logging
 from dataclasses import dataclass
 from typing import Callable, Optional
+
 from flax.training.early_stopping import EarlyStopping
 
 logger = logging.getLogger(__name__)
