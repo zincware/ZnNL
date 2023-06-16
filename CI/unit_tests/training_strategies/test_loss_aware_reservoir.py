@@ -23,10 +23,13 @@ If you use this module please cite us with:
 
 Summary
 -------
+Unit tests for the loss aware reservoir training class.
 """
 import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
+from typing import Callable, List, Optional, Union
 
 import numpy as np
 import optax
@@ -35,9 +38,64 @@ from jax import random
 from neural_tangents import stax
 from numpy.testing import assert_array_equal
 
+from znnl.accuracy_functions import AccuracyFunction
+from znnl.distance_metrics import DistanceMetric
 from znnl.loss_functions import MeanPowerLoss
-from znnl.models import FlaxModel, NTModel
-from znnl.training_strategies import LossAwareReservoir
+from znnl.models import JaxModel, NTModel, FlaxModel
+from znnl.training_recording import JaxRecorder
+from znnl.training_strategies import LossAwareReservoir, RecursiveMode
+from znnl.training_strategies.training_decorator import train_func
+
+
+class LarDecoratorTester(LossAwareReservoir):
+    """
+    Class to test the training decorator of the simple training.
+    """
+
+    def __init__(
+        self,
+        model: Union[JaxModel, None],
+        loss_fn: Callable,
+        accuracy_fn: AccuracyFunction = None,
+        seed: int = None,
+        reservoir_size: int = 500,
+        reservoir_metric: Optional[DistanceMetric] = None,
+        latest_points: int = 1,
+        recursive_mode: RecursiveMode = None,
+        disable_loading_bar: bool = False,
+        recorders: List["JaxRecorder"] = None,
+    ):
+        super().__init__(
+            model=model,
+            loss_fn=loss_fn,
+            accuracy_fn=accuracy_fn,
+            seed=seed,
+            recursive_mode=recursive_mode,
+            disable_loading_bar=disable_loading_bar,
+            recorders=recorders,
+            reservoir_size=reservoir_size,
+            reservoir_metric=reservoir_metric,
+            latest_points=latest_points,
+        )
+
+    @train_func
+    def train_model(
+        self,
+        train_ds: dict,
+        test_ds: dict,
+        epochs: list = None,
+        batch_size: list = None,
+        train_ds_selection: list = None,
+        **kwargs,
+    ):
+        """
+        Define train method to test how the decorator changes the inputs.
+
+        Returns
+        -------
+        Epochs and batch_size of the Loss aware Reservoir training strategy.
+        """
+        return epochs, batch_size
 
 
 class FlaxArchitecture(nn.Module):
@@ -61,8 +119,14 @@ class TestPartitionedSelection:
     @classmethod
     def setup_class(cls):
         """
-        Create models for the tests.
+        Create models and data for the tests.
         """
+        key1, key2 = random.split(random.PRNGKey(1), 2)
+        x = random.normal(key1, (10, 8))
+        y = random.normal(key1, (10, 1))
+        cls.train_ds = {"inputs": x, "targets": y}
+        cls.test_ds = {"inputs": x, "targets": y}
+
         cls.nt_model = NTModel(
             nt_module=stax.serial(stax.Dense(5), stax.Relu(), stax.Dense(1)),
             optimizer=optax.adam(learning_rate=0.001),
@@ -102,7 +166,7 @@ class TestPartitionedSelection:
         )
 
         # Test if a smaller reservoir selects the correctly sorted points
-        trainer.train_data_size = len(train_ds["inputs"])
+        trainer.train_data_size = train_ds["inputs"].shape[0]
         reservoir = trainer._update_reservoir(train_ds=train_ds)
         selection_idx = np.argsort(np.abs(raw_x))[::-1][:4]
         assert_array_equal(reservoir, selection_idx)
@@ -127,12 +191,6 @@ class TestPartitionedSelection:
         Perform both tests for nt and flax models.
         """
 
-        # Create some test data
-        key1, key2 = random.split(random.PRNGKey(1), 2)
-        x = random.normal(key1, (10, 8))
-        y = random.normal(key1, (10, 1))
-        train_ds = {"inputs": x, "targets": y}
-
         nt_model = self.nt_model
         flax_model = self.flax_model
 
@@ -151,12 +209,13 @@ class TestPartitionedSelection:
             reservoir_size=10,
             latest_points=1,
         )
-        nt_trainer.train_data_size = len(x)
-        flax_trainer.train_data_size = len(x)
-        reservoir = nt_trainer._update_reservoir(train_ds=train_ds)
-        assert len(x) - 1 == len(reservoir)
-        reservoir = flax_trainer._update_reservoir(train_ds=train_ds)
-        assert len(x) - 1 == len(reservoir)
+
+        nt_trainer.train_data_size = self.train_ds["inputs"].shape[0]
+        flax_trainer.train_data_size = self.train_ds["inputs"].shape[0]
+        reservoir = nt_trainer._update_reservoir(train_ds=self.train_ds)
+        assert self.train_ds["inputs"].shape[0] - 1 == len(reservoir)
+        reservoir = flax_trainer._update_reservoir(train_ds=self.train_ds)
+        assert self.train_ds["inputs"].shape[0] - 1 == len(reservoir)
 
         # Test for latest_points = 4
         nt_trainer = LossAwareReservoir(
@@ -174,12 +233,12 @@ class TestPartitionedSelection:
             latest_points=4,
         )
 
-        nt_trainer.train_data_size = len(x)
-        flax_trainer.train_data_size = len(x)
-        reservoir = nt_trainer._update_reservoir(train_ds=train_ds)
-        assert len(x) - 4 == len(reservoir)
-        reservoir = flax_trainer._update_reservoir(train_ds=train_ds)
-        assert len(x) - 4 == len(reservoir)
+        nt_trainer.train_data_size = self.train_ds["inputs"].shape[0]
+        flax_trainer.train_data_size = self.train_ds["inputs"].shape[0]
+        reservoir = nt_trainer._update_reservoir(train_ds=self.train_ds)
+        assert self.train_ds["inputs"].shape[0] - 4 == len(reservoir)
+        reservoir = flax_trainer._update_reservoir(train_ds=self.train_ds)
+        assert self.train_ds["inputs"].shape[0] - 4 == len(reservoir)
 
         # Test for latest_points = 10
         nt_trainer = LossAwareReservoir(
@@ -197,11 +256,11 @@ class TestPartitionedSelection:
             latest_points=10,
         )
 
-        nt_trainer.train_data_size = len(x)
-        flax_trainer.train_data_size = len(x)
-        reservoir = nt_trainer._update_reservoir(train_ds=train_ds)
+        nt_trainer.train_data_size = self.train_ds["inputs"].shape[0]
+        flax_trainer.train_data_size = self.train_ds["inputs"].shape[0]
+        reservoir = nt_trainer._update_reservoir(train_ds=self.train_ds)
         assert 0 == len(reservoir)
-        reservoir = flax_trainer._update_reservoir(train_ds=train_ds)
+        reservoir = flax_trainer._update_reservoir(train_ds=self.train_ds)
         assert 0 == len(reservoir)
 
         # Test for latest_points = 2 but for reservoir_size = 5. The reservoir size
@@ -221,9 +280,87 @@ class TestPartitionedSelection:
             latest_points=4,
         )
 
-        nt_trainer.train_data_size = len(x)
-        flax_trainer.train_data_size = len(x)
-        reservoir = nt_trainer._update_reservoir(train_ds=train_ds)
+        nt_trainer.train_data_size = self.train_ds["inputs"].shape[0]
+        flax_trainer.train_data_size = self.train_ds["inputs"].shape[0]
+        reservoir = nt_trainer._update_reservoir(train_ds=self.train_ds)
         assert 5 == len(reservoir)
-        reservoir = flax_trainer._update_reservoir(train_ds=train_ds)
+        reservoir = flax_trainer._update_reservoir(train_ds=self.train_ds)
         assert 5 == len(reservoir)
+
+    def test_update_training_kwargs(self):
+        """
+        Test the parameter adaption of the training strategy when executing the
+        training.
+
+        When calling the train_model method, parameters get adapted if necessary.
+        This methods checks if the adaption is done correctly.
+        """
+        model = NTModel(
+            nt_module=stax.serial(stax.Dense(5), stax.Relu(), stax.Dense(1)),
+            optimizer=optax.adam(learning_rate=0.001),
+            input_shape=(1, 8),
+        )
+
+        # Test if the default batch size and epochs are correct.
+        lar_tester = LarDecoratorTester(
+            model=model,
+            loss_fn=MeanPowerLoss(order=2),
+            reservoir_size=20,
+            latest_points=0,
+        )
+        epochs, batch_size = lar_tester.train_model(
+            train_ds=self.train_ds,
+            test_ds=self.train_ds,
+        )
+        print(lar_tester.latest_points)
+        assert epochs == 50
+        assert batch_size == len(self.train_ds["targets"])
+
+        # Test if the batch size and the epochs get chenged correctly.
+        epochs, batch_size = lar_tester.train_model(
+            train_ds=self.train_ds, test_ds=self.train_ds, epochs=100, batch_size=1
+        )
+        assert epochs == 100
+        assert batch_size == 1
+
+        # Test if the batch size is adapted to the size of available data.
+        epochs, batch_size = lar_tester.train_model(
+            train_ds=self.train_ds, test_ds=self.train_ds, batch_size=100
+        )
+        assert batch_size == len(self.train_ds["targets"])
+
+        # Test if the batch size is adapted to the reservoir size if the reservoir
+        # cannot capture all the available data.
+        lar_tester = LarDecoratorTester(
+            model=model,
+            loss_fn=MeanPowerLoss(order=2),
+            reservoir_size=5,
+            latest_points=0,
+        )
+        epochs, batch_size = lar_tester.train_model(
+            train_ds=self.train_ds, test_ds=self.train_ds, batch_size=5
+        )
+        assert batch_size == 5
+
+        # Test if the number of latest points adapt the batch size correctly
+        # (default=1).
+        lar_tester = LarDecoratorTester(
+            model=model,
+            loss_fn=MeanPowerLoss(order=2),
+            reservoir_size=20,
+        )
+        epochs, batch_size = lar_tester.train_model(
+            train_ds=self.train_ds, test_ds=self.train_ds, batch_size=20
+        )
+        assert batch_size == 9
+
+        lar_tester = LarDecoratorTester(
+            model=model,
+            loss_fn=MeanPowerLoss(order=2),
+            reservoir_size=20,
+            latest_points=5,
+        )
+        epochs, batch_size = lar_tester.train_model(
+            train_ds=self.train_ds, test_ds=self.train_ds, batch_size=20
+        )
+        assert batch_size == 5

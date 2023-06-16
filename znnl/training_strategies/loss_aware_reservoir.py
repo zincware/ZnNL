@@ -278,7 +278,9 @@ class LossAwareReservoir(SimpleTraining):
         if not kwargs["epochs"]:
             kwargs["epochs"] = 50
         if not kwargs["batch_size"]:
-            kwargs["batch_size"] = len(kwargs["train_ds"]["targets"])
+            kwargs["batch_size"] = (
+                len(kwargs["train_ds"]["targets"]) - self.latest_points
+            )
 
         # Raise error if less data available than latest points chosen.
         if self.latest_points > len(kwargs["train_ds"]["targets"]):
