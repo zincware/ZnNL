@@ -121,6 +121,8 @@ def train_func(train_fn: Callable):
             counter = 0
             batch_wise_loss = {"train_losses": [], "train_accuracy": []}
 
+            recursive_mode.early_stop = recursive_mode.early_stop.reset()
+
             while not condition:
                 new_batch_wise_loss = train_fn(trainer, **kwargs)
                 for key, val in new_batch_wise_loss.items():
