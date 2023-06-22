@@ -44,15 +44,15 @@ class ClassGreedySelection(PointSelection):
         Parameters
         ----------
         labels : np.ndarray
-                Labels of the data pool.
+                Labels of the data pool in one-hot encoding.
         """
         super(ClassGreedySelection, self).__init__()
         self.labels = labels
         self.drawn_points = -1  # draw all points
 
-        self.create_index_lists()
+        self._create_index_lists()
 
-    def create_index_lists(self):
+    def _create_index_lists(self):
         """
         Create an index lists mapping instances of the data pool to the
         according label.
