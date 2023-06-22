@@ -90,4 +90,4 @@ class TestGreedySelection:
 
         self.selector = GreedySelection()
         point = self.selector.select_points(distances)
-        assert_array_equal(data[point], np.array([0, 1]))
+        assert_array_equal(data[point], np.array([[0, 1]]))
