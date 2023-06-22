@@ -24,7 +24,12 @@ If you use this module please cite us with:
 Summary
 -------
 """
+from znnl.point_selection.class_greedy_selection import ClassGreedySelection
 from znnl.point_selection.greedy_selection import GreedySelection
 from znnl.point_selection.point_selection import PointSelection
 
-__all__ = [PointSelection.__name__, GreedySelection.__name__]
+__all__ = [
+    PointSelection.__name__,
+    GreedySelection.__name__,
+    ClassGreedySelection.__name__,
+]

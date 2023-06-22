@@ -65,6 +65,6 @@ class GreedySelection(PointSelection):
         """
         truth_sum = len(np.where(distances > self.threshold))
         if truth_sum > 0:
-            return np.argmax(distances)
+            return np.array([np.argmax(distances)])
         else:
             return None

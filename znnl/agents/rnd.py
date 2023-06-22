@@ -198,8 +198,8 @@ class RND(Agent):
         distances = self.compute_distance(np.array(data))
         points = self.point_selector.select_points(distances)
         selected_points = data[points]
-        self._update_target_set([selected_points])
-        self.target_indices.append(int(points))
+        self._update_target_set([i for i in selected_points])
+        self.target_indices.extend([int(i) for i in points])
 
     def _update_target_set(self, points: Union[np.ndarray, None]):
         """
