@@ -194,9 +194,9 @@ class RND(Agent):
         Call compute distances on all generated points and decide what to
         do with them.
         """
-        data = self.fetch_data(-1) # get all points in the pool.
+        data = self.fetch_data(-1)  # get all points in the pool.
         # Distinguish between points that are already in the target set and others
-        data_idx = np.arange(np.shape(data)[0], dtype=int) 
+        data_idx = np.arange(np.shape(data)[0], dtype=int)
         non_target_idx = np.setdiff1d(data_idx, np.array(self.target_indices))
         unseen_data = data[non_target_idx, ...]
         # Compute distances and select points

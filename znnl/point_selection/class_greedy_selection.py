@@ -50,9 +50,9 @@ class ClassGreedySelection(PointSelection):
         self.labels = labels
         self.drawn_points = -1  # draw all points
 
-        self._create_index_lists()
+        # self._create_index_lists(labels)
 
-    def _create_index_lists(self):
+    def _create_index_lists(self, labels: np.ndarray):
         """
         Create an index lists mapping instances of the data pool to the
         according label.
@@ -63,23 +63,41 @@ class ClassGreedySelection(PointSelection):
         All index lists are stored in self.index_list.
         """
         index_lists = []
-        labels = np.argmax(self.labels, axis=-1)
+        labels = np.argmax(labels, axis=-1)
         for i in range(np.shape(self.labels)[1]):
             index_lists.append(np.where(labels == i)[0])
         self.index_list = index_lists
 
-    def select_points(self, distances: np.ndarray) -> Union[List, None]:
+    def select_points(
+        self, distances: np.ndarray, target_idx: list = None
+    ) -> Union[List, None]:
         """
         Select points from the pool using the greedy algorithm.
 
         Select points of maximum distance of each class.
         If no points are available for a class, no points are selected.
 
+        Drawing is repeated to take into account the already selected points.
+
+        Parameters
+        ----------
+        distances : np.ndarray
+                An array of distances. 
+        target_idx : list
+                A list of indices of points that are already selected.
+
         Returns
         -------
         points : np.array
                 A set of indices of points to be used by the RND class.
         """
+
+        if target_idx:
+            labels = np.delete(self.labels, target_idx, axis=0)
+            self._create_index_lists(labels)
+        else:
+            self._create_index_lists(self.labels)
+
         max_distances = []
         for l in self.index_list:
             class_distances = np.take(distances, l, axis=0)

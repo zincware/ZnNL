@@ -48,13 +48,12 @@ class TestClassGreedySelection:
         labels = data_generator.train_ds["targets"][:100]
 
         point_selector = ClassGreedySelection(labels)
-        point_selector.select_points(labels)
 
         # Create a distance equivalent to the index of the point
         distances = np.arange(labels.shape[0])
 
-        predicted_selection = [l[-1] for l in point_selector.index_list]
         selected_idx = point_selector.select_points(distances)
+        predicted_selection = [l[-1] for l in point_selector.index_list]
 
         assert_array_equal(predicted_selection, selected_idx)
 
