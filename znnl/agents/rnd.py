@@ -195,6 +195,7 @@ class RND(Agent):
         do with them.
         """
         data = self.fetch_data(-1)  # get all points in the pool.
+        data = np.delete(data, self.target_indices, axis=0)
         distances = self.compute_distance(np.array(data))
         points = self.point_selector.select_points(distances)
         selected_points = data[points]
