@@ -103,6 +103,7 @@ class JaxRecorder:
     name: str = "my_recorder"
     storage_path: str = "./"
     chunk_size: int = 100
+    subset: int = None
 
     # Model Loss
     loss: bool = True
@@ -294,9 +295,19 @@ class JaxRecorder:
             # Compute ntk here to avoid repeated computation.
             if self._compute_ntk:
                 try:
-                    ntk = self._model.compute_ntk(
-                        self._data_set["inputs"], infinite=False
-                    )
+                    if self.subset is not None:
+                        indices = onp.random.randint(
+                            0,
+                            self._data_set["inputs"].shape[0] - 1,
+                            size=self.subset,
+                        )
+
+                        my_ds = onp.take(self._data_set["inputs"], indices, axis=0)
+                        ntk = self._model.compute_ntk(my_ds, infinite=False)
+                    else:
+                        ntk = self._model.compute_ntk(
+                            self._data_set["inputs"], infinite=False
+                        )
                     parsed_data["ntk"] = ntk["empirical"]
                 except NotImplementedError:
                     logger.info(

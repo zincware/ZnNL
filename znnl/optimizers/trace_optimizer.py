@@ -25,9 +25,10 @@ Summary
 -------
 """
 from dataclasses import dataclass
-from typing import Callable
+from typing import Callable, Union
 
 import jax.numpy as np
+import numpy as onp
 import optax
 from flax.training.train_state import TrainState
 
@@ -43,10 +44,15 @@ class TraceOptimizer:
             Scale factor to apply to the optimizer.
     rescale_interval : int
             Number of epochs to wait before re-scaling the learning rate.
+    subset : float
+            What percentage of data you want to use in the trace calculation.
     """
 
     scale_factor: float
     rescale_interval: float = 1
+    subset: Union[float, list] = None
+
+    _start_value = None
 
     @optax.inject_hyperparams
     def optimizer(self, learning_rate):
@@ -79,14 +85,45 @@ class TraceOptimizer:
                 New state of the model
         """
         eps = 1e-8
+
+        if self._start_value is None:
+            if self.subset is not None:
+                if isinstance(self.subset, float):
+                    subset_size = int(self.subset * data_set.shape[0])
+                    init_data_set = np.take(
+                        data_set,
+                        onp.random.randint(0, data_set.shape[0] - 1, size=subset_size),
+                        axis=0,
+                    )
+                else:
+                    init_data_set = np.take(data_set, self.subset, axis=0)
+            else:
+                init_data_set = data_set
+            ntk = ntk_fn(init_data_set)["empirical"]
+            self._start_value = np.trace(ntk)
+
         # Check if the update should be performed.
         if epoch % self.rescale_interval == 0:
+            # Select a subset of the data
+            if self.subset is not None:
+                if isinstance(self.subset, float):
+                    subset_size = int(self.subset * data_set.shape[0])
+                    data_set = np.take(
+                        data_set,
+                        onp.random.randint(0, data_set.shape[0] - 1, size=subset_size),
+                        axis=0,
+                    )
+                else:
+                    data_set = np.take(data_set, self.subset, axis=0)
+
             # Compute the ntk trace.
             ntk = ntk_fn(data_set)["empirical"]
             trace = np.trace(ntk)
 
             # Create the new optimizer.
-            new_optimizer = self.optimizer(self.scale_factor / (trace + eps))
+            new_optimizer = self.optimizer(
+                (self.scale_factor * self._start_value) / (trace + eps)
+            )
 
             # Create the new state
             new_state = TrainState.create(
