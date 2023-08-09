@@ -36,6 +36,7 @@ from tqdm import trange
 
 from znnl.accuracy_functions.accuracy_function import AccuracyFunction
 from znnl.models.jax_model import JaxModel
+from znnl.optimizers.partitioned_trace_optimizer import PartitionedTraceOptimizer
 from znnl.optimizers.trace_optimizer import TraceOptimizer
 from znnl.training_recording import JaxRecorder
 from znnl.training_strategies.recursive_mode import RecursiveMode
@@ -199,6 +200,15 @@ class SimpleTraining:
         metrics : dict
                 Metrics for the current model.
         """
+        if isinstance(
+            self.model.optimizer, (TraceOptimizer, PartitionedTraceOptimizer)
+        ):
+            state = self.model.optimizer.apply_optimizer(
+                model_state=state,
+                data_set=batch,
+                ntk_fn=self.model.compute_ntk,
+                epoch=1,
+            )
 
         def loss_fn(params):
             """
@@ -372,14 +382,6 @@ class SimpleTraining:
                     item.update_recorder(epoch=i, model=self.model)
 
             loading_bar.set_description(f"Epoch: {i}")
-
-            if isinstance(self.model.optimizer, TraceOptimizer):
-                state = self.model.optimizer.apply_optimizer(
-                    model_state=state,
-                    data_set=train_ds["inputs"],
-                    ntk_fn=self.model.compute_ntk,
-                    epoch=i,
-                )
 
             state, train_metrics = self._train_epoch(
                 state, train_ds, batch_size=batch_size

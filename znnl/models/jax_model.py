@@ -33,6 +33,7 @@ import neural_tangents as nt
 import optax
 from flax.training.train_state import TrainState
 
+from znnl.optimizers.partitioned_trace_optimizer import PartitionedTraceOptimizer
 from znnl.optimizers.trace_optimizer import TraceOptimizer
 from znnl.utils.prng import PRNGKey
 
@@ -80,10 +81,10 @@ class JaxModel:
         self.init_model(seed)
 
         # Prepare NTK calculation
-        self.empirical_ntk = nt.batch(
-            nt.empirical_ntk_fn(f=self._ntk_apply_fn, trace_axes=trace_axes),
-            batch_size=ntk_batch_size,
+        self.empirical_ntk = nt.empirical_ntk_fn(
+            f=self._ntk_apply_fn, trace_axes=trace_axes
         )
+
         self.empirical_ntk_jit = jax.jit(self.empirical_ntk)
 
     def init_model(
@@ -122,7 +123,7 @@ class JaxModel:
         params = self._init_params(kernel_init, bias_init)
 
         # Set dummy optimizer for case of trace optimizer.
-        if isinstance(self.optimizer, TraceOptimizer):
+        if isinstance(self.optimizer, (TraceOptimizer, PartitionedTraceOptimizer)):
             optimizer = optax.sgd(1.0)
         else:
             optimizer = self.optimizer
