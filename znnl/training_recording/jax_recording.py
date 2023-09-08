@@ -82,6 +82,9 @@ class JaxRecorder:
     covariance_entropy : bool (default=False)
             If true, the entropy of the covariance ntk will be recorded.
             Warning, large overhead.
+    magnitude_variance : bool (default=False)
+            If true, the variance of the gradient magnitudes of the ntk will be
+            recorded.
     magnitude_entropy : bool (default=False)
             If true, the entropy of the gradient magnitudes of the ntk will be recorded.
             Warning, large overhead.
@@ -131,6 +134,10 @@ class JaxRecorder:
     # Covariance Entropy of the model
     covariance_entropy: bool = False
     _covariance_entropy_array: list = None
+
+    # Magnitude Variance of the model
+    magnitude_variance: bool = False
+    _magnitude_variance_array: list = None
 
     # Magnitude Entropy of the model
     magnitude_entropy: bool = False
@@ -252,6 +259,7 @@ class JaxRecorder:
                 "magnitude_ntk" in self._selected_properties,
                 "entropy" in self._selected_properties,
                 "magnitude_entropy" in self._selected_properties,
+                "magnitude_variance" in self._selected_properties,
                 "covariance_entropy" in self._selected_properties,
                 "eigenvalues" in self._selected_properties,
                 "trace" in self._selected_properties,
@@ -308,6 +316,7 @@ class JaxRecorder:
                     self.magnitude_ntk = False
                     self.entropy = False
                     self.magnitude_entropy = False
+                    self.magnitude_variance = False
                     self.covariance_entropy = False
                     self.eigenvalues = False
                     self._read_selected_attributes()
@@ -508,6 +517,33 @@ class JaxRecorder:
         magnitude_dist = compute_magnitude_density(gram_matrix=parsed_data["ntk"])
         entropy = EntropyAnalysis.compute_shannon_entropy(magnitude_dist)
         self._magnitude_entropy_array.append(entropy)
+
+    def _update_magnitude_variance(self, parsed_data: dict):
+        """
+        Update the magnitude variance of the NTK.
+
+        The magnitude variance is defined as the variance of the normalized gradient
+        magnitudes.
+        As the normalization to obtain the magnitude distribution is done by dividing
+        by the sum of the magnitudes, the variance is calculated as:
+
+            magnitude_variance = var(magnitudes * onp.shape(magnitudes)[0])
+
+        This ensures that the variance is not dependent on the number entries in the
+        magnitude distribution.
+        It is equivalent to the following:
+
+            ntk_diag = sqrt( diag(ntk) )
+            magnitude_variance = var( diag / mean(ntk_diag) )
+
+        Parameters
+        ----------
+        parsed_data : dict
+                Data computed before the update to prevent repeated calculations.
+        """
+        magnitude_dist = compute_magnitude_density(gram_matrix=parsed_data["ntk"])
+        magvar = onp.var(magnitude_dist * onp.shape(magnitude_dist)[0])
+        self._magnitude_variance_array.append(magvar)
 
     def _update_eigenvalues(self, parsed_data: dict):
         """
