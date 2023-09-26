@@ -64,6 +64,10 @@ class TestModelRecording:
             eigenvalues=True,
             trace=True,
             loss_derivative=True,
+            fisher_trace=True,
+            tensornetwork_entropy=True,
+            tensornetwork_covariance_entropy=True,
+            tensornetwork_magnitude_entropy=True,
         )
         recorder.instantiate_recorder(data_set=self.dummy_data_set)
         _exclude_list = [
