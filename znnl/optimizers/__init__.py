@@ -24,6 +24,7 @@ If you use this module please cite us with:
 Summary
 -------
 """
+from znnl.optimizers.partitioned_trace_optimizer import PartitionedTraceOptimizer
 from znnl.optimizers.trace_optimizer import TraceOptimizer
 
-__all__ = [TraceOptimizer.__name__]
+__all__ = [TraceOptimizer.__name__, PartitionedTraceOptimizer.__name__]

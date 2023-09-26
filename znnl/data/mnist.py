@@ -26,6 +26,7 @@ Summary
 """
 import jax.nn as nn
 import jax.numpy as np
+import numpy as onp
 import plotly.graph_objects as go
 import tensorflow_datasets as tfds
 from plotly.subplots import make_subplots
@@ -66,11 +67,11 @@ class MNISTGenerator(DataGenerator):
         self.test_ds.pop("label")
         self.data_pool = self.train_ds["inputs"].astype(float)
         if one_hot_encoding:
-            self.train_ds["targets"] = nn.one_hot(
-                self.train_ds["targets"], num_classes=10
+            self.train_ds["targets"] = onp.array(
+                nn.one_hot(self.train_ds["targets"], num_classes=10)
             )
-            self.test_ds["targets"] = nn.one_hot(
-                self.test_ds["targets"], num_classes=10
+            self.test_ds["targets"] = onp.array(
+                nn.one_hot(self.test_ds["targets"], num_classes=10)
             )
 
     def plot_image(self, indices: list = None, data_list: list = None):

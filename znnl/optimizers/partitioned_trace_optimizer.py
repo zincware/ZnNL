@@ -25,7 +25,7 @@ Summary
 -------
 """
 from dataclasses import dataclass
-from typing import Callable, Union
+from typing import Callable
 
 import jax.numpy as np
 import numpy as onp
@@ -34,7 +34,7 @@ from flax.training.train_state import TrainState
 
 
 @dataclass
-class TraceOptimizer:
+class PartitionedTraceOptimizer:
     """
     Class implementation of the trace optimizer
 
@@ -50,10 +50,9 @@ class TraceOptimizer:
 
     scale_factor: float
     rescale_interval: float = 1
-    subset: Union[float, list] = None
-    memory: int = 1
+    subset: float = None
 
-    _start_value = []
+    _start_value = None
 
     @optax.inject_hyperparams
     def optimizer(self, learning_rate):
@@ -85,51 +84,67 @@ class TraceOptimizer:
         new_state : TrainState
                 New state of the model
         """
-        data_set = data_set["inputs"]
         eps = 1e-8
 
-        if self._start_value == []:
+        partitions = {}
+
+        number_of_classes = np.unique(data_set["targets"], axis=0)
+
+        for i in range(number_of_classes.shape[0]):
+            indices = np.where(data_set["targets"].argmax(-1) == i)[0]
+
+            partitions[i] = np.take(data_set["inputs"], indices, axis=0)
+
+        if self._start_value is None:
             if self.subset is not None:
-                if isinstance(self.subset, float):
-                    subset_size = int(self.subset * data_set.shape[0])
-                    init_data_set = np.take(
-                        data_set,
-                        onp.random.randint(0, data_set.shape[0] - 1, size=subset_size),
+                init_data_set = {}
+                for ds in partitions:
+                    subset_size = int(self.subset * partitions[ds].shape[0])
+                    init_data_set[ds] = np.take(
+                        partitions[ds],
+                        onp.random.randint(
+                            0, partitions[ds].shape[0] - 1, size=subset_size
+                        ),
                         axis=0,
                     )
-                else:
-                    init_data_set = np.take(data_set, self.subset, axis=0)
             else:
                 init_data_set = data_set
-            ntk = ntk_fn(init_data_set)["empirical"]
-            self._start_value.append(np.trace(ntk))
+
+            start_trace = 0
+
+            for ds in init_data_set:
+                ntk = ntk_fn(init_data_set[ds])["empirical"]
+                start_trace += np.trace(ntk)
+
+            self._start_value = np.trace(ntk)
 
         # Check if the update should be performed.
         if epoch % self.rescale_interval == 0:
             # Select a subset of the data
             if self.subset is not None:
-                if isinstance(self.subset, float):
-                    subset_size = int(self.subset * data_set.shape[0])
-                    data_set = np.take(
-                        data_set,
-                        onp.random.randint(0, data_set.shape[0] - 1, size=subset_size),
+                data_set = {}
+
+                for ds in partitions:
+                    subset_size = int(self.subset * partitions[ds].shape[0])
+                    data_set[ds] = np.take(
+                        partitions[ds],
+                        onp.random.randint(
+                            0, partitions[ds].shape[0] - 1, size=subset_size
+                        ),
                         axis=0,
                     )
-                else:
-                    data_set = np.take(data_set, self.subset, axis=0)
 
             # Compute the ntk trace.
-            ntk = ntk_fn(data_set)["empirical"]
-            trace = np.trace(ntk)
+            trace = 0.0
 
-            memory_index = int(np.clip(epoch - self.memory, 0, epoch))
-            memory_index = 0
+            for ds in data_set:
+                ntk = ntk_fn(data_set[ds])["empirical"]
+                trace += np.trace(ntk)
 
             # Create the new optimizer.
             new_optimizer = self.optimizer(
-                (self.scale_factor * self._start_value[memory_index]) / (trace + eps)
+                (self.scale_factor * self._start_value) / (trace + eps)
             )
-            self._start_value.append(trace)
 
             # Create the new state
             new_state = TrainState.create(
