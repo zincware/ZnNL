@@ -24,4 +24,3 @@ isort
 tensorflow
 pyyaml
 jupyter
-protobuf==3.20.*
