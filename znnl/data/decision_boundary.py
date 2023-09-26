@@ -40,7 +40,7 @@ def linear_boundary(data: onp.ndarray, gradient: float, intercept: float) -> np.
 
     Parameters
     ----------
-    data : np.ndarray (n_samples, 2)
+    data : onp.ndarray (n_samples, 2)
             Data to be converted into classes.
     gradient : float
             Gradient of the line, default 1.0.
@@ -67,7 +67,7 @@ def circle(data: onp.ndarray, radius: float = 0.25):
 
     Parameters
     ----------
-    data : np.ndarray
+    data : onp.ndarray
         Data to be converted into classes.
     radius : float
         Radius of the circle.
@@ -130,6 +130,8 @@ class DecisionBoundaryGenerator(DataGenerator):
 
         self.train_ds = self._build_dataset(n_samples=n_samples)
         self.test_ds = self._build_dataset(n_samples=n_samples)
+
+        self.data_pool = self.train_ds["inputs"]
 
     def _build_dataset(self, n_samples: int):
         """
