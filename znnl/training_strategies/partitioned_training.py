@@ -244,7 +244,7 @@ class PartitionedTraining(SimpleTraining):
                 Number of epochs to train over.
                 Each epoch defines a training phase.
         train_ds_selection : list
-                             (default = [slice(-1, None, None), slice(None, None, None)])
+                        (default = [slice(-1, None, None), slice(None, None, None)])
                 The train is selected by a np.array of indices or slices.
                 Each slice or array defines a training phase.
         batch_size : list (default = [1, 1])

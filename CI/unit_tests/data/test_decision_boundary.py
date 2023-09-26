@@ -25,10 +25,15 @@ Summary
 -------
 Unit test for the decision boundary.
 """
-from znnl.data.decision_boundary import linear_boundary, circle, DecisionBoundaryGenerator
-import numpy as onp
 import jax.numpy as np
+import numpy as onp
 from pytest import approx
+
+from znnl.data.decision_boundary import (
+    DecisionBoundaryGenerator,
+    circle,
+    linear_boundary,
+)
 
 
 class TestDecisionBoundary:
@@ -44,7 +49,7 @@ class TestDecisionBoundary:
         for _ in range(10):
             input_data = onp.random.uniform(0, 1, size=(10000, 2))
             target_ratio += linear_boundary(input_data, 1.0, 0.0).mean()
-        
+
         assert target_ratio / 10 == approx(0.5, rel=0.01)
 
     def test_circle(self):
@@ -55,7 +60,7 @@ class TestDecisionBoundary:
         for _ in range(10):
             input_data = onp.random.uniform(0, 1, size=(10000, 2))
             target_ratio += circle(input_data, 0.25).mean()
-        
+
         # P(x in class 1) = 1 - (pi / 16)
         assert target_ratio / 10 == approx(1 - (np.pi / 16), abs=0.01)
 
@@ -64,9 +69,7 @@ class TestDecisionBoundary:
         Test the actual generator.
         """
         generator = DecisionBoundaryGenerator(
-            n_samples=10000,
-            discriminator="circle",
-            one_hot=True
+            n_samples=10000, discriminator="circle", one_hot=True
         )
 
         # Check the dataset shapes
@@ -80,9 +83,7 @@ class TestDecisionBoundary:
         Test the actual generator.
         """
         generator = DecisionBoundaryGenerator(
-            n_samples=10000,
-            discriminator="circle",
-            one_hot=False
+            n_samples=10000, discriminator="circle", one_hot=False
         )
 
         # Check the dataset shapes

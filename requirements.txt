@@ -1,8 +1,8 @@
 numpy
 matplotlib
 sphinx
-flake8==5.0.4
-black==22.8.0
+flake8
+black
 ipython
 numpydoc
 optax
@@ -20,7 +20,7 @@ tqdm
 pandas
 neural-tangents
 tensorflow-datasets
-isort==5.10.1
+isort
 tensorflow
 pyyaml
 jupyter

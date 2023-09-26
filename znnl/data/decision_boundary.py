@@ -25,20 +25,19 @@ Summary
 -------
 Data generator for decision boundary problems.
 """
-from znnl.data.data_generator import DataGenerator
 import jax
 import jax.numpy as np
-import numpy as onp
-from znnl.utils.prng import PRNGKey
 import matplotlib.pyplot as plt
+import numpy as onp
+
+from znnl.data.data_generator import DataGenerator
+from znnl.utils.prng import PRNGKey
 
 
-def linear_boundary(
-    data: onp.ndarray, gradient: float, intercept: float
-) -> np.ndarray:
+def linear_boundary(data: onp.ndarray, gradient: float, intercept: float) -> np.ndarray:
     """
     Create a linear boundary between classes.
-    
+
     Parameters
     ----------
     data : np.ndarray (n_samples, 2)
@@ -50,23 +49,22 @@ def linear_boundary(
     """
     # y = m * x + c
     reference_values = gradient * data[:, 0] + intercept
-    
+
     differences = data[:, 1] - reference_values
 
     differences[differences > 0] = 1
-    differences[differences < 0.] = 0
-    
+    differences[differences < 0.0] = 0
+
     return differences
 
-def circle(
-    data: onp.ndarray, radius: float = 0.25
-):
+
+def circle(data: onp.ndarray, radius: float = 0.25):
     """
     Create a circular classification problem.
-    
+
     For simplicity, assume the points inside the circle are
     class 0 and outside are class 1.
-    
+
     Parameters
     ----------
     data : np.ndarray
@@ -75,10 +73,10 @@ def circle(
         Radius of the circle.
     """
     radii = onp.linalg.norm(data - 0.5, axis=1)
-    
-    radii[radii < radius] = 0.
-    radii[radii > radius] = 1.
-    
+
+    radii[radii < radius] = 0.0
+    radii[radii > radius] = 1.0
+
     return radii
 
 
@@ -88,24 +86,24 @@ class DecisionBoundaryGenerator(DataGenerator):
     """
 
     def __init__(
-            self, 
-            n_samples: int, 
-            discriminator: str = "line", 
-            one_hot: bool = True,
-            gradient: float = 1.0,
-            y_intercept: float = 0.0,
-            radius: float = 0.25,
-            seed: int = None
-        ):
+        self,
+        n_samples: int,
+        discriminator: str = "line",
+        one_hot: bool = True,
+        gradient: float = 1.0,
+        y_intercept: float = 0.0,
+        radius: float = 0.25,
+        seed: int = None,
+    ):
         """
         Instantiate the class.
-       
+
         Parameters
         ----------
         n_samples : int
                 Number of samples to generate per class.
         discriminator : str
-                String to define the discriminator to use. 
+                String to define the discriminator to use.
                 Options are "line" and "circle".
         one_hot : bool
                 Whether to use one-hot encoding for the classes.
@@ -129,10 +127,10 @@ class DecisionBoundaryGenerator(DataGenerator):
             self.args = (radius,)
         else:
             raise ValueError("Discriminator not recognised.")
-        
+
         self.train_ds = self._build_dataset(n_samples=n_samples)
         self.test_ds = self._build_dataset(n_samples=n_samples)
-        
+
     def _build_dataset(self, n_samples: int):
         """
         Helper method to create datasets quickly.
@@ -143,19 +141,15 @@ class DecisionBoundaryGenerator(DataGenerator):
                 Number of samples to generate per class.
         """
         # Create the data-sets
-        data = onp.array(jax.random.uniform(
-            self.rng(), minval=0., maxval=1., shape=(n_samples, 2)
-        ))
-        data = onp.clip(data, 0., 1.)
+        data = onp.array(
+            jax.random.uniform(self.rng(), minval=0.0, maxval=1.0, shape=(n_samples, 2))
+        )
+        data = onp.clip(data, 0.0, 1.0)
         targets = self.discriminator(data, *self.args)  # build classes (0, 1)
-        
-        class_one_indices = np.where(
-            targets == 0
-        )[0]
 
-        class_two_indices = np.where(
-            targets == 1
-        )[0]
+        class_one_indices = np.where(targets == 0)[0]
+
+        class_two_indices = np.where(targets == 1)[0]
 
         indices = np.hstack((class_one_indices, class_two_indices))
         indices = jax.random.shuffle(self.rng(), indices)
@@ -164,12 +158,12 @@ class DecisionBoundaryGenerator(DataGenerator):
             targets = np.array(jax.nn.one_hot(targets, num_classes=2))
         else:
             targets = targets.reshape(-1, 1)
-            
+
         return {
             "inputs": np.take(data, indices, axis=0),
-            "targets": np.take(targets, indices, axis=0)
+            "targets": np.take(targets, indices, axis=0),
         }
-    
+
     def plot(self):
         """
         Plot the training and test datasets.
@@ -180,7 +174,7 @@ class DecisionBoundaryGenerator(DataGenerator):
         ax[0].scatter(
             self.train_ds["inputs"][:, 0],
             self.train_ds["inputs"][:, 1],
-            c=self.train_ds["targets"][:, 0]
+            c=self.train_ds["targets"][:, 0],
         )
         ax[0].set_title("Training Data")
         ax[0].set_xlabel("x")
@@ -190,13 +184,10 @@ class DecisionBoundaryGenerator(DataGenerator):
         ax[1].scatter(
             self.test_ds["inputs"][:, 0],
             self.test_ds["inputs"][:, 1],
-            c=self.test_ds["targets"][:, 0]
+            c=self.test_ds["targets"][:, 0],
         )
         ax[1].set_title("Test Data")
         ax[1].set_xlabel("x")
         ax[1].set_ylabel("y")
 
         plt.show()
-
-
-
