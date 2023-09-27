@@ -63,7 +63,8 @@ def circle(data: onp.ndarray, radius: float = 0.25):
     Create a circular classification problem.
 
     For simplicity, assume the points inside the circle are
-    class 0 and outside are class 1.
+    class 0 and outside are class 1. Circle sits in the middle
+    of the box. It is assumed that data is in the range [0, 1].
 
     Parameters
     ----------
