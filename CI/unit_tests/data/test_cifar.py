@@ -23,38 +23,38 @@ If you use this module please cite us with:
 
 Summary
 -------
-Test MNIST generator.
+Test CIFAR10 generator.
 """
-from znnl.data import MNISTGenerator
+from znnl.data import CIFAR10Generator
 
 
-class TestMNISTGenerator:
+class TestCIFARGenerator:
     """
-    Class for testing the MNIST generator.
+    Class for testing the CIFAR generator.
     """
 
     def test_one_hot_creation(self):
         """
         Test if one can create the generator.
         """
-        generator = MNISTGenerator(ds_size=500)
+        generator = CIFAR10Generator(ds_size=500)
 
         assert generator is not None
-        assert generator.train_ds["inputs"].shape == (500, 28, 28, 1)
+        assert generator.train_ds["inputs"].shape == (500, 32, 32, 3)
         assert generator.train_ds["targets"].shape == (500, 10)
 
-        assert generator.test_ds["inputs"].shape == (500, 28, 28, 1)
+        assert generator.test_ds["inputs"].shape == (500, 32, 32, 3)
         assert generator.test_ds["targets"].shape == (500, 10)
 
     def test_serial_creation(self):
         """
         Test if one can create the generator.
         """
-        generator = MNISTGenerator(ds_size=500, one_hot_encoding=False)
+        generator = CIFAR10Generator(ds_size=500, one_hot_encoding=False)
 
         assert generator is not None
-        assert generator.train_ds["inputs"].shape == (500, 28, 28, 1)
+        assert generator.train_ds["inputs"].shape == (500, 32, 32, 3)
         assert generator.train_ds["targets"].shape == (500, 1)
 
-        assert generator.test_ds["inputs"].shape == (500, 28, 28, 1)
+        assert generator.test_ds["inputs"].shape == (500, 32, 32, 3)
         assert generator.test_ds["targets"].shape == (500, 1)
