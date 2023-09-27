@@ -72,6 +72,9 @@ class CIFAR10Generator(DataGenerator):
             self.test_ds["targets"] = nn.one_hot(
                 self.test_ds["targets"], num_classes=10
             )
+        else:
+            self.train_ds["targets"] = self.train_ds["targets"].reshape(-1, 1)
+            self.test_ds["targets"] = self.test_ds["targets"].reshape(-1, 1)
 
     def plot_image(self, indices: list = None, data_list: list = None):
         """
