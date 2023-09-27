@@ -29,6 +29,7 @@ from dataclasses import dataclass, make_dataclass
 from os import path
 from pathlib import Path
 
+import jax.numpy as np
 import numpy as onp
 
 from znnl.accuracy_functions.accuracy_function import AccuracyFunction
@@ -527,7 +528,7 @@ class JaxRecorder:
         As the normalization to obtain the magnitude distribution is done by dividing
         by the sum of the magnitudes, the variance is calculated as:
 
-            magnitude_variance = var(magnitudes * onp.shape(magnitudes)[0])
+            magnitude_variance = var(magnitudes * magnitudes.shape[0])
 
         This ensures that the variance is not dependent on the number entries in the
         magnitude distribution.
@@ -542,7 +543,7 @@ class JaxRecorder:
                 Data computed before the update to prevent repeated calculations.
         """
         magnitude_dist = compute_magnitude_density(gram_matrix=parsed_data["ntk"])
-        magvar = onp.var(magnitude_dist * onp.shape(magnitude_dist)[0])
+        magvar = np.var(magnitude_dist * magnitude_dist.shape[0])
         self._magnitude_variance_array.append(magvar)
 
     def _update_eigenvalues(self, parsed_data: dict):
@@ -567,7 +568,7 @@ class JaxRecorder:
         parsed_data : dict
                 Data computed before the update to prevent repeated calculations.
         """
-        trace = onp.trace(parsed_data["ntk"])
+        trace = np.trace(parsed_data["ntk"])
         self._trace_array.append(trace)
 
     def _update_loss_derivative(self, parsed_data):
