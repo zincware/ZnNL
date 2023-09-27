@@ -41,6 +41,7 @@ from znnl.training_recording import JaxRecorder
 from znnl.training_strategies.recursive_mode import RecursiveMode
 from znnl.training_strategies.training_decorator import train_func
 from znnl.utils.prng import PRNGKey
+from znnl.regularizers import Regularizer
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +70,7 @@ class SimpleTraining:
         recursive_mode: RecursiveMode = None,
         disable_loading_bar: bool = False,
         recorders: List["JaxRecorder"] = None,
+        regularizer: Optional[Regularizer] = None,
     ):
         """
         Construct a simple training strategy for a model.
@@ -94,6 +96,9 @@ class SimpleTraining:
                 Disable the output visualization of the loading bar.
         recorders : List[JaxRecorder]
                 A list of recorders to monitor model training.
+        regularizer : Regularizer
+                Regularizer to use in the training. More information to the regularizers
+                can be found in the regularizers module.
         """
         self.model = model
         self.loss_fn = loss_fn
@@ -102,6 +107,7 @@ class SimpleTraining:
 
         self.disable_loading_bar = disable_loading_bar
         self.recorders = recorders
+        self.regularizer = regularizer
 
         self.rng = PRNGKey(seed)
 
@@ -206,6 +212,15 @@ class SimpleTraining:
             """
             inner_predictions = self.model.apply(params, batch["inputs"])
             loss = self.loss_fn(inner_predictions, batch["targets"])
+
+            # Add gradient regularization
+            if self.regularizer:
+                reg_loss = self.regularizer(
+                    apply_fn=self.model.apply, 
+                    params=params, 
+                    batch=batch, 
+                )
+                loss += reg_loss
             return loss, inner_predictions
 
         grad_fn = jax.value_and_grad(loss_fn, has_aux=True)
