@@ -25,25 +25,29 @@ Summary
 -------
 Module containing the trace regularizer class.
 """
-from znnl.regularizers.regularizer import Regularizer
 from typing import Callable
+
 import jax.flatten_util
 import jax.tree_util
+
+from znnl.regularizers.regularizer import Regularizer
 
 
 class TraceRegularizer(Regularizer):
     """
     Trace regularizer class.
 
-    Regularizing the loss of gradient based learning proportional to the trace of the 
+    Regularizing the loss of gradient based learning proportional to the trace of the
     NTK. As:
         Trace(NTK) = sum_i (d f(x_i)/d theta)^2
-    the trace of the NTK is the sum of the squared gradients of the model, the trace 
-    regularizer is equivalent to regularizing on the sum of the squared gradients of 
+    the trace of the NTK is the sum of the squared gradients of the model, the trace
+    regularizer is equivalent to regularizing on the sum of the squared gradients of
     the model.
     """
 
-    def __init__(self, reg_factor: float = 1e-1) -> None:
+    def __init__(
+        self, reg_factor: float = 1e-1, reg_schedule_fn: Callable = None
+    ) -> None:
         """
         Constructor of the trace regularizer class.
 
@@ -51,17 +55,21 @@ class TraceRegularizer(Regularizer):
         ----------
         reg_factor : float
                 Regularization factor.
+        reg_schedule_fn : Callable
+
         """
-        super().__init__(reg_factor) 
-    
-    def __call__(self, apply_fn: Callable, params: dict, batch: dict) -> float:
+        super().__init__(reg_factor, reg_schedule_fn)
+
+    def _calculate_regularization(
+        self, apply_fn: Callable, params: dict, batch: dict, epoch: int
+    ) -> float:
         """
         Call function of the trace regularizer class.
 
         Parameters
         ----------
         apply_fn : Callable
-                Function to apply the model to inputs. 
+                Function to apply the model to inputs.
         params : dict
                 Parameters of the model.
         batch : dict

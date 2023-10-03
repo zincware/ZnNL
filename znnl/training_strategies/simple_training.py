@@ -112,6 +112,7 @@ class SimpleTraining:
         self.rng = PRNGKey(seed)
 
         self.review_metric = None
+        self.epoch = 0
 
         # Add the loss and accuracy function to the recorders and re-instantiate them
         if self.recorders is not None:
@@ -219,6 +220,7 @@ class SimpleTraining:
                     apply_fn=self.model.apply, 
                     params=params, 
                     batch=batch, 
+                    epoch=self.epoch
                 )
                 loss += reg_loss
             return loss, inner_predictions
@@ -381,6 +383,8 @@ class SimpleTraining:
         train_losses = []
         train_accuracy = []
         for i in loading_bar:
+            self.epoch = i
+            
             # Update the recorder properties
             if self.recorders is not None:
                 for item in self.recorders:

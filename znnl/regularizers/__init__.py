@@ -24,14 +24,12 @@ If you use this module please cite us with:
 Summary
 -------
 """
-from znnl.regularizers.regularizer import Regularizer
 from znnl.regularizers.norm_regularizer import NormRegularizer
+from znnl.regularizers.regularizer import Regularizer
 from znnl.regularizers.trace_regularizer import TraceRegularizer
-from znnl.regularizers.grad_variance_regularizer import GradVarianceRegularizer
 
 __all__ = [
     Regularizer.__name__,
     NormRegularizer.__name__,
     TraceRegularizer.__name__,
-    GradVarianceRegularizer.__name__,
 ]

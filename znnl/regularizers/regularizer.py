@@ -24,7 +24,11 @@ If you use this module please cite us with:
 Summary
 -------
 """
+import logging
 from abc import ABC
+from typing import Callable, Optional
+
+logger = logging.getLogger(__name__)
 
 
 class Regularizer(ABC):
@@ -32,7 +36,9 @@ class Regularizer(ABC):
     Parent class for a regularizer. All regularizers should inherit from this class.
     """
 
-    def __init__(self, reg_factor) -> None:
+    def __init__(
+        self, reg_factor: float, reg_schedule_fn: Optional[Callable] = None
+    ) -> None:
         """
         Constructor of the regularizer class.
 
@@ -40,20 +46,71 @@ class Regularizer(ABC):
         ----------
         reg_factor : float
                 Regularization factor.
+        reg_schedule_fn : Optional[Callable]
+                Function to schedule the regularization factor.
+                The function takes the current epoch and the regularization factor
+                as input and returns the scheduled regularization factor (float).
+                An example function is:
+
+                    def reg_schedule(epoch: int, reg_factor: float) -> float:
+                        return reg_factor * 0.99 ** epoch
+
+                where the regularization factor is reduced by 1% each epoch.
+                The default is None, which means no scheduling is applied:
+
+                    def reg_schedule(epoch: int, reg_factor: float) -> float:
+                        return reg_factor
         """
         self.reg_factor = reg_factor
+        self.reg_schedule_fn = reg_schedule_fn
 
-    def __call__(self, params: dict, **kwargs: dict) -> float:
+        if self.reg_schedule_fn:
+            logger.info(
+                "Setting a regularization schedule."
+                "The set regularization factor will be overwritten."
+            )
+            if not callable(self.reg_schedule_fn):
+                raise TypeError("Regularization schedule must be a Callable.")
+
+        if self.reg_schedule_fn is None:
+            self.reg_schedule_fn = self._schedule_fn_default
+
+    @staticmethod
+    def _schedule_fn_default(epoch: int, reg_factor: float) -> float:
         """
-        Call function of the regularizer class.
+        Default function for the regularization factor.
+
+        Parameters
+        ----------
+        epoch : int
+                Current epoch.
+        reg_factor : float
+                Regularization factor.
+
+        Returns
+        -------
+        scheduled_reg_factor : float
+                Scheduled regularization factor.
+        """
+        return reg_factor
+
+    def _calculate_regularization(self, params: dict, **kwargs: dict) -> float:
+        """
+        Calculate the regularization contribution to the loss.
 
         Parameters
         ----------
         params : dict
                 Parameters of the model.
         kwargs : dict
-                Additional arguments. 
-                Individual regularizers can define their own arguments.
+                Additional arguments.
+                Individual regularizers can utilize arguments from the set:
+                    apply_fn : Callable
+                            Function to apply the model to inputs.
+                    batch : dict
+                            Batch of data.
+                    epoch : int
+                            Current epoch.
 
         Returns
         -------
@@ -61,3 +118,30 @@ class Regularizer(ABC):
                 Loss contribution from the regularizer.
         """
         raise NotImplementedError
+
+    def __call__(
+        self, apply_fn: Callable, params: dict, batch: dict, epoch: int
+    ) -> float:
+        """
+        Call function of the regularizer class.
+
+        Parameters
+        ----------
+        apply_fn : Callable
+                Function to apply the model to inputs.
+        params : dict
+                Parameters of the model.
+        batch : dict
+                Batch of data.
+        epoch : int
+                Current epoch.
+
+        Returns
+        -------
+        scaled_reg_loss : float
+                Scaled loss contribution from the regularizer.
+        """
+        self.reg_factor = self.reg_schedule_fn(epoch, self.reg_factor)
+        return self.reg_factor * self._calculate_regularization(
+            apply_fn=apply_fn, params=params, batch=batch, epoch=epoch
+        )
