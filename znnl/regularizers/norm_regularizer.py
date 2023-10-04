@@ -23,6 +23,7 @@ If you use this module please cite us with:
 
 Summary
 -------
+Module containing the class for a norm regularizer.
 """
 from functools import partial
 from typing import Callable, Optional
@@ -30,7 +31,6 @@ from typing import Callable, Optional
 import jax.flatten_util
 import jax.numpy as np
 import jax.tree_util
-from jax import jit
 
 from znnl.regularizers.regularizer import Regularizer
 
@@ -58,9 +58,16 @@ class NormRegularizer(Regularizer):
         ----------
         reg_factor : float
                 Regularization factor.
+        reg_schedule_fn : Optional[Callable]
+                Function to schedule the regularization factor.
+                For more information see the docstring of the parent class.
         norm_fn : Callable
                 Function to compute the norm of the parameters.
-                If None, the default norm is the mean squared error.
+                If None, the default norm is the mean squared error:
+                    norm_fn = lambda x: np.mean(x**2)
+                Choosing a different norm, such as the L1 norm, can be done by
+                passing the function:
+                    norm_fn = lambda x: np.mean(np.abs(x))
         """
         super().__init__(reg_factor, reg_schedule_fn)
 
@@ -79,6 +86,7 @@ class NormRegularizer(Regularizer):
         kwargs : dict
                 Additional arguments.
                 Individual regularizers can define their own arguments.
+                For more information see the docstring of the parent class.
 
         Returns
         -------

@@ -23,6 +23,7 @@ If you use this module please cite us with:
 
 Summary
 -------
+Module containing the abstract class for a regularizer.
 """
 import logging
 from abc import ABC
