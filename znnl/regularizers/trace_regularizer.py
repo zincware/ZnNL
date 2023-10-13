@@ -30,6 +30,7 @@ from typing import Callable
 import jax.flatten_util
 import jax.tree_util
 
+from znnl.models.jax_model import JaxModel
 from znnl.regularizers.regularizer import Regularizer
 
 
@@ -61,19 +62,22 @@ class TraceRegularizer(Regularizer):
         super().__init__(reg_factor, reg_schedule_fn)
 
     def _calculate_regularization(
-        self, apply_fn: Callable, params: dict, batch: dict, epoch: int
+        self, model: JaxModel, params: dict, batch: dict, **kwargs
     ) -> float:
         """
-        Call function of the trace regularizer class.
+        Calculate the regularization contribution to the loss using the trace of the
+        parameters.
 
         Parameters
         ----------
-        apply_fn : Callable
-                Function to apply the model to inputs.
+        model : JaxModel
+                Model to regularize.
         params : dict
                 Parameters of the model.
         batch : dict
                 Batch of data.
+        kwargs : dict
+                Additional arguments.
 
         Returns
         -------
@@ -81,7 +85,7 @@ class TraceRegularizer(Regularizer):
                 Loss contribution from the regularizer.
         """
         # Compute squared gradient of shape=(batch_size, n_outputs, params)
-        grads = jax.jacrev(apply_fn)(params, batch["inputs"])
+        grads = jax.jacrev(model.apply)(params, batch["inputs"])
         # Square the gradients and take the mean over the batch
         squared_grads = jax.flatten_util.ravel_pytree(grads)[0] ** 2
         reg_loss = self.reg_factor * squared_grads.mean()

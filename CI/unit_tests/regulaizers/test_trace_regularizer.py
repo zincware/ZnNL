@@ -57,9 +57,9 @@ class Network(nn.Module):
         return x
 
 
-class TestNormRegularizer:
+class TestTraceRegularizer:
     """
-    Unit test suite for the norm regularizer class.
+    Unit test suite for the trace regularizer class.
     """
 
     @classmethod
@@ -76,6 +76,7 @@ class TestNormRegularizer:
             optimizer=optax.adam(learning_rate=0.001),
             input_shape=(1, 1),
             seed=key,
+            batch_size=3,
         )
         return nt_model
 
@@ -91,28 +92,16 @@ class TestNormRegularizer:
             seed=key,
         )
         return flax_model
-    
-    @classmethod
-    def setup_data(cls):
-        """
-        Create data for the tests.
-        """
-        key1, key2 = random.split(random.PRNGKey(0), 2)
-        # x = random.normal(key1, (3, 1))
-        # y = random.normal(key2, (3, 1))
-        x = np.ones((3, 1))
-        y = np.zeros((3, 1))
-        cls.train_ds = {"inputs": x, "targets": y}
-        cls.test_ds = {"inputs": x, "targets": y}
+
 
     def test_constructor(self):
         """
         Test the constructor of the norm regularizer class.
         """
-        regularizer = NormRegularizer(reg_factor=1e-2)
+        regularizer = TraceRegularizer(reg_factor=1e-2)
         assert regularizer.reg_factor == 1e-2
 
-        regularizer = NormRegularizer(reg_factor=1e-4)
+        regularizer = TraceRegularizer(reg_factor=1e-4)
         assert regularizer.reg_factor == 1e-4
 
     def test_calculate_regularization(self):
@@ -128,39 +117,36 @@ class TestNormRegularizer:
         nt_model = self.create_nt_model(key)
         flax_model = self.create_flax_model(key)
 
-        nt_params = jax.tree_util.tree_map(
-            lambda x: jax.numpy.ones_like(x), nt_model.model_state.params
-        )
-        nt_model.model_state = TrainState.create(
-            apply_fn=nt_model.apply_fn, params=nt_params, tx=nt_model.optimizer
-        )
-
-        flax_params = jax.tree_util.tree_map(
-            lambda x: jax.numpy.ones_like(x), flax_model.model_state.params
-        )
-        flax_model.model_state = TrainState.create(
-            apply_fn=flax_model.apply_fn, params=flax_params, tx=flax_model.optimizer
-        )
-
-        # Test the default norm (mean squared norm).
-        regularizer = TraceRegularizer(reg_factor=1.0)
-        nt_norm = regularizer(
-            nt_model.apply_fn, nt_model.model_state.params, batch=self.train_ds, epoch=1
-        )
-        assert nt_norm == 4.0
-        flax_norm = regularizer(
-            flax_model.apply_fn, flax_model.model_state.params, batch=self.train_ds, epoch=1
-        )
-        assert flax_norm == 4.0
+        x = np.ones((3, 1))
+        y = np.zeros((3, 1))
+        batch = {"inputs": x, "targets": y}
 
         regularizer = TraceRegularizer(reg_factor=1.0)
-        nt_norm = regularizer(
-            nt_model.apply_fn, nt_model.model_state.params, batch=None, epoch=1
-        )
-        print(nt_norm)
-        # assert nt_norm == 2.0
-        # flax_norm = regularizer(
-        #     flax_model.apply_fn, flax_model.model_state.params, batch=None, epoch=1
-        # )
-        # assert flax_norm == 2.0
 
+        # Calculate norm from regularizer
+        ntk_norm_regularizer = regularizer(
+            model=nt_model, params=nt_model.model_state.params, batch=batch, epoch=1
+        )
+        # Calculate norm from NTK
+        ntk = nt_model.compute_ntk(
+            batch["inputs"], infinite=False
+        )["empirical"]
+        num_parameters = jax.flatten_util.ravel_pytree(nt_model.model_state.params)[0].shape[0]
+        normed_ntk = ntk / num_parameters
+        diag_ntk = np.diagonal(normed_ntk)
+        mean_trace = np.mean(diag_ntk)
+        assert mean_trace == ntk_norm_regularizer
+
+        # Calculate norm from regularizer
+        flax_norm_regularizer = regularizer(
+            model=flax_model, params=flax_model.model_state.params, batch=batch, epoch=1
+        )
+        # Calculate norm from NTK
+        ntk = flax_model.compute_ntk(
+                        batch["inputs"], infinite=False
+                    )['empirical']
+        num_parameters = jax.flatten_util.ravel_pytree(flax_model.model_state.params)[0].shape[0]
+        normed_ntk = ntk / num_parameters
+        diag_ntk = np.diagonal(normed_ntk)
+        mean_trace = np.mean(diag_ntk)
+        assert mean_trace == flax_norm_regularizer

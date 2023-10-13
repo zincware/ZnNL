@@ -25,13 +25,13 @@ Summary
 -------
 Module containing the class for a norm regularizer.
 """
-from functools import partial
 from typing import Callable, Optional
 
 import jax.flatten_util
 import jax.numpy as np
 import jax.tree_util
 
+from znnl.models.jax_model import JaxModel
 from znnl.regularizers.regularizer import Regularizer
 
 
@@ -75,9 +75,10 @@ class NormRegularizer(Regularizer):
         if self.norm_fn is None:
             self.norm_fn = lambda x: np.mean(x**2)
 
-    def _calculate_regularization(self, params: dict, **kwargs: dict) -> float:
+    def _calculate_regularization(self, params: dict, **kwargs) -> float:
         """
         Calculate the regularization contribution to the loss using the norm of the
+        parameters.
 
         Parameters
         ----------
@@ -85,8 +86,6 @@ class NormRegularizer(Regularizer):
                 Parameters of the model.
         kwargs : dict
                 Additional arguments.
-                Individual regularizers can define their own arguments.
-                For more information see the docstring of the parent class.
 
         Returns
         -------

@@ -29,6 +29,8 @@ import logging
 from abc import ABC
 from typing import Callable, Optional
 
+from znnl.models.jax_model import JaxModel
+
 logger = logging.getLogger(__name__)
 
 
@@ -95,9 +97,11 @@ class Regularizer(ABC):
         """
         return reg_factor
 
-    def _calculate_regularization(self, params: dict, **kwargs: dict) -> float:
+    def _calculate_regularization(self, params: dict, **kwargs) -> float:
         """
         Calculate the regularization contribution to the loss.
+        Individual regularizers should implement this function.
+        For more information see the docstring of the child class.
 
         Parameters
         ----------
@@ -106,8 +110,8 @@ class Regularizer(ABC):
         kwargs : dict
                 Additional arguments.
                 Individual regularizers can utilize arguments from the set:
-                    apply_fn : Callable
-                            Function to apply the model to inputs.
+                    model : JaxModel
+                            Model to regularize.
                     batch : dict
                             Batch of data.
                     epoch : int
@@ -120,18 +124,14 @@ class Regularizer(ABC):
         """
         raise NotImplementedError
 
-    def __call__(
-        self, apply_fn: Callable, params: dict, batch: dict, epoch: int
-    ) -> float:
+    def __call__(self, model: JaxModel, params: dict, batch: dict, epoch: int) -> float:
         """
         Call function of the regularizer class.
 
         Parameters
         ----------
-        apply_fn : Callable
-                Function to apply the model to inputs.
-        params : dict
-                Parameters of the model.
+        model : JaxModel
+                Model to regularize.
         batch : dict
                 Batch of data.
         epoch : int
@@ -144,5 +144,5 @@ class Regularizer(ABC):
         """
         self.reg_factor = self.reg_schedule_fn(epoch, self.reg_factor)
         return self.reg_factor * self._calculate_regularization(
-            apply_fn=apply_fn, params=params, batch=batch, epoch=epoch
+            model=model, params=params, batch=batch, epoch=epoch
         )

@@ -217,8 +217,8 @@ class SimpleTraining:
             # Add gradient regularization
             if self.regularizer:
                 reg_loss = self.regularizer(
-                    apply_fn=self.model.apply, 
-                    params=params, 
+                    model=self.model, 
+                    params=params,
                     batch=batch, 
                     epoch=self.epoch
                 )
