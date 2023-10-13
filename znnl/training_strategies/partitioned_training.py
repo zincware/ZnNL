@@ -279,7 +279,7 @@ class PartitionedTraining(SimpleTraining):
 
         for i in loading_bar:
             self.epoch = i
-            
+
             # Update the recorder properties
             if self.recorders is not None:
                 for item in self.recorders:

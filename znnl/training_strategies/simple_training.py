@@ -37,11 +37,11 @@ from tqdm import trange
 from znnl.accuracy_functions.accuracy_function import AccuracyFunction
 from znnl.models.jax_model import JaxModel
 from znnl.optimizers.trace_optimizer import TraceOptimizer
+from znnl.regularizers import Regularizer
 from znnl.training_recording import JaxRecorder
 from znnl.training_strategies.recursive_mode import RecursiveMode
 from znnl.training_strategies.training_decorator import train_func
 from znnl.utils.prng import PRNGKey
-from znnl.regularizers import Regularizer
 
 logger = logging.getLogger(__name__)
 
@@ -217,10 +217,7 @@ class SimpleTraining:
             # Add gradient regularization
             if self.regularizer:
                 reg_loss = self.regularizer(
-                    model=self.model, 
-                    params=params,
-                    batch=batch, 
-                    epoch=self.epoch
+                    model=self.model, params=params, batch=batch, epoch=self.epoch
                 )
                 loss += reg_loss
             return loss, inner_predictions
@@ -384,7 +381,7 @@ class SimpleTraining:
         train_accuracy = []
         for i in loading_bar:
             self.epoch = i
-            
+
             # Update the recorder properties
             if self.recorders is not None:
                 for item in self.recorders:

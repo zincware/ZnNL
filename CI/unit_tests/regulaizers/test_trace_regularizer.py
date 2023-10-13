@@ -36,8 +36,8 @@ import jax.numpy as np
 import optax
 from flax import linen as nn
 from flax.training.train_state import TrainState
-from neural_tangents import stax
 from jax import random
+from neural_tangents import stax
 
 from znnl.models.flax_model import FlaxModel
 from znnl.models.nt_model import NTModel
@@ -93,7 +93,6 @@ class TestTraceRegularizer:
         )
         return flax_model
 
-
     def test_constructor(self):
         """
         Test the constructor of the norm regularizer class.
@@ -128,10 +127,10 @@ class TestTraceRegularizer:
             model=nt_model, params=nt_model.model_state.params, batch=batch, epoch=1
         )
         # Calculate norm from NTK
-        ntk = nt_model.compute_ntk(
-            batch["inputs"], infinite=False
-        )["empirical"]
-        num_parameters = jax.flatten_util.ravel_pytree(nt_model.model_state.params)[0].shape[0]
+        ntk = nt_model.compute_ntk(batch["inputs"], infinite=False)["empirical"]
+        num_parameters = jax.flatten_util.ravel_pytree(nt_model.model_state.params)[
+            0
+        ].shape[0]
         normed_ntk = ntk / num_parameters
         diag_ntk = np.diagonal(normed_ntk)
         mean_trace = np.mean(diag_ntk)
@@ -142,10 +141,10 @@ class TestTraceRegularizer:
             model=flax_model, params=flax_model.model_state.params, batch=batch, epoch=1
         )
         # Calculate norm from NTK
-        ntk = flax_model.compute_ntk(
-                        batch["inputs"], infinite=False
-                    )['empirical']
-        num_parameters = jax.flatten_util.ravel_pytree(flax_model.model_state.params)[0].shape[0]
+        ntk = flax_model.compute_ntk(batch["inputs"], infinite=False)["empirical"]
+        num_parameters = jax.flatten_util.ravel_pytree(flax_model.model_state.params)[
+            0
+        ].shape[0]
         normed_ntk = ntk / num_parameters
         diag_ntk = np.diagonal(normed_ntk)
         mean_trace = np.mean(diag_ntk)
