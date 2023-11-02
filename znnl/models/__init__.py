@@ -25,7 +25,13 @@ Summary
 -------
 """
 from znnl.models.flax_model import FlaxModel
+from znnl.models.huggingface_flax_model import HuggingFaceFlaxModel
 from znnl.models.jax_model import JaxModel
 from znnl.models.nt_model import NTModel
 
-__all__ = [JaxModel.__name__, FlaxModel.__name__, NTModel.__name__]
+__all__ = [
+    JaxModel.__name__,
+    FlaxModel.__name__,
+    NTModel.__name__,
+    HuggingFaceFlaxModel.__name__,
+]

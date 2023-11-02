@@ -24,7 +24,7 @@ If you use this module please cite us with:
 Summary
 -------
 """
-from typing import Callable, Sequence, Union
+from typing import TYPE_CHECKING, Callable, Optional, Sequence, Union
 
 import jax
 import jax.numpy as np
@@ -32,6 +32,7 @@ import jax.random
 import neural_tangents as nt
 import optax
 from flax.training.train_state import TrainState
+from transformers import FlaxPreTrainedModel
 
 from znnl.optimizers.trace_optimizer import TraceOptimizer
 from znnl.utils.prng import PRNGKey
@@ -45,10 +46,11 @@ class JaxModel:
     def __init__(
         self,
         optimizer: Union[Callable, TraceOptimizer],
-        input_shape: tuple,
-        seed: int = None,
+        input_shape: Optional[tuple] = None,
+        seed: Optional[int] = None,
         ntk_batch_size: int = 10,
         trace_axes: Union[int, Sequence[int]] = (-1,),
+        pre_built_model: Union[None, FlaxPreTrainedModel] = None,
     ):
         """
         Construct a znrnd model.
@@ -57,27 +59,39 @@ class JaxModel:
         optimizer : Callable
                 optimizer to use in the training. OpTax is used by default and
                 cross-compatibility is not assured.
-        input_shape : tuple
-                Shape of the NN input.
+        input_shape : Optional[tuple]
+                Shape of the NN input. Required if no pre-built model is passed.
         seed : int, default None
                 Random seed for the RNG. Uses a random int if not specified.
-        ntk_batch_size : int, default 10
+        ntk_batch_size : Optional[int], default 10
                 Batch size to use in the NTK computation.
         trace_axes : Union[int, Sequence[int]]
                 Tracing over axes of the NTK.
                 The default value is trace_axes(-1,), which reduces the NTK to a tensor
                 of rank 2.
                 For a full NTK set trace_axes=().
+        pre_built_model : Union[None, FlaxPreTrainedModel] (default = None)
+                Pre-built model to use instead of building one from scratch here.
+                So far, this is only implemented for Hugging Face flax models.
         """
         self.optimizer = optimizer
         self.input_shape = input_shape
+
+        # Input shape is required if no full model is passed.
+        if pre_built_model is None and input_shape is None:
+            raise ValueError(
+                "Input shape must be specified if no pre-built model is passed."
+                "Model is yet to be constructed."
+            )
 
         # Initialized in self.init_model
         self.rng = None
 
         # initialize the model state
-        self.model_state = None
-        self.init_model(seed)
+        if pre_built_model is None:
+            self.init_model(seed=seed)
+        else:
+            self.model_state = self._create_train_state(params=pre_built_model.params)
 
         # Prepare NTK calculation
         self.empirical_ntk = nt.batch(
@@ -104,11 +118,10 @@ class JaxModel:
                 Define the bias initialization.
         """
         self.rng = PRNGKey(seed)
-        self.model_state = self._create_train_state(kernel_init, bias_init)
+        params = self._init_params(kernel_init, bias_init)
+        self.model_state = self._create_train_state(params)
 
-    def _create_train_state(
-        self, kernel_init: Callable = None, bias_init: Callable = None
-    ) -> TrainState:
+    def _create_train_state(self, params: dict) -> TrainState:
         """
         Create a training state of the model.
         Returns
@@ -119,8 +132,6 @@ class JaxModel:
         TODO: Make the TrainState class passable by the user as it can track custom
               model properties.
         """
-        params = self._init_params(kernel_init, bias_init)
-
         # Set dummy optimizer for case of trace optimizer.
         if isinstance(self.optimizer, TraceOptimizer):
             optimizer = optax.sgd(1.0)
