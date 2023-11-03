@@ -24,6 +24,7 @@ If you use this module please cite us with:
 Summary
 -------
 """
+
 import numpy as np
 import plotly.graph_objects as go
 from sklearn.manifold import TSNE

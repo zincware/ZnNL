@@ -24,6 +24,7 @@ If you use this module please cite us with:
 Summary
 -------
 """
+
 from znnl.loss_functions.absolute_angle_difference import AngleDistanceLoss
 from znnl.loss_functions.cosine_distance import CosineDistanceLoss
 from znnl.loss_functions.cross_entropy_loss import CrossEntropyLoss

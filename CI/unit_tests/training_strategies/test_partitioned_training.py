@@ -25,6 +25,7 @@ Summary
 -------
 Unit tests for the partitioned training class.
 """
+
 import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"

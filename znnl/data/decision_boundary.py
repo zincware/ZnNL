@@ -25,6 +25,7 @@ Summary
 -------
 Data generator for decision boundary problems.
 """
+
 import jax
 import jax.numpy as np
 import matplotlib.pyplot as plt

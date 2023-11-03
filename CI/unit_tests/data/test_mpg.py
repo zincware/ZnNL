@@ -25,6 +25,7 @@ Summary
 -------
 Test MPG generator.
 """
+
 from znnl.data import MPGDataGenerator
 
 

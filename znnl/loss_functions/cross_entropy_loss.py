@@ -24,6 +24,7 @@ If you use this module please cite us with:
 Summary
 -------
 """
+
 import optax
 
 from znnl.loss_functions.simple_loss import SimpleLoss

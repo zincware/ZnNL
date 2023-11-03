@@ -24,6 +24,7 @@ If you use this module please cite us with:
 Summary
 -------
 """
+
 import jax.numpy as np
 
 from znnl.distance_metrics.cosine_distance import CosineDistance

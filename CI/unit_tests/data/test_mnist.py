@@ -25,6 +25,7 @@ Summary
 -------
 Test MNIST generator.
 """
+
 from znnl.data import MNISTGenerator
 
 

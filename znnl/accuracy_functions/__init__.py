@@ -24,6 +24,7 @@ If you use this module please cite us with:
 Summary
 -------
 """
+
 from znnl.accuracy_functions.accuracy_function import AccuracyFunction
 from znnl.accuracy_functions.label_accuracy import LabelAccuracy
 

@@ -25,6 +25,7 @@ Summary
 -------
 Unit test for the decision boundary.
 """
+
 import jax.numpy as np
 import numpy as onp
 from pytest import approx
