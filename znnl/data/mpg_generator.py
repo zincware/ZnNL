@@ -1,6 +1,7 @@
 """
 Data generator for the MPG data.
 """
+
 import pandas as pd
 
 from znnl.data.data_generator import DataGenerator

@@ -24,6 +24,7 @@ If you use this module please cite us with:
 Summary
 -------
 """
+
 from znnl.optimizers.trace_optimizer import TraceOptimizer
 
 __all__ = [TraceOptimizer.__name__]

@@ -24,6 +24,7 @@ If you use this module please cite us with:
 Summary
 -------
 """
+
 import znnl.distance_metrics.mahalanobis_distance as mahalanobis
 from znnl.loss_functions.simple_loss import SimpleLoss
 

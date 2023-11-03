@@ -24,6 +24,7 @@ If you use this module please cite us with:
 Summary
 -------
 """
+
 import jax.nn as nn
 import jax.numpy as np
 import plotly.graph_objects as go

@@ -25,7 +25,6 @@ Summary
 -------
 """
 
-
 class Agent:
     """
     Parent class of the data selection agents.

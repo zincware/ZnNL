@@ -24,6 +24,7 @@ If you use this module please cite us with:
 Summary
 -------
 """
+
 from znnl.visualization.tsne_visualizer import TSNEVisualizer
 
 __all__ = [TSNEVisualizer.__name__]

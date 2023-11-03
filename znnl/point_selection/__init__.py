@@ -24,6 +24,7 @@ If you use this module please cite us with:
 Summary
 -------
 """
+
 from znnl.point_selection.greedy_selection import GreedySelection
 from znnl.point_selection.point_selection import PointSelection
 
