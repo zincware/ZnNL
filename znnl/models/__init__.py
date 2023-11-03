@@ -24,6 +24,7 @@ If you use this module please cite us with:
 Summary
 -------
 """
+
 from znnl.models.flax_model import FlaxModel
 from znnl.models.jax_model import JaxModel
 from znnl.models.nt_model import NTModel

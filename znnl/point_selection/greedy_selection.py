@@ -24,6 +24,7 @@ If you use this module please cite us with:
 Summary
 -------
 """
+
 from typing import List, Union
 
 import jax.numpy as np

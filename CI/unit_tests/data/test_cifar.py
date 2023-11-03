@@ -25,6 +25,7 @@ Summary
 -------
 Test CIFAR10 generator.
 """
+
 from znnl.data import CIFAR10Generator
 
 

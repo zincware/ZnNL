@@ -24,6 +24,7 @@ If you use this module please cite us with:
 Summary
 -------
 """
+
 from znnl.utils.matrix_utils import compute_eigensystem, normalize_gram_matrix
 from znnl.utils.prng import PRNGKey
 

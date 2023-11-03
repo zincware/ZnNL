@@ -24,6 +24,7 @@ If you use this module please cite us with:
 Summary
 -------
 """
+
 from znnl.distance_metrics.angular_distance import AngularDistance
 from znnl.distance_metrics.cosine_distance import CosineDistance
 from znnl.distance_metrics.distance_metric import DistanceMetric

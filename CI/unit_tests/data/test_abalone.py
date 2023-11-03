@@ -25,6 +25,7 @@ Summary
 -------
 Test Abaone generator.
 """
+
 from znnl.data import AbaloneDataGenerator
 
 

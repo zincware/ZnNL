@@ -25,6 +25,7 @@ Summary
 -------
 Test the RND class.
 """
+
 import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"

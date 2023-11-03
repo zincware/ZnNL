@@ -24,6 +24,7 @@ If you use this module please cite us with:
 Summary
 -------
 """
+
 from znnl.data.abalone import AbaloneDataGenerator
 from znnl.data.cifar10 import CIFAR10Generator
 from znnl.data.confined_particles import ConfinedParticles

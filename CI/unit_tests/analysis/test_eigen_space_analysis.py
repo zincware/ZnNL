@@ -24,6 +24,7 @@ If you use this module please cite us with:
 Summary
 -------
 """
+
 import jax.random as random
 from jax.lib import xla_bridge
 
