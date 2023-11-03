@@ -25,7 +25,7 @@ Summary
 -------
 """
 
-from typing import TYPE_CHECKING, Callable, Optional, Sequence, Union
+from typing import Callable, Optional, Sequence, Union
 
 import jax
 import jax.numpy as np
