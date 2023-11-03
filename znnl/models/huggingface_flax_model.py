@@ -25,13 +25,14 @@ Summary
 -------
 Module for using a Flax model from Hugging Face in ZnNL.
 """
+
 import logging
 from typing import Callable, List, Sequence, Union
 
 import jax
 import jax.numpy as np
 from flax import linen as nn
-from transformers import FlaxPreTrainedModel, ResNetConfig
+from transformers import FlaxPreTrainedModel
 
 from znnl.models.jax_model import JaxModel
 

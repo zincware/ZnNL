@@ -24,6 +24,7 @@ If you use this module please cite us with:
 Summary
 -------
 """
+
 from typing import TYPE_CHECKING, Callable, Optional, Sequence, Union
 
 import jax
@@ -77,15 +78,15 @@ class JaxModel:
         self.optimizer = optimizer
         self.input_shape = input_shape
 
+        # Initialized in self.init_model
+        self.rng = None
+
         # Input shape is required if no full model is passed.
         if pre_built_model is None and input_shape is None:
             raise ValueError(
                 "Input shape must be specified if no pre-built model is passed."
                 "Model is yet to be constructed."
             )
-
-        # Initialized in self.init_model
-        self.rng = None
 
         # initialize the model state
         if pre_built_model is None:

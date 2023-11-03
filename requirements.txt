@@ -13,7 +13,7 @@ tensorflow_probability
 scipy
 scikit-learn
 jaxlib
-jax
+# jax
 plotly
 flax
 tqdm
@@ -24,3 +24,4 @@ isort
 tensorflow
 pyyaml
 jupyter
+transformers
