@@ -41,6 +41,7 @@ from znnl.optimizers.trace_optimizer import TraceOptimizer
 from znnl.training_recording import JaxRecorder
 from znnl.training_strategies.recursive_mode import RecursiveMode
 from znnl.training_strategies.training_decorator import train_func
+from znnl.training_strategies.training_steps import train_step
 from znnl.utils.prng import PRNGKey
 
 logger = logging.getLogger(__name__)
@@ -115,6 +116,8 @@ class SimpleTraining:
                 item.accuracy_fn = accuracy_fn
                 item.instantiate_recorder()
 
+        self._train_step = train_step
+
     def _compute_metrics(self, predictions: np.ndarray, targets: np.ndarray):
         """
         Compute the current metrics of the training.
@@ -182,43 +185,43 @@ class SimpleTraining:
 
         return summary
 
-    def _train_step(self, state: TrainState, batch: dict):
-        """
-        Train a single step.
+    # def _train_step(self, state: TrainState, batch: dict):
+    #     """
+    #     Train a single step.
 
-        Parameters
-        ----------
-        state : TrainState
-                Current state of the neural network.
-        batch : dict
-                Batch of data to train on.
+    #     Parameters
+    #     ----------
+    #     state : TrainState
+    #             Current state of the neural network.
+    #     batch : dict
+    #             Batch of data to train on.
 
-        Returns
-        -------
-        state : dict
-                Updated state of the neural network.
-        metrics : dict
-                Metrics for the current model.
-        """
+    #     Returns
+    #     -------
+    #     state : dict
+    #             Updated state of the neural network.
+    #     metrics : dict
+    #             Metrics for the current model.
+    #     """
 
-        def loss_fn(params):
-            """
-            helper loss computation
-            """
-            inner_predictions = self.model.apply(params, batch["inputs"])
-            loss = self.loss_fn(inner_predictions, batch["targets"])
-            return loss, inner_predictions
+    #     def loss_fn(params):
+    #         """
+    #         helper loss computation
+    #         """
+    #         inner_predictions = self.model.apply(params, batch["inputs"])
+    #         loss = self.loss_fn(inner_predictions, batch["targets"])
+    #         return loss, inner_predictions
 
-        grad_fn = jax.value_and_grad(loss_fn, has_aux=True)
+    #     grad_fn = jax.value_and_grad(loss_fn, has_aux=True)
 
-        (_, predictions), grads = grad_fn(state.params)
+    #     (_, predictions), grads = grad_fn(state.params)
 
-        state = state.apply_gradients(grads=grads)  # in place state update.
-        metrics = self._compute_metrics(
-            predictions=predictions, targets=batch["targets"]
-        )
+    #     state = state.apply_gradients(grads=grads)  # in place state update.
+    #     metrics = self._compute_metrics(
+    #         predictions=predictions, targets=batch["targets"]
+    #     )
 
-        return state, metrics
+    #     return state, metrics
 
     def _train_epoch(
         self, state: TrainState, train_ds: dict, batch_size: int
@@ -258,7 +261,12 @@ class SimpleTraining:
         steps_per_epoch = train_ds_size // batch_size
 
         if train_ds_size == 1:
-            state, metrics = self._train_step(state, train_ds)
+            state, metrics = self._train_step(
+                state=state,
+                batch=train_ds,
+                loss_fn=self.loss_fn,
+                compute_metrics_fn=self._compute_metrics,
+            )
             batch_metrics = [metrics]
 
         else:
@@ -270,7 +278,12 @@ class SimpleTraining:
             batch_metrics = []
             for permutation in permutations:
                 batch = {k: v[permutation, ...] for k, v in train_ds.items()}
-                state, metrics = self._train_step(state, batch)
+                state, metrics = self._train_step(
+                    state=state,
+                    batch=batch,
+                    loss_fn=self.loss_fn,
+                    compute_metrics_fn=self._compute_metrics,
+                )
                 batch_metrics.append(metrics)
 
         # Get the metrics off device for printing.
@@ -385,7 +398,9 @@ class SimpleTraining:
             state, train_metrics = self._train_epoch(
                 state, train_ds, batch_size=batch_size
             )
-            self.review_metric = self._evaluate_model(state.params, test_ds)
+            self.review_metric = self._evaluate_model(
+                {"params": state.params, "batch_stats": state.batch_stats}, test_ds
+            )
             train_losses.append(train_metrics["loss"])
 
             # Update the loading bar

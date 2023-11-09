@@ -26,7 +26,7 @@ Summary
 """
 
 import logging
-from typing import Callable, Sequence, Union
+from typing import Any, Callable, Sequence, Union
 
 import jax
 import jax.numpy as np
@@ -51,6 +51,7 @@ class NTModel(JaxModel):
         nt_module: serial = None,
         batch_size: int = 10,
         trace_axes: Union[int, Sequence[int]] = (-1,),
+        store_on_device: bool = True,
         seed: int = None,
     ):
         """
@@ -72,6 +73,9 @@ class NTModel(JaxModel):
                 The default value is trace_axes(-1,), which reduces the NTK to a tensor
                 of rank 2.
                 For a full NTK set trace_axes=().
+        store_on_device : bool, default True
+                Whether to store the NTK on the device or not.
+                This should be set False for large NTKs that do not fit in GPU memory.
         seed : int, default None
                 Random seed for the RNG. Uses a random int if not specified.
         """
@@ -86,10 +90,12 @@ class NTModel(JaxModel):
             seed=seed,
             trace_axes=trace_axes,
             ntk_batch_size=batch_size,
+            store_on_device=store_on_device,
         )
 
     def _init_params(self, kernel_init: Callable = None, bias_init: Callable = None):
-        """Initialize a state for the model parameters.
+        """
+        Initialize a state for the model parameters.
 
         Parameters
         ----------
@@ -116,7 +122,8 @@ class NTModel(JaxModel):
         return params
 
     def apply(self, params: dict, inputs: np.ndarray):
-        """Apply the model to a feature vector.
+        """
+        Apply the model to a feature vector.
 
         Parameters
         ----------
@@ -129,7 +136,24 @@ class NTModel(JaxModel):
         -------
         Output of the model.
         """
-        return self.apply_fn(params, inputs)
+        return self.apply_fn(params["params"], inputs)
+
+    def train_apply_fn(self, params: dict, inputs: np.ndarray):
+        """
+        Apply function used for training the model.
+
+        Parameters
+        ----------
+        params: dict
+                Contains the model parameters to use for the model computation.
+        inputs : np.ndarray
+                Feature vector on which to apply the model.
+
+        Returns
+        -------
+        Output of the model.
+        """
+        return self.apply_fn(params["params"], inputs)
 
     def _ntk_apply_fn(self, params: dict, inputs: np.ndarray):
         """
@@ -146,4 +170,4 @@ class NTModel(JaxModel):
         -------
         The apply function used in the NTK computation.
         """
-        return self.apply_fn(params, inputs)
+        return self.apply_fn(params["params"], inputs)
