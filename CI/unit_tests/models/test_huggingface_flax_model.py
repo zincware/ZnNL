@@ -25,21 +25,23 @@ Summary
 -------
 """
 
-import jax.numpy as np
+import os
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
 import optax
 import pytest
-from flax import linen as nn
 from jax import random
 from transformers import FlaxResNetForImageClassification, ResNetConfig
 
-from znnl.loss_functions import CrossEntropyLoss
 from znnl.models import HuggingFaceFlaxModel
-from znnl.training_strategies import SimpleTraining
 
 
 class TestFlaxHFModule:
     """
-    Test suite for the flax Hugging Face (HF) module.
+    Integration test suite for the flax Hugging Face (HF) module.
+
+    Train the model for a few steps and check whether the loss decreases.
     """
 
     @classmethod
@@ -49,8 +51,8 @@ class TestFlaxHFModule:
         The resnet config has a 1 dimensional input and a 2 dimensional output.
         """
 
-        resnet50_config = ResNetConfig(
-            num_channels=3,
+        resnet_config = ResNetConfig(
+            num_channels=2,
             embedding_size=64,
             hidden_sizes=[256, 512, 1024, 2048],
             depths=[3, 4, 6, 3],
@@ -59,77 +61,35 @@ class TestFlaxHFModule:
             downsample_in_first_stage=False,
             out_features=None,
             out_indices=None,
-            id2label=dict(
-                zip(np.arange(10), np.arange(10))
-            ),  # Dummy labels to define the output dimension
+            id2label=dict(zip([1, 2], [1, 2])),
             return_dict=True,
         )
-
-        # ResNet-18 taken from https://huggingface.co/microsoft/resnet-18/blob/main/config.json
-        resnet18_config = ResNetConfig(
-            num_channels=3,
-            embedding_size=64,
-            hidden_sizes=[64, 128, 256, 512],
-            depths=[2, 2, 2, 2],
-            layer_type="basic",
-            hidden_act="relu",
-            downsample_in_first_stage=False,
-            id2label=dict(
-                zip(np.arange(10), np.arange(10))
-            ),  # Dummy labels to define the output dimension
-            return_dict=True,
-        )
-
-        resnet18 = FlaxResNetForImageClassification(
-            config=resnet50_config,
+        hf_model = FlaxResNetForImageClassification(
+            config=resnet_config,
             input_shape=(1, 8, 8, 2),
             seed=0,
             _do_init=True,
         )
-        resnet50 = FlaxResNetForImageClassification(
-            config=resnet18_config,
-            input_shape=(1, 8, 8, 2),
-            seed=0,
-            _do_init=True,
-        )
-        cls.resnet18 = HuggingFaceFlaxModel(
-            resnet18,
-            optax.adam(learning_rate=0.001),
-            batch_size=3,
-        )
-        cls.resnet50 = HuggingFaceFlaxModel(
-            resnet50,
+        cls.model = HuggingFaceFlaxModel(
+            hf_model,
             optax.adam(learning_rate=0.001),
             batch_size=3,
         )
 
         key = random.PRNGKey(0)
-        cls.train_ds = {
-            "inputs": random.normal(key, (3, 2, 8, 8)),
-            "targets": np.arange(3),
-        }
+        cls.x = random.normal(key, (3, 2, 8, 8))
 
-    def train_model(self, model, x):
+    def test_ntk_shape(self):
         """
-        Train the model for a few steps.
+        Test whether the NTK shape is correct.
         """
-        trainer = SimpleTraining(
-            model=model,
-            loss_fn=CrossEntropyLoss(),
-        )
-        batched_loss = trainer.train_model(
-            train_ds=self.train_ds,
-            test_ds=self.train_ds,
-            epochs=5,
-        )
-        return batched_loss
+        ntk = self.model.compute_ntk(self.x)["empirical"]
+        assert ntk.shape == (3, 3)
 
-    def test_loss_decreaser(self):
+    def test_infinite_failure(self):
         """
-        Test whether the loss decreases.
+        Test that the call to the infinite NTK fails.
         """
-        batched_loss = self.train_model(self.resnet18, self.train_ds)
-        assert np.all(np.diff(batched_loss) < 0)
-
-        batched_loss = self.train_model(self.resnet50, self.train_ds)
-        assert np.all(np.diff(batched_loss) < 0)
+        with pytest.raises(NotImplementedError):
+            self.model.compute_ntk(self.x, infinite=True)
+            

@@ -135,12 +135,9 @@ class TrainStep:
 
         grad_fn = jax.value_and_grad(loss_fn_helper, has_aux=True)
 
-        (_, (predictions, batch_stats)), grads = grad_fn(state.params)
+        (_, (predictions, updates)), grads = grad_fn(state.params)
 
-        state = state.apply_gradients(grads=grads)  # in place state update.
-        state = state.replace(
-            batch_stats=batch_stats["batch_stats"]
-        )  # update batch stats
+        state = state.apply_gradients(grads=grads, batch_stats=updates["batch_stats"])
 
         metrics = compute_metrics_fn(predictions=predictions, targets=batch["targets"])
 
