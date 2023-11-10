@@ -456,7 +456,9 @@ class LossAwareReservoir(SimpleTraining):
             state, train_metrics = self._train_epoch(
                 state=state, train_ds=train_ds, batch_size=batch_size
             )
-            self.review_metric = self._evaluate_model(state.params, test_ds)
+            self.review_metric = self._evaluate_model(
+                {"params": state.params, "batch_stats": state.batch_stats}, test_ds
+            )
             train_losses.append(train_metrics["loss"])
 
             # Update the loading bar

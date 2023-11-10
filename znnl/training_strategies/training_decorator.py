@@ -92,6 +92,17 @@ def train_func(train_fn: Callable):
         Output of the train_fn. A more detailed documentation can be found in the used
         training strategy.
         """
+        # Check whether a model is available
+        if trainer.model is None:
+            raise ValueError("No model available. Please initialize a model first.")
+        # Check whether the model has been set up properly
+        if trainer._train_step is None:
+            raise ValueError(
+                "The model has not been set up properly."
+                "If no model is used in the initialization of the training strategy,"
+                "please set up the model with the set_model method."
+            )
+
         # Make args to kwargs to enable easy access
         # Get all possible args
         all_args = list(inspect.signature(train_fn).parameters)
