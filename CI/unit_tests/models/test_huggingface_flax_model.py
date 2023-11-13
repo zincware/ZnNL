@@ -92,4 +92,3 @@ class TestFlaxHFModule:
         """
         with pytest.raises(NotImplementedError):
             self.model.compute_ntk(self.x, infinite=True)
-            
