@@ -74,7 +74,8 @@ class TestFlaxHFModule:
             embedding_size=64,
             hidden_sizes=[64, 128, 256, 512],
             depths=[2, 2, 2, 2],
-            layer_type="basic",
+            layer_type="bottleneck",
+            # layer_type="basic",
             hidden_act="relu",
             downsample_in_first_stage=False,
             id2label={
