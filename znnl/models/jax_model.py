@@ -25,9 +25,8 @@ Summary
 -------
 """
 
-from typing import Any, Callable, Optional, Sequence, Union
-
 from functools import partial
+from typing import Any, Callable, Optional, Sequence, Union
 
 import jax
 import jax.numpy as np
