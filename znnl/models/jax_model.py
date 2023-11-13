@@ -27,6 +27,8 @@ Summary
 
 from typing import Any, Callable, Optional, Sequence, Union
 
+from functools import partial
+
 import jax
 import jax.numpy as np
 import jax.random
@@ -127,6 +129,7 @@ class JaxModel:
             store_on_device=store_on_device,
         )
         self.empirical_ntk_jit = jax.jit(self.empirical_ntk)
+        self.apply_jit = jax.jit(self.apply)
 
     def init_model(
         self,
@@ -279,7 +282,7 @@ class JaxModel:
         -------
         output of the model.
         """
-        return self.apply(
+        return self.apply_jit(
             {
                 "params": self.model_state.params,
                 "batch_stats": self.model_state.batch_stats,
