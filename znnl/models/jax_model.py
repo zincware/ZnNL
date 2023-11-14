@@ -112,7 +112,7 @@ class JaxModel:
         if pre_built_model is None and input_shape is None:
             raise ValueError(
                 "Input shape must be specified if no pre-built model is passed."
-                "Model is yet to be constructed."
+                "Model has not been constructed."
             )
 
         # initialize the model state
