@@ -31,13 +31,31 @@ from typing import Callable
 
 import jax.random
 from flax.training.train_state import TrainState
-from jax import jit, lax
+from jax import jit
 
 logger = logging.getLogger(__name__)
 
 
 class TrainStep:
+    """
+    Train a single step.
+
+    This class is used to train a model for a single step.
+    Performing a step is done by calling the class.
+    It serves the purpose of allowing for models with and without batch statistics.
+    """
+
     def __init__(self, state) -> None:
+        """
+        Constructor of the TrainStep class.
+
+        Utilizes the train state to determine whether batch statistics are used.
+
+        Parameters
+        ----------
+        state : TrainState
+                Current state of the neural network.
+        """
         self.use_batch_stats = state.use_batch_stats
         if self.use_batch_stats:
             self.train_step = self.batch_stat_step
