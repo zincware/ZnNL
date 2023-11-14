@@ -110,14 +110,6 @@ class HuggingFaceFlaxModel(JaxModel):
         -------
         Acts on the data with the model architecture and parameter set.
         """
-        # out = self.apply_fn(
-        #     pixel_values=inputs,
-        #     params={"params": params, "batch_stats": batch_stats},
-        #     train=True,
-        #     return_dict=False,
-        # )
-        # return out.logits
-
         pixel_values = np.transpose(inputs, (0, 2, 3, 1))
 
         # Handle any PRNG if needed
