@@ -25,10 +25,6 @@ Summary
 -------
 """
 
-import os
-
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-
 import jax.numpy as np
 import numpy as np
 import optax

@@ -25,10 +25,6 @@ Summary
 -------
 """
 
-import os
-
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-
 import optax
 import pytest
 from jax import random
