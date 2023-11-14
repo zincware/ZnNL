@@ -98,9 +98,9 @@ def train_func(train_fn: Callable):
         # Check whether the model has been set up properly
         if trainer._train_step is None:
             raise ValueError(
-                "The model has not been set up properly."
+                "No model is available in the training strategy."
                 "If no model is used in the initialization of the training strategy,"
-                "please set up the model with the set_model method."
+                "please set up the model by calling the model.set_model() method."
             )
 
         # Make args to kwargs to enable easy access
