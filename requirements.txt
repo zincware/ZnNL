@@ -24,3 +24,4 @@ isort
 tensorflow
 pyyaml
 jupyter
+transformers

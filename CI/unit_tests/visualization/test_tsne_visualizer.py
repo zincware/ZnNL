@@ -25,6 +25,7 @@ Summary
 -------
 """
 
+
 class TestTSNEVisualizer:
     """
     Test for the tSNE visualizer.

@@ -351,7 +351,12 @@ class LossAwareReservoir(SimpleTraining):
             latest_data = {
                 k: v[-self.latest_points :, ...] for k, v in train_ds.items()
             }
-            state, metrics = self._train_step(state, latest_data)
+            state, metrics = self._train_step(
+                state=state,
+                batch=latest_data,
+                loss_fn=self.loss_fn,
+                compute_metrics_fn=self._compute_metrics,
+            )
             batch_metrics = [metrics]
         else:
             batches_per_epoch = len(self.reservoir) // batch_size
@@ -364,7 +369,12 @@ class LossAwareReservoir(SimpleTraining):
             for permutation in permutations:
                 permutation = self._append_latest_points(permutation)
                 batch = {k: v[permutation, ...] for k, v in train_ds.items()}
-                state, metrics = self._train_step(state, batch)
+                state, metrics = self._train_step(
+                    state=state,
+                    batch=batch,
+                    loss_fn=self.loss_fn,
+                    compute_metrics_fn=self._compute_metrics,
+                )
                 batch_metrics.append(metrics)
 
         # Get the metrics off device for printing.
@@ -446,7 +456,9 @@ class LossAwareReservoir(SimpleTraining):
             state, train_metrics = self._train_epoch(
                 state=state, train_ds=train_ds, batch_size=batch_size
             )
-            self.review_metric = self._evaluate_model(state.params, test_ds)
+            self.review_metric = self._evaluate_model(
+                {"params": state.params, "batch_stats": state.batch_stats}, test_ds
+            )
             train_losses.append(train_metrics["loss"])
 
             # Update the loading bar
