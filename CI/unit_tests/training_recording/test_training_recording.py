@@ -27,8 +27,9 @@ Summary
 
 import tempfile
 from pathlib import Path
-import jax.numpy as np
+
 import h5py as hf
+import jax.numpy as np
 import numpy as onp
 from numpy import testing
 
@@ -187,7 +188,7 @@ class TestModelRecording:
         class_labels, class_indices = recorder._class_idx
         assert np.all(class_labels == np.eye(5))
         assert np.all(np.array(class_indices) == np.arange(10).reshape(2, 5).T)
-        
+
         # Test non-one-hot encoding.
         recorder = JaxRecorder(
             class_specific=True,
