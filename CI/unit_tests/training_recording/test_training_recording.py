@@ -27,7 +27,7 @@ Summary
 
 import tempfile
 from pathlib import Path
-
+import jax.numpy as np
 import h5py as hf
 import numpy as onp
 from numpy import testing
@@ -75,6 +75,7 @@ class TestModelRecording:
             "name",
             "storage_path",
             "chunk_size",
+            "class_specific",
         ]
         for key, val in vars(recorder).items():
             if key[0] != "_" and key not in _exclude_list:
@@ -164,3 +165,44 @@ class TestModelRecording:
         testing.assert_almost_equal(
             recorder._magnitude_variance_array, expected_variance
         )
+
+    def test_index_identification(self):
+        """
+        Test the index identification of class specific recording.
+        """
+        # Test one-hot encoding.
+        recorder = JaxRecorder(
+            class_specific=True,
+            loss=False,
+            accuracy=False,
+            ntk=False,
+            entropy=False,
+            magnitude_variance=True,
+            eigenvalues=False,
+        )
+        dummy_data_input = onp.random.uniform(size=(10, 2, 3))
+        dummy_data_target = np.concatenate([np.eye(5), np.eye(5)], axis=0)
+        dummy_data_set = {"inputs": dummy_data_input, "targets": dummy_data_target}
+        recorder.instantiate_recorder(data_set=dummy_data_set)
+        class_labels, class_indices = recorder._class_idx
+        assert np.all(class_labels == np.eye(5))
+        assert np.all(np.array(class_indices) == np.arange(10).reshape(2, 5).T)
+        
+        # Test non-one-hot encoding.
+        recorder = JaxRecorder(
+            class_specific=True,
+            loss=False,
+            accuracy=False,
+            ntk=False,
+            entropy=False,
+            magnitude_variance=True,
+            eigenvalues=False,
+        )
+        dummy_data_input = onp.random.uniform(size=(10, 2, 3))
+        x = np.expand_dims(np.arange(5), axis=1)
+        dummy_data_target = np.concatenate([x, x], axis=0)
+        dummy_data_set = {"inputs": dummy_data_input, "targets": dummy_data_target}
+        recorder.instantiate_recorder(data_set=dummy_data_set)
+        class_labels, class_indices = recorder._class_idx
+        assert np.all(class_labels == x)
+        assert np.all(np.array(class_indices) == np.arange(10).reshape(2, 5).T)

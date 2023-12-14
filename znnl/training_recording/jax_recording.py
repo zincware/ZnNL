@@ -32,6 +32,7 @@ from pathlib import Path
 
 import jax.numpy as np
 import numpy as onp
+from jax import vmap
 
 from znnl.accuracy_functions.accuracy_function import AccuracyFunction
 from znnl.analysis.eigensystem import EigenSpaceAnalysis
@@ -67,6 +68,9 @@ class JaxRecorder:
             Where to store the data on disk.
     chunk_size : int
             Amount of data to keep in memory before it is dumped to a hdf5 database.
+    class_specific : bool (default=False)
+            If true, all activated properties will be recorded for each class
+            individually. This is requires a classifcation problem.
     loss : bool (default=True)
             If true, loss will be recorded.
     accuracy : bool (default=False)
@@ -108,6 +112,7 @@ class JaxRecorder:
     name: str = "my_recorder"
     storage_path: str = "./"
     chunk_size: int = 100
+    class_specific: bool = False
 
     # Model Loss
     loss: bool = True
@@ -170,6 +175,9 @@ class JaxRecorder:
     _index_count: int = 0  # Helps to avoid problems with non-1 update rates.
     _data_storage: DataStorage = None  # For writing to disk.
 
+    # For class specific recording, _class_idx contains (class_labels, indices)
+    _class_idx: tuple = None
+
     def _read_selected_attributes(self):
         """
         Helper function to read selected attributes.
@@ -178,7 +186,9 @@ class JaxRecorder:
         self._selected_properties = [
             value
             for value in list(vars(self))
-            if value[0] != "_" and vars(self)[value] is True
+            if value[0] != "_"
+            and vars(self)[value] is True
+            and value != "class_specific"
         ]
 
     def _build_or_resize_array(self, name: str, overwrite: bool):
@@ -204,6 +214,40 @@ class JaxRecorder:
             data = []
 
         return data
+
+    def _get_class_indices(self):
+        """
+        Get the indices of the classes.
+
+        Returns
+        -------
+        class_specific_idx : tuple
+                Tuple of (class_labels, indices).
+                class_labels : np.ndarray
+                        Array of class labels, containing all unique labels.
+                indices : list
+                        List of indices for each class with each entry containing a
+                        numpy array of indices for each class.
+
+        """
+        class_idx = np.unique(self._data_set["targets"], axis=0, return_index=True)[1]
+        class_idx_sorted = np.sort(class_idx)
+        class_labels = self._data_set["targets"][class_idx_sorted]
+        label_dim = class_labels.shape[1]
+        if label_dim > 1:
+            targets = np.argmax(self._data_set["targets"], axis=1)
+            class_specific_idx = (
+                class_labels,
+                [np.where(targets == np.argmax(i))[0] for i in class_labels],
+            )
+        else:
+            targets = np.array(self._data_set["targets"])
+            class_specific_idx = (
+                class_labels,
+                [np.where(targets == i)[0] for i in class_labels],
+            )
+
+        return class_specific_idx
 
     def instantiate_recorder(self, data_set: dict = None, overwrite: bool = False):
         """
@@ -234,6 +278,9 @@ class JaxRecorder:
                 "Instantiate the recorder with a data set."
             )
 
+        # Get indices for class specific recording.
+        self._class_idx = self._get_class_indices()
+
         # populate the class attribute
         self._read_selected_attributes()
 
@@ -254,21 +301,51 @@ class JaxRecorder:
             self._index_count = 0
 
         # Check if we need an NTK computation and update the class accordingly
-        if any([
-            "ntk" in self._selected_properties,
-            "covariance_ntk" in self._selected_properties,
-            "magnitude_ntk" in self._selected_properties,
-            "entropy" in self._selected_properties,
-            "magnitude_entropy" in self._selected_properties,
-            "magnitude_variance" in self._selected_properties,
-            "covariance_entropy" in self._selected_properties,
-            "eigenvalues" in self._selected_properties,
-            "trace" in self._selected_properties,
-        ]):
+        if any(
+            [
+                "ntk" in self._selected_properties,
+                "covariance_ntk" in self._selected_properties,
+                "magnitude_ntk" in self._selected_properties,
+                "entropy" in self._selected_properties,
+                "magnitude_entropy" in self._selected_properties,
+                "magnitude_variance" in self._selected_properties,
+                "covariance_entropy" in self._selected_properties,
+                "eigenvalues" in self._selected_properties,
+                "trace" in self._selected_properties,
+            ]
+        ):
             self._compute_ntk = True
 
         if "loss_derivative" in self._selected_properties:
             self._loss_derivative_fn = LossDerivative(self._loss_fn)
+
+    @staticmethod
+    def class_specific_update_fn(
+        call_fn: callable, class_indices: np.ndarray, parsed_data: dict
+    ):
+        """
+        Update the class specific arrays.
+
+        Parameters
+        ----------
+        call_fn : callable
+                Callable function to update.
+        class_indices : np.ndarray
+                Indices of the classes to update.
+        parsed_data : dict
+                Data computed before the update to prevent repeated calculations.
+
+        Returns
+        -------
+        Updates the class specific arrays.
+        """
+        # Get the class
+        parsed_data["predictions"] = np.take(
+            parsed_data["predictions"], class_indices, axis=0
+        )
+        parsed_data["targets"] = np.take(parsed_data["targets"], class_indices, axis=0)
+        parsed_data["ntk"] = parsed_data["ntk"][class_indices, class_indices, ...]
+        return call_fn(parsed_data)
 
     def update_recorder(self, epoch: int, model: JaxModel):
         """
@@ -324,8 +401,17 @@ class JaxRecorder:
             for item in self._selected_properties:
                 call_fn = getattr(self, f"_update_{item}")  # get the callable function
 
-                # Try to add data and resize if necessary.
-                call_fn(parsed_data)  # call the function and update the property
+                if self.class_specific:
+                    # Vmap over the classes.
+                    vmapped_call_fn = vmap(
+                        self.class_specific_update_fn, in_axes=(None, 0, None)
+                    )
+                    call_fn = vmapped_call_fn(call_fn, self._class_idx[1], parsed_data)
+                else:
+                    call_fn(parsed_data)
+
+                # # Try to add data and resize if necessary.
+                # call_fn(parsed_data)  # call the function and update the property
 
             self._index_count += 1  # Update the index count.
         else:
