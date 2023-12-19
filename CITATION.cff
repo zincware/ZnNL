@@ -22,6 +22,7 @@ authors:
 #   - type: doi
 #     value: 10.48550/arXiv.2307.00994
 version: 0.0.1
+date-released: 2021-07-19
 repository-code: 'https://github.com/zincware/ZnNL'
 abstract: >-
   Zinware package for Neural Learning (ZnNL) is a Python package for studying the 
