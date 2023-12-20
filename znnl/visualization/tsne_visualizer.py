@@ -165,20 +165,24 @@ class TSNEVisualizer:
         }
 
         # Add initial data
-        fig_dict["data"].append({
-            "x": self.dynamic[0][:, 0],
-            "y": self.dynamic[0][:, 1],
-            "mode": "markers",
-            "name": "Predictor",
-        })
-        fig_dict["data"].append({
-            "x": self.reference[0][:, 0],
-            "y": self.reference[0][:, 1],
-            "mode": "markers",
-            "xaxis": "x2",
-            "yaxis": "y2",
-            "name": "Target",
-        })
+        fig_dict["data"].append(
+            {
+                "x": self.dynamic[0][:, 0],
+                "y": self.dynamic[0][:, 1],
+                "mode": "markers",
+                "name": "Predictor",
+            }
+        )
+        fig_dict["data"].append(
+            {
+                "x": self.reference[0][:, 0],
+                "y": self.reference[0][:, 1],
+                "mode": "markers",
+                "xaxis": "x2",
+                "yaxis": "y2",
+                "name": "Target",
+            }
+        )
 
         # Make the figure frames.
         for i, item in enumerate(self.dynamic):
