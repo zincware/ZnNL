@@ -135,12 +135,12 @@ class TestMahalanobisDistance:
         -------
         Creates a random normal distributed sample set
         """
-        point_1 = np.array([
-            onp.random.normal(0, 10, 100), onp.random.normal(0, 20, 100)
-        ]).T
-        point_2 = np.array([
-            onp.random.normal(0, 10, 100), onp.random.normal(0, 20, 100)
-        ]).T
+        point_1 = np.array(
+            [onp.random.normal(0, 10, 100), onp.random.normal(0, 20, 100)]
+        ).T
+        point_2 = np.array(
+            [onp.random.normal(0, 10, 100), onp.random.normal(0, 20, 100)]
+        ).T
         return point_1, point_2
 
     @staticmethod
