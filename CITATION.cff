@@ -8,16 +8,16 @@ message: >-
   metadata from this file.
 type: software
 authors:
-  - given-names: Samuel
-    family-names: Tovey
-    email: stovey@icp.uni-stuttgart.de
-    affiliation: University of Stuttgart
-    orcid: 'https://orcid.org/0000-0001-9537-8361'
   - given-names: Konstantin
     family-names: Nikolaou
     email: knikolaou@icp.uni-stuttgart.de
     affiliation: University of Stuttgart
     orcid: 'https://orcid.org/0009-0000-9926-680X'
+  - given-names: Samuel
+    family-names: Tovey
+    email: stovey@icp.uni-stuttgart.de
+    affiliation: University of Stuttgart
+    orcid: 'https://orcid.org/0000-0001-9537-8361'
 # identifiers:
 #   - type: doi
 #     value: 10.48550/arXiv.2307.00994
