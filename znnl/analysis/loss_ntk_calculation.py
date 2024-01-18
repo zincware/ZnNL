@@ -26,7 +26,7 @@ Summary
 """
 
 import neural_tangents as nt
-from typing import Callable
+from typing import Callable, Union, Sequence
 from znnl.models.jax_model import JaxModel
 import jax
 import jax.numpy as np
