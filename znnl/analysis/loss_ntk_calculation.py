@@ -37,17 +37,14 @@ class loss_ntk_calculation:
         self,
         metric_fn: Callable,
         model: JaxModel,
-        ntk_batch_size: int = 10,
-        store_on_device: bool = True,
-        trace_axes: Union[int, Sequence[int]] = (-1,),
     ):
         """Constructor for the loss ntk calculation class."""
 
         # Set the attributes
         self.metric_fn = metric_fn
-        self.ntk_batch_size = ntk_batch_size
-        self.store_on_device = store_on_device
-        self.trace_axes = trace_axes
+        self.ntk_batch_size = model.ntk_batch_size
+        self.store_on_device = model.store_on_device
+        self.trace_axes = model.trace_axes
 
         # Set the loss ntk function
         _function_for_loss_ntk = lambda x, y: self._function_for_loss_ntk_helper(
