@@ -296,11 +296,11 @@ class JaxRecorder:
             ]
         ):
             self._compute_loss_ntk = True
-            print("instantiating")
-            print(self._loss_fn)
             try:
                 self._loss_ntk_calculator = loss_ntk_calculation(
-                    metric_fn=self._loss_fn.metric, model=self._model
+                    metric_fn=self._loss_fn.metric,
+                    model=self._model,
+                    dataset=self._data_set,
                 )
             except AttributeError:
                 print("Warning")
@@ -369,8 +369,8 @@ class JaxRecorder:
                     x_i=self._data_set,
                     x_j=None,
                     model=self._model,
-                    infinite=False,  # Set true to compute infinite width limit of loss ntk
-                )
+                    infinite=False,  # Set true to compute infinite width limit
+                )["empirical"]
 
             for item in self._selected_properties:
                 call_fn = getattr(self, f"_update_{item}")  # get the callable function
