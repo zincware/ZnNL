@@ -1,27 +1,55 @@
-numpy~=1.22.2
-matplotlib
-sphinx
-flake8~=7.0.0
-black
-ipython~=8.20.0
-numpydoc
-optax~=0.1.2
+# numpy~=1.22.2
+# numpydoc
+# matplotlib
+# sphinx
+# flake8~=7.0.0
+# black
+# ipython~=8.20.0
+# optax~=0.1.2
+# sphinx_copybutton
+# sphinx_rtd_theme
+# nbsphinx
+# tensorflow_probability~=0.23.0
+# scipy~=1.11.4
+# scikit-learn~=1.0.0
+# jaxlib
+# jax
+# plotly
+# flax>=0.6.1
+# tqdm~=4.62.3
+# pandas
+# neural-tangents==0.6.4
+# tensorflow-datasets~=4.9.4
+# isort
+# tensorflow
+# pyyaml
+# jupyter
+# transformers~=4.36.2
+
+numpy~=1.26.1
+numpydoc~=1.6.0
+matplotlib~=3.8.1
+Sphinx~=7.2.6
+flake8~=5.0.4
+black~=22.8.0
+ipython~=8.17.2
+optax~=0.1.7
 sphinx_copybutton
 sphinx_rtd_theme
-nbsphinx
-tensorflow_probability~=0.23.0
-scipy~=1.11.4
-scikit-learn~=1.0.0
+nbsphinx~=0.9.3
+tensorflow_probability~=0.22.1
+scipy~=1.11.3
+scikit-learn~=1.3.2
 jaxlib
 jax
-plotly
-flax>=0.6.1
-tqdm~=4.62.3
-pandas
+plotly~=5.18.0
+flax>=0.7.5
+tqdm~=4.66.1
+pandas~=2.1.2
 neural-tangents==0.6.4
-tensorflow-datasets~=4.9.4
-isort
-tensorflow
-pyyaml
-jupyter
-transformers~=4.36.2
+tensorflow-datasets~=4.9.3
+isort~=5.10.1
+tensorflow~=2.14.0
+pyyaml~=6.0.1
+jupyter~=1.0.0
+transformers~=4.35.0
