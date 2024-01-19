@@ -127,6 +127,13 @@ class JaxModel:
             batch_size=ntk_batch_size,
             store_on_device=store_on_device,
         )
+
+        # Next values need to be set to be available for the loss ntk calculation because
+        # it's implemented outside of the model class.
+        self.ntk_batch_size = ntk_batch_size
+        self.trace_axes = trace_axes
+        self.store_on_device = store_on_device
+
         self.empirical_ntk_jit = jax.jit(self.empirical_ntk)
         self.apply_jit = jax.jit(self.apply)
 

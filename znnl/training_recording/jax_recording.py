@@ -183,6 +183,7 @@ class JaxRecorder:
     )
     _compute_loss_derivative: bool = False
     _loss_derivative_fn: LossDerivative = False
+    _loss_ntk_calculator: loss_ntk_calculation = None
     _index_count: int = 0  # Helps to avoid problems with non-1 update rates.
     _data_storage: DataStorage = None  # For writing to disk.
 
@@ -295,9 +296,18 @@ class JaxRecorder:
             ]
         ):
             self._compute_loss_ntk = True
-            self._loss_ntk_calculator = loss_ntk_calculation(
-                metric_fn=self._loss_fn.metric, model=self._model
-            )
+            print("instantiating")
+            print(self._loss_fn)
+            try:
+                self._loss_ntk_calculator = loss_ntk_calculation(
+                    metric_fn=self._loss_fn.metric, model=self._model
+                )
+            except AttributeError:
+                print("Warning")
+                logger.info(
+                    "Warning: The loss function hasn't been set yet."
+                    "Please set it before training."
+                )
 
         if "loss_derivative" in self._selected_properties:
             self._loss_derivative_fn = LossDerivative(self._loss_fn)
@@ -357,6 +367,7 @@ class JaxRecorder:
             if self._compute_loss_ntk:
                 parsed_data["loss_ntk"] = self._loss_ntk_calculator.compute_loss_ntk(
                     x_i=self._data_set,
+                    x_j=None,
                     model=self._model,
                     infinite=False,  # Set true to compute infinite width limit of loss ntk
                 )
