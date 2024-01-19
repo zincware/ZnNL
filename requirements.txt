@@ -26,14 +26,14 @@
 # jupyter
 # transformers~=4.36.2
 
-numpy~=1.26.1
+numpy~=1.22.2
 numpydoc~=1.6.0
 matplotlib~=3.8.1
 Sphinx~=7.2.6
 flake8~=5.0.4
 black~=22.8.0
 ipython~=8.17.2
-optax~=0.1.7
+optax~=0.1.2
 sphinx_copybutton
 sphinx_rtd_theme
 nbsphinx~=0.9.3
@@ -43,8 +43,8 @@ scikit-learn~=1.3.2
 jaxlib
 jax
 plotly~=5.18.0
-flax>=0.7.5
-tqdm~=4.66.1
+flax>=0.6.1
+tqdm~=4.62.3
 pandas~=2.1.2
 neural-tangents==0.6.4
 tensorflow-datasets~=4.9.3
@@ -53,3 +53,22 @@ tensorflow~=2.14.0
 pyyaml~=6.0.1
 jupyter~=1.0.0
 transformers~=4.35.0
+
+
+# markupsafe==2.0.1
+# numpy~=1.22.2
+# pint~=0.18
+# h5py
+# tqdm~=4.62.3
+# pytest~=6.2.5
+# jax
+# jaxlib
+# flax>=0.6.1
+# setuptools~=58.0.4
+# optax~=0.1.2
+# rich
+# dataclasses~=0.6
+# dask
+# distributed
+# dask-jobqueue
+# znnl @ git+https://github.com/zincware/ZnNL.git@Konsti_fix_requirements
