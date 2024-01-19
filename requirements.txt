@@ -2,7 +2,7 @@ numpy~=1.22.2
 matplotlib
 sphinx
 flake8~=7.0.0
-black~=23.12.1
+black
 ipython~=8.20.0
 numpydoc
 optax~=0.1.2
