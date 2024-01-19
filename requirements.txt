@@ -9,7 +9,7 @@ optax~=0.1.2
 sphinx_copybutton
 sphinx_rtd_theme
 nbsphinx
-tensorflow_probability~=0.21.0
+tensorflow_probability~=0.23.0
 scipy~=1.11.4
 scikit-learn~=1.0.0
 jaxlib
