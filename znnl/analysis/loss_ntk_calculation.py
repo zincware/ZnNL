@@ -70,9 +70,12 @@ class loss_ntk_calculation:
         input dimension + output dimension.
         This is done so that the inputs and targets can be understood
         by the neural tangents empirical_ntk_fn function.
+
+        Seems like during the NTK calculation, this function needs to handle
+        the whole dataset at once instead of just one datapoint.
         """
-        _input = datapoint[: self.input_dimension]
-        _target = datapoint[self.input_dimension :]
+        _input = datapoint[:, : self.input_dimension]
+        _target = datapoint[:, self.input_dimension :]
         return self.metric_fn(
             self.apply_fn(params, _input),
             _target,

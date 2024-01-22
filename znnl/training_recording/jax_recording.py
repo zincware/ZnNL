@@ -303,7 +303,6 @@ class JaxRecorder:
                     dataset=self._data_set,
                 )
             except AttributeError:
-                print("Warning")
                 logger.info(
                     "Warning: The loss function hasn't been set yet."
                     "Please set it before training."
