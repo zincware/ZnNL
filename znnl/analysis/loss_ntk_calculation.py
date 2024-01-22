@@ -61,6 +61,10 @@ class loss_ntk_calculation:
             batch_size=self.ntk_batch_size,
             store_on_device=self.store_on_device,
         )
+        empirical_ntk = nt.empirical_ntk_fn(
+            f=self._function_for_loss_ntk,
+            trace_axes=self.trace_axes,
+        )
         self.empirical_ntk_jit = jax.jit(empirical_ntk)
 
     def _function_for_loss_ntk(self, params, datapoint) -> float:
@@ -82,7 +86,11 @@ class loss_ntk_calculation:
         )
 
     def compute_loss_ntk(
-        self, x_i: np.ndarray, x_j: np.ndarray, model: JaxModel, infinite: bool = False
+        self,
+        x_i: np.ndarray,
+        model: JaxModel,
+        x_j: np.ndarray = None,
+        infinite: bool = False,
     ):
         """
         Compute the loss NTK matrix for the model.
