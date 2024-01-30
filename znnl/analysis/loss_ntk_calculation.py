@@ -32,6 +32,7 @@ import jax
 import jax.numpy as np
 import numpy
 
+
 class loss_ntk_calculation:
     def __init__(
         self,
@@ -75,8 +76,13 @@ class loss_ntk_calculation:
         Seems like during the NTK calculation, this function needs to handle
         the whole dataset at once instead of just one datapoint.
         """
-        _input = datapoint[:, : self.input_dimension]
-        _target = datapoint[:, self.input_dimension :]
+        batch_length = datapoint.shape[0]
+        _input = datapoint[:, : self.input_dimension].reshape(
+            batch_length, *self.input_shape[1:]
+        )
+        _target = datapoint[:, self.input_dimension :].reshape(
+            batch_length, *self.target_shape[1:]
+        )
         return self.metric_fn(
             self.apply_fn(params, _input),
             _target,

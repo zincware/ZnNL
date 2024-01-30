@@ -33,12 +33,39 @@ import jax.numpy as np
 import pytest
 
 from znnl.analysis import loss_ntk_calculation
+from znnl.distance_metrics import LPNorm
 from znnl.training_recording import JaxRecorder
-from znnl.models import NTModel
+from znnl.loss_functions import LPNormLoss
+from znnl.analysis import LossDerivative
+from znnl.models import FlaxModel
 from znnl.data import MNISTGenerator
+from flax import linen as nn
+
 from neural_tangents import stax
 
 import optax
+
+
+# Defines a simple CNN module
+class ProductionModule(nn.Module):
+    """
+    Simple CNN module.
+    """
+
+    @nn.compact
+    def __call__(self, x):
+        x = nn.Conv(features=128, kernel_size=(3, 3))(x)
+        x = nn.relu(x)
+        x = nn.max_pool(x, window_shape=(3, 3), strides=(2, 2))
+        x = nn.Conv(features=128, kernel_size=(3, 3))(x)
+        x = nn.relu(x)
+        x = nn.max_pool(x, window_shape=(3, 3), strides=(2, 2))
+        x = x.reshape((x.shape[0], -1))  # flatten
+        x = nn.Dense(features=300)(x)
+        x = nn.relu(x)
+        x = nn.Dense(10)(x)
+
+        return x
 
 
 class TestLossNTKCalculation:
@@ -59,14 +86,12 @@ class TestLossNTKCalculation:
         )
 
         # Define a test model
-        fuel_model = NTModel(
-            nt_module=dense_network,
-            optimizer=optax.adam(learning_rate=0.005),
-            input_shape=(9,),
+        production_model = FlaxModel(
+            flax_module=ProductionModule(),
+            optimizer=optax.adam(learning_rate=0.01),
+            input_shape=(1, 28, 28, 1),
             trace_axes=(),
-            batch_size=314,
         )
-
         # Initialize model parameters
 
         data_generator = MNISTGenerator(ds_size=10)
@@ -77,14 +102,32 @@ class TestLossNTKCalculation:
 
         # Initialize the loss NTK calculation
         loss_ntk_calculator = loss_ntk_calculation(
-            metric_fn=lambda x, y: (x - y) ** 2,
-            model=fuel_model,
+            metric_fn=LPNorm(order=2),
+            model=production_model,
             dataset=data_set,
         )
 
         # Compute the loss NTK
-        ntk = loss_ntk_calculator.compute_loss_ntk(x_i=data_set, model=fuel_model)
-        print(ntk.shape)
+        loss_ntk = loss_ntk_calculator.compute_loss_ntk(
+            x_i=data_set, model=production_model
+        )["empirical"]
+
+        # Now for comparison calculate regular ntk
+        ntk = production_model.compute_ntk(data_set["inputs"], infinite=False)[
+            "empirical"
+        ]
+        # Calculate Loss derivative fn
+        loss_derivative_calculator = LossDerivative(LPNormLoss(order=2))
+        # predictions calculation analogous to the one in jax recording
+        predictions = production_model(data_set["inputs"])
+        if type(predictions) is tuple:
+            predictions = predictions[0]
+        # calculation of loss derivatives
+        loss_derivatives = loss_derivative_calculator.calculate(
+            predictions=predictions,
+            targets=data_set["targets"],
+        )
+        print(loss_derivatives.shape)
 
 
 TestLossNTKCalculation().test_loss_ntk_calculation()
