@@ -30,7 +30,7 @@ from typing import Callable
 from znnl.models.jax_model import JaxModel
 import jax
 import jax.numpy as np
-
+import numpy
 
 class loss_ntk_calculation:
     def __init__(
@@ -57,13 +57,10 @@ class loss_ntk_calculation:
             nt.empirical_ntk_fn(
                 f=self._function_for_loss_ntk,
                 trace_axes=self.trace_axes,
+                vmap_axes=0,
             ),
             batch_size=self.ntk_batch_size,
             store_on_device=self.store_on_device,
-        )
-        empirical_ntk = nt.empirical_ntk_fn(
-            f=self._function_for_loss_ntk,
-            trace_axes=self.trace_axes,
         )
         self.empirical_ntk_jit = jax.jit(empirical_ntk)
 
@@ -109,8 +106,8 @@ class loss_ntk_calculation:
 
         Returns
         -------
-        NTK : dict
-                The NTK matrix for both the empirical and infinite width computation.
+        Loss NTK : dict
+                The Loss NTK matrix for both the empirical and infinite width computation.
         """
 
         x_i = np.concatenate(

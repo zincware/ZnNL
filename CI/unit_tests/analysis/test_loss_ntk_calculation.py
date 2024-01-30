@@ -39,7 +39,6 @@ from znnl.data import MNISTGenerator
 from neural_tangents import stax
 
 import optax
-import tensorflow_datasets as tfds
 
 
 class TestLossNTKCalculation:
@@ -76,7 +75,16 @@ class TestLossNTKCalculation:
             "targets": data_generator.train_ds["targets"],
         }
 
-        print(fuel_model.model_state.params)
+        # Initialize the loss NTK calculation
+        loss_ntk_calculator = loss_ntk_calculation(
+            metric_fn=lambda x, y: (x - y) ** 2,
+            model=fuel_model,
+            dataset=data_set,
+        )
+
+        # Compute the loss NTK
+        ntk = loss_ntk_calculator.compute_loss_ntk(x_i=data_set, model=fuel_model)
+        print(ntk.shape)
 
 
 TestLossNTKCalculation().test_loss_ntk_calculation()
