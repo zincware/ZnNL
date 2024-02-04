@@ -31,22 +31,17 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 import jax.numpy as np
 import numpy as onp
+import optax
+from flax import linen as nn
+from neural_tangents import stax
 from numpy.testing import assert_array_almost_equal
 
-import pytest
-
-from znnl.analysis import loss_ntk_calculation
-from znnl.distance_metrics import LPNorm
-from znnl.training_recording import JaxRecorder
-from znnl.loss_functions import LPNormLoss
-from znnl.analysis import LossDerivative
-from znnl.models import FlaxModel
+from znnl.analysis import LossDerivative, loss_ntk_calculation
 from znnl.data import MNISTGenerator
-from flax import linen as nn
-
-from neural_tangents import stax
-
-import optax
+from znnl.distance_metrics import LPNorm
+from znnl.loss_functions import LPNormLoss
+from znnl.models import FlaxModel
+from znnl.training_recording import JaxRecorder
 
 
 # Defines a simple CNN module

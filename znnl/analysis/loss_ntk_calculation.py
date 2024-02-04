@@ -25,12 +25,13 @@ Summary
 -------
 """
 
-import neural_tangents as nt
 from typing import Callable
-from znnl.models.jax_model import JaxModel
+
 import jax
 import jax.numpy as np
-import numpy
+import neural_tangents as nt
+
+from znnl.models.jax_model import JaxModel
 
 
 class loss_ntk_calculation:
