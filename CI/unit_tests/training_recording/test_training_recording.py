@@ -67,8 +67,8 @@ class TestModelRecording:
             trace=True,
             loss_derivative=True,
             loss_ntk=True,
-            loss_ntk_derivative=True,
             loss_ntk_eigenvalues=True,
+            loss_ntk_entropy=True,
         )
         recorder.instantiate_recorder(data_set=self.dummy_data_set)
         _exclude_list = [
