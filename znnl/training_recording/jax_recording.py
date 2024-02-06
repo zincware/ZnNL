@@ -37,7 +37,7 @@ from znnl.accuracy_functions.accuracy_function import AccuracyFunction
 from znnl.analysis.eigensystem import EigenSpaceAnalysis
 from znnl.analysis.entropy import EntropyAnalysis
 from znnl.analysis.loss_fn_derivative import LossDerivative
-from znnl.analysis.loss_ntk_calculation import loss_ntk_calculation
+from znnl.analysis.loss_ntk_calculation import LossNTKCalculation
 from znnl.loss_functions import SimpleLoss
 from znnl.models.jax_model import JaxModel
 from znnl.training_recording.data_storage import DataStorage
@@ -183,7 +183,7 @@ class JaxRecorder:
     )
     _compute_loss_derivative: bool = False
     _loss_derivative_fn: LossDerivative = False
-    _loss_ntk_calculator: loss_ntk_calculation = None
+    _loss_ntk_calculator: LossNTKCalculation = None
     _index_count: int = 0  # Helps to avoid problems with non-1 update rates.
     _data_storage: DataStorage = None  # For writing to disk.
 
@@ -293,7 +293,7 @@ class JaxRecorder:
         ]):
             self._compute_loss_ntk = True
             try:
-                self._loss_ntk_calculator = loss_ntk_calculation(
+                self._loss_ntk_calculator = LossNTKCalculation(
                     metric_fn=self._loss_fn.metric,
                     model=self._model,
                     dataset=self._data_set,

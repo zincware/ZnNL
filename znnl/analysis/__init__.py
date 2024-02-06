@@ -28,11 +28,11 @@ Summary
 from znnl.analysis.eigensystem import EigenSpaceAnalysis
 from znnl.analysis.entropy import EntropyAnalysis
 from znnl.analysis.loss_fn_derivative import LossDerivative
-from znnl.analysis.loss_ntk_calculation import loss_ntk_calculation
+from znnl.analysis.loss_ntk_calculation import LossNTKCalculation
 
 __all__ = [
     EntropyAnalysis.__name__,
     EigenSpaceAnalysis.__name__,
     LossDerivative.__name__,
-    loss_ntk_calculation.__name__,
+    LossNTKCalculation.__name__,
 ]

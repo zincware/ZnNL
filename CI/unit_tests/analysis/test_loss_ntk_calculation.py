@@ -36,7 +36,7 @@ from flax import linen as nn
 from neural_tangents import stax
 from numpy.testing import assert_array_almost_equal
 
-from znnl.analysis import LossDerivative, loss_ntk_calculation
+from znnl.analysis import LossDerivative, LossNTKCalculation
 from znnl.data import MNISTGenerator
 from znnl.distance_metrics import LPNorm
 from znnl.loss_functions import LPNormLoss
@@ -71,7 +71,7 @@ class TestLossNTKCalculation:
     Test Suite for the loss NTK calculation module.
     """
 
-    def test_loss_ntk_calculation(self):
+    def test_LossNTKCalculation(self):
         """
         Test the Loss NTK calculation.
         Here we test if the Loss NTK calculated through the neural tangents module is
@@ -95,7 +95,7 @@ class TestLossNTKCalculation:
         }
 
         # Initialize the loss NTK calculation
-        loss_ntk_calculator = loss_ntk_calculation(
+        loss_ntk_calculator = LossNTKCalculation(
             metric_fn=LPNorm(order=2),
             model=production_model,
             dataset=data_set,
@@ -136,4 +136,4 @@ class TestLossNTKCalculation:
         assert_array_almost_equal(loss_ntk, loss_ntk_2, decimal=4)
 
 
-TestLossNTKCalculation().test_loss_ntk_calculation()
+TestLossNTKCalculation().test_LossNTKCalculation()

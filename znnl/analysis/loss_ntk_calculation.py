@@ -34,7 +34,7 @@ import neural_tangents as nt
 from znnl.models.jax_model import JaxModel
 
 
-class loss_ntk_calculation:
+class LossNTKCalculation:
     def __init__(
         self,
         metric_fn: Callable,
