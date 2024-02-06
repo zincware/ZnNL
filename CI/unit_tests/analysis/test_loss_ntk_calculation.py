@@ -52,14 +52,14 @@ class ProductionModule(nn.Module):
 
     @nn.compact
     def __call__(self, x):
-        x = nn.Conv(features=128, kernel_size=(3, 3))(x)
+        x = nn.Conv(features=16, kernel_size=(3, 3))(x)
         x = nn.relu(x)
         x = nn.max_pool(x, window_shape=(3, 3), strides=(2, 2))
-        x = nn.Conv(features=128, kernel_size=(3, 3))(x)
+        x = nn.Conv(features=16, kernel_size=(3, 3))(x)
         x = nn.relu(x)
         x = nn.max_pool(x, window_shape=(3, 3), strides=(2, 2))
         x = x.reshape((x.shape[0], -1))  # flatten
-        x = nn.Dense(features=300)(x)
+        x = nn.Dense(features=10)(x)
         x = nn.relu(x)
         x = nn.Dense(10)(x)
 
@@ -79,13 +79,6 @@ class TestLossNTKCalculation:
         derivatives.
         """
 
-        # Define a test Network
-        dense_network = stax.serial(
-            stax.Dense(32),
-            stax.Relu(),
-            stax.Dense(32),
-        )
-
         # Define a test model
         production_model = FlaxModel(
             flax_module=ProductionModule(),
@@ -95,7 +88,7 @@ class TestLossNTKCalculation:
         )
         # Initialize model parameters
 
-        data_generator = MNISTGenerator(ds_size=10)
+        data_generator = MNISTGenerator(ds_size=20)
         data_set = {
             "inputs": data_generator.train_ds["inputs"],
             "targets": data_generator.train_ds["targets"],
@@ -135,12 +128,12 @@ class TestLossNTKCalculation:
             )[0]
 
         # Calculate the loss NTK from the loss derivatives and the ntk
-        loss_ntk_2 = onp.zeros_like(loss_ntk)
-        for i in range(len(loss_ntk_2)):
-            for j in range(len(loss_ntk_2[0])):
-                loss_ntk_2[i, j] = np.einsum(
-                    "i, j, ij", loss_derivatives[i], loss_derivatives[j], ntk[i, j]
-                )
+        loss_ntk_2 = np.einsum(
+            "ik, jl, ijkl-> ij", loss_derivatives, loss_derivatives, ntk
+        )
 
         # Assert that the loss NTKs are the same
-        assert_array_almost_equal(loss_ntk, loss_ntk_2, decimal=2)
+        assert_array_almost_equal(loss_ntk, loss_ntk_2, decimal=4)
+
+
+TestLossNTKCalculation().test_loss_ntk_calculation()
