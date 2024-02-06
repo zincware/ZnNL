@@ -66,6 +66,34 @@ class LossNTKCalculation:
         )
         self.empirical_ntk_jit = jax.jit(empirical_ntk)
 
+    @staticmethod
+    def _reshape_dataset(dataset):
+        """
+        Helper function to reshape the dataset for the Loss NTK calculation.
+        """
+        return np.concatenate(
+            (
+                dataset["inputs"].reshape(dataset["inputs"].shape[0], -1),
+                dataset["targets"].reshape(dataset["targets"].shape[0], -1),
+            ),
+            axis=1,
+        )
+
+    @staticmethod
+    def _unshape_data(
+        datapoint: np.ndarray,
+        input_dimension: int,
+        input_shape: tuple,
+        target_shape: tuple,
+        batch_length: int,
+    ):
+        """
+        Helper function to unshape the data for the subloss calculation.
+        """
+        return datapoint[:, :input_dimension].reshape(
+            batch_length, *input_shape[1:]
+        ), datapoint[:, input_dimension:].reshape(batch_length, *target_shape[1:])
+
     def _function_for_loss_ntk(self, params, datapoint) -> float:
         """
         Helper function to create a subloss apply function.
@@ -78,11 +106,12 @@ class LossNTKCalculation:
         the whole dataset at once instead of just one datapoint.
         """
         batch_length = datapoint.shape[0]
-        _input = datapoint[:, : self.input_dimension].reshape(
-            batch_length, *self.input_shape[1:]
-        )
-        _target = datapoint[:, self.input_dimension :].reshape(
-            batch_length, *self.target_shape[1:]
+        _input, _target = self._unshape_data(
+            datapoint,
+            self.input_dimension,
+            self.input_shape,
+            self.target_shape,
+            batch_length,
         )
         return self.metric_fn(
             self.apply_fn(params, _input),
@@ -117,24 +146,12 @@ class LossNTKCalculation:
                 The Loss NTK matrix for both the empirical and infinite width computation.
         """
 
-        x_i = np.concatenate(
-            (
-                x_i["inputs"].reshape(x_i["inputs"].shape[0], -1),
-                x_i["targets"].reshape(x_i["targets"].shape[0], -1),
-            ),
-            axis=1,
-        )
+        x_i = self._reshape_dataset(x_i)
 
         if x_j is None:
             x_j = x_i
         else:
-            x_j = np.concatenate(
-                (
-                    x_j["inputs"].reshape(x_j["inputs"].shape[0], -1),
-                    x_j["targets"].reshape(x_j["targets"].shape[0], -1),
-                ),
-                axis=1,
-            )
+            x_j = self._reshape_dataset(x_j)
 
         empirical_ntk = self.empirical_ntk_jit(
             x_i,
