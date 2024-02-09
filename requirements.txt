@@ -47,7 +47,6 @@ pandas~=2.1.2
 neural-tangents==0.6.4
 tensorflow-datasets~=4.9.3
 isort~=5.10.1
-tensorflow~=2.14.0
 pyyaml~=6.0.1
 jupyter~=1.0.0
 transformers~=4.35.0
