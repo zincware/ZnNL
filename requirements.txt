@@ -51,8 +51,6 @@ tensorflow~=2.14.0
 pyyaml~=6.0.1
 jupyter~=1.0.0
 transformers~=4.35.0
-jaxlib
-jax
 
 
 # markupsafe==2.0.1
