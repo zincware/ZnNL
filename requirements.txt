@@ -26,7 +26,7 @@
 # jupyter
 # transformers~=4.36.2
 
-numpy~=1.26.1
+numpy>=1.22.2
 numpydoc~=1.6.0
 matplotlib~=3.8.1
 Sphinx~=7.2.6
