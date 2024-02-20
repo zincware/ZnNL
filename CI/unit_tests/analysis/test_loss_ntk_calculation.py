@@ -36,12 +36,11 @@ from flax import linen as nn
 from neural_tangents import stax
 from numpy.testing import assert_array_almost_equal
 
-from znnl.analysis import LossDerivative, LossNTKCalculation, EigenSpaceAnalysis
+from znnl.analysis import EigenSpaceAnalysis, LossDerivative, LossNTKCalculation
 from znnl.data import MNISTGenerator
 from znnl.distance_metrics import LPNorm
 from znnl.loss_functions import LPNormLoss
 from znnl.models import FlaxModel, NTModel
-from znnl.training_recording import JaxRecorder
 
 
 # Defines a simple CNN module
@@ -68,7 +67,7 @@ class ProductionModule(nn.Module):
 
 class TestLossNTKCalculation:
     """
-    Test Suite for the loss NTK calculation module.
+    Test Suite for the LossNTKCalculation module.
     """
 
     def test_reshaping_methods(self):
@@ -76,7 +75,8 @@ class TestLossNTKCalculation:
         Test the _reshape_dataset and _unshape_dataset methods.
         These are functions used in the loss NTK calculation to
         """
-        # Define a dummy model and dataset to be able to define a LossNTKCalculation class
+        # Define a dummy model and dataset to be able to define a
+        # LossNTKCalculation class
         production_model = FlaxModel(
             flax_module=ProductionModule(),
             optimizer=optax.adam(learning_rate=0.01),
@@ -123,8 +123,10 @@ class TestLossNTKCalculation:
 
     def test_function_for_loss_ntk(self):
         """
-        This method tests the function that is used for the correlation matrix in the loss NTK calculation.
-        It is supposed to yield the loss per single datapoint."""
+        This method tests the function that is used for the correlation matrix
+        in the loss NTK calculation. It is supposed to yield the loss per single
+        datapoint.
+        """
         # Define a simple feed forward test model
         feed_forward_model = stax.serial(
             stax.Dense(5),
@@ -185,6 +187,11 @@ class TestLossNTKCalculation:
         Here we test if the Loss NTK calculated through the neural tangents module is
         the same as the Loss NTK calculated with the already implemented NTK and loss
         derivatives.
+        We do this for a small CNN model and the MNIST dataset.
+        We also check if the eigenvalues of the two Loss NTKs are the same.
+
+        The current implementation yields a precision of e-4. If these are numerical
+        errors or due to a mistake in the implementation is to be decided.
         """
 
         # Define a test model
@@ -230,7 +237,7 @@ class TestLossNTKCalculation:
         # note: here we need the derivatives of the subloss, not the regular loss fn
         loss_derivatives = onp.empty(shape=(len(predictions), len(predictions[0])))
         for i in range(len(loss_derivatives)):
-            # The weird indexing here is because of axis constraints in the LPNormLoss module
+            # The weird indexing here is because of axis constraints in LPNormLoss
             loss_derivatives[i] = loss_derivative_calculator.calculate(
                 predictions[i : i + 1], data_set["targets"][i : i + 1]
             )[0]

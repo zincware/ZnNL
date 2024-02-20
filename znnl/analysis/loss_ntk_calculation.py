@@ -41,9 +41,25 @@ class LossNTKCalculation:
         model: JaxModel,
         dataset: dict,
     ):
-        """Constructor for the loss ntk calculation class.
+        """
+        Constructor for the loss ntk calculation class.
 
-        Metri fn has to be the Metric, not the Loss!"""
+        Parameters
+        ----------
+
+        metric_fn : Callable
+                The metric function to be used for the loss calculation.
+                !This has to be the metric, not the Loss!
+                If you put in the Loss here you won't get an error but an
+                incorrect result.
+
+        model : JaxModel
+                The model for which to calculate the loss NTK.
+
+        dataset : dict
+                The dataset for which to calculate the loss NTK.
+                The dictionary should contain the keys "inputs" and "targets".
+        """
 
         # Set the attributes
         self.ntk_batch_size = model.ntk_batch_size
@@ -71,6 +87,17 @@ class LossNTKCalculation:
     def _reshape_dataset(dataset):
         """
         Helper function to reshape the dataset for the Loss NTK calculation.
+
+        Parameters
+        ----------
+        dataset : dict
+                The dataset to be reshaped.
+                Should contain the keys "inputs" and "targets".
+
+        Returns
+        -------
+        reshaped_dataset : np.ndarray
+                The reshaped dataset.
         """
         return np.concatenate(
             (
@@ -90,6 +117,24 @@ class LossNTKCalculation:
     ):
         """
         Helper function to unshape the data for the subloss calculation.
+
+        Parameters
+        ----------
+        datapoint : np.ndarray
+                The datapoint to be unshaped.
+        input_dimension : int
+                The total dimension of the input, i.e. the product of its shape.
+        input_shape : tuple
+                The shape of the original input.
+        target_shape : tuple
+                The shape of the original target.
+
+        Returns
+        -------
+        input: np.ndarray
+                The unshaped input.
+        target: np.ndarray
+                The unshaped target.
         """
         return datapoint[:, :input_dimension].reshape(
             batch_length, *input_shape[1:]
@@ -99,12 +144,22 @@ class LossNTKCalculation:
         """
         Helper function to create a subloss apply function.
         The datapoint here has to be shaped so that its an array of length
-        input dimension + output dimension.
-        This is done so that the inputs and targets can be understood
-        by the neural tangents empirical_ntk_fn function.
+        input dimension + output dimension. This is done so that the inputs
+        and targets can be understood by the neural tangents empirical_ntk_fn
+        function. It gets unpacked by the _unshape_data function in here.
 
-        Seems like during the NTK calculation, this function needs to handle
-        the whole dataset at once instead of just one datapoint.
+        Parameters
+        ----------
+        params : dict
+                The parameters of the model.
+        datapoint : np.ndarray
+                The datapoint for which to calculate the subloss. Shaped as
+                described in the description of this function.
+
+        Returns
+        -------
+        subloss : float
+                The subloss for the given datapoint.
         """
         batch_length = datapoint.shape[0]
         _input, _target = self._unshape_data(
@@ -144,7 +199,8 @@ class LossNTKCalculation:
         Returns
         -------
         Loss NTK : dict
-                The Loss NTK matrix for both the empirical and infinite width computation.
+                The Loss NTK matrix for both the empirical and
+                infinite width computation.
         """
 
         x_i = self._reshape_dataset(x_i)
