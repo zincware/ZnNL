@@ -128,6 +128,9 @@ class LossNTKCalculation:
                 The shape of the original input.
         target_shape : tuple
                 The shape of the original target.
+        batch_length : int
+                The length of the batch, i.e. the number of actual datapoints
+                inside the datapoint variable
 
         Returns
         -------
