@@ -59,6 +59,7 @@ class LossNTKCalculation:
             nt.empirical_ntk_fn(
                 f=self._function_for_loss_ntk,
                 trace_axes=(),
+                vmap_axes=0,
             ),
             batch_size=self.ntk_batch_size,
             store_on_device=self.store_on_device,
