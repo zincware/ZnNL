@@ -41,10 +41,11 @@ class LossNTKCalculation:
         model: JaxModel,
         dataset: dict,
     ):
-        """Constructor for the loss ntk calculation class."""
+        """Constructor for the loss ntk calculation class.
+
+        Metri fn has to be the Metric, not the Loss!"""
 
         # Set the attributes
-        self.metric_fn = metric_fn
         self.ntk_batch_size = model.ntk_batch_size
         self.store_on_device = model.store_on_device
         self.trace_axes = model.trace_axes

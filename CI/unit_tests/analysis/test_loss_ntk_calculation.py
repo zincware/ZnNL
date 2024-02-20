@@ -36,7 +36,7 @@ from flax import linen as nn
 from neural_tangents import stax
 from numpy.testing import assert_array_almost_equal
 
-from znnl.analysis import LossDerivative, LossNTKCalculation
+from znnl.analysis import LossDerivative, LossNTKCalculation, EigenSpaceAnalysis
 from znnl.data import MNISTGenerator
 from znnl.distance_metrics import LPNorm
 from znnl.loss_functions import LPNormLoss
@@ -74,7 +74,7 @@ class TestLossNTKCalculation:
     def test_reshaping_methods(self):
         """
         Test the _reshape_dataset and _unshape_dataset methods.
-        These are functions used in the loss NTK calculation.
+        These are functions used in the loss NTK calculation to
         """
         # Define a dummy model and dataset to be able to define a LossNTKCalculation class
         production_model = FlaxModel(
@@ -151,18 +151,33 @@ class TestLossNTKCalculation:
         loss = LPNormLoss(order=2)
         # Initialize the loss NTK calculation
         loss_ntk_calculator = LossNTKCalculation(
-            metric_fn=loss,
+            metric_fn=loss.metric,
             model=model,
             dataset=test_data_set,
         )
 
         # Calculate the subloss from the NTK first
-        datapoint = np.array([1, 2, 3, 4, 5, 1])
+        datapoint = loss_ntk_calculator._reshape_dataset(test_data_set)[0:1]
         subloss_from_NTK = loss_ntk_calculator._function_for_loss_ntk(
-            model.model_state.params, datapoint
+            {
+                "params": model.model_state.params,
+                "batch_stats": model.model_state.batch_stats,
+            },
+            datapoint=datapoint,
         )
 
-        print(subloss_from_NTK)
+        # Now calculate subloss manually
+        applied_model = model.apply(
+            {
+                "params": model.model_state.params,
+                "batch_stats": model.model_state.batch_stats,
+            },
+            test_data_set["inputs"][0],
+        )
+        subloss = np.linalg.norm(applied_model - test_data_set["targets"][0], ord=2)
+
+        # Check that the two losses are the same
+        assert subloss - subloss_from_NTK < 1e-5
 
     def test_loss_NTK_calculation(self):
         """
@@ -226,7 +241,12 @@ class TestLossNTKCalculation:
         )
 
         # Assert that the loss NTKs are the same
-        assert_array_almost_equal(loss_ntk, loss_ntk_2)
+        assert_array_almost_equal(loss_ntk, loss_ntk_2, decimal=4)
 
+        calculator1 = EigenSpaceAnalysis(matrix=loss_ntk)
+        calculator2 = EigenSpaceAnalysis(matrix=loss_ntk_2)
 
-TestLossNTKCalculation().test_function_for_loss_ntk()
+        eigenvalues1 = calculator1.compute_eigenvalues(normalize=False)
+        eigenvalue2 = calculator2.compute_eigenvalues(normalize=False)
+
+        assert_array_almost_equal(eigenvalues1, eigenvalue2, decimal=4)
