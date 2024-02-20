@@ -271,29 +271,25 @@ class JaxRecorder:
             self._index_count = 0
 
         # Check if we need an NTK computation and update the class accordingly
-        if any(
-            [
-                "ntk" in self._selected_properties,
-                "covariance_ntk" in self._selected_properties,
-                "magnitude_ntk" in self._selected_properties,
-                "entropy" in self._selected_properties,
-                "magnitude_entropy" in self._selected_properties,
-                "magnitude_variance" in self._selected_properties,
-                "covariance_entropy" in self._selected_properties,
-                "eigenvalues" in self._selected_properties,
-                "trace" in self._selected_properties,
-            ]
-        ):
+        if any([
+            "ntk" in self._selected_properties,
+            "covariance_ntk" in self._selected_properties,
+            "magnitude_ntk" in self._selected_properties,
+            "entropy" in self._selected_properties,
+            "magnitude_entropy" in self._selected_properties,
+            "magnitude_variance" in self._selected_properties,
+            "covariance_entropy" in self._selected_properties,
+            "eigenvalues" in self._selected_properties,
+            "trace" in self._selected_properties,
+        ]):
             self._compute_ntk = True
 
         # Check if we need a loss NTK computation and update the class accordingly
-        if any(
-            [
-                "loss_ntk" in self._selected_properties,
-                "loss_ntk_eigenvalues" in self._selected_properties,
-                "loss_ntk_entropy" in self._selected_properties,
-            ]
-        ):
+        if any([
+            "loss_ntk" in self._selected_properties,
+            "loss_ntk_eigenvalues" in self._selected_properties,
+            "loss_ntk_entropy" in self._selected_properties,
+        ]):
             self._compute_loss_ntk = True
             try:
                 self._loss_ntk_calculator = LossNTKCalculation(
