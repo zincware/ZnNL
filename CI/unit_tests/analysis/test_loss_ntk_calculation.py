@@ -36,7 +36,7 @@ from flax import linen as nn
 from neural_tangents import stax
 from numpy.testing import assert_array_almost_equal
 
-from znnl.analysis import EigenSpaceAnalysis, LossDerivative, LossNTKCalculation
+from znnl.analysis import EigenSpaceAnalysis, LossNTKCalculation
 from znnl.data import MNISTGenerator
 from znnl.distance_metrics import LPNorm
 from znnl.loss_functions import LPNormLoss
@@ -100,14 +100,14 @@ class TestLossNTKCalculation:
         # Setup a test dataset for reshaping
         test_data_set = {
             "inputs": np.array([[1, 2, 3], [4, 5, 6]]),
-            "targets": np.array([[7], [10]]),
+            "targets": np.array([[7, 9], [10, 12]]),
         }
 
         # Test the reshaping
         reshaped_test_data_set = loss_ntk_calculator._reshape_dataset(test_data_set)
 
         assert_array_almost_equal(
-            reshaped_test_data_set, np.array([[1, 2, 3, 7], [4, 5, 6, 10]])
+            reshaped_test_data_set, np.array([[1, 2, 3, 7, 9], [4, 5, 6, 10, 12]])
         )
 
         # Test the unshaping
@@ -115,7 +115,7 @@ class TestLossNTKCalculation:
             reshaped_test_data_set,
             input_dimension=3,
             input_shape=(2, 3),
-            target_shape=(2, 1),
+            target_shape=(2, 2),
             batch_length=reshaped_test_data_set.shape[0],
         )
         assert_array_almost_equal(input_0, test_data_set["inputs"])
@@ -123,9 +123,8 @@ class TestLossNTKCalculation:
 
     def test_function_for_loss_ntk(self):
         """
-        This method tests the function that is used for the correlation matrix
-        in the loss NTK calculation. It is supposed to yield the loss per single
-        datapoint.
+        This method tests the function that calculates the loss for single
+        datapoints.
         """
         # Define a simple feed forward test model
         feed_forward_model = stax.serial(
@@ -183,72 +182,69 @@ class TestLossNTKCalculation:
 
     def test_loss_NTK_calculation(self):
         """
-        Test the Loss NTK calculation.
-        Here we test if the Loss NTK calculated through the neural tangents module is
-        the same as the Loss NTK calculated with the already implemented NTK and loss
-        derivatives.
-        We do this for a small CNN model and the MNIST dataset.
-        We also check if the eigenvalues of the two Loss NTKs are the same.
-
-        The current implementation yields a precision of e-4. If these are numerical
-        errors or due to a mistake in the implementation is to be decided.
+        Test the Loss NTK calculation with a manually hardcoded dataset
+        and a simple feed forward network.
         """
-
-        # Define a test model
-        production_model = FlaxModel(
-            flax_module=ProductionModule(),
-            optimizer=optax.adam(learning_rate=0.01),
-            input_shape=(1, 28, 28, 1),
-            trace_axes=(),
+        # Define a simple feed forward test model
+        feed_forward_model = stax.serial(
+            stax.Dense(5),
+            stax.Relu(),
+            stax.Dense(1),
+            stax.Relu(),
         )
-        # Initialize model parameters
 
-        data_generator = MNISTGenerator(ds_size=20)
-        data_set = {
-            "inputs": data_generator.train_ds["inputs"],
-            "targets": data_generator.train_ds["targets"],
-        }
+        # Initialize the model
+        model = NTModel(
+            optimizer=optax.adam(learning_rate=0.01),
+            input_shape=(2,),
+            trace_axes=(),
+            nt_module=feed_forward_model,
+        )
 
+        # Create a test dataset
+        inputs = np.array(onp.random.rand(10, 2))
+        targets = np.array(100 * onp.random.rand(10, 1))
+        test_data_set = {"inputs": inputs, "targets": targets}
+
+        # Initialize loss
+        loss = LPNormLoss(order=2)
         # Initialize the loss NTK calculation
         loss_ntk_calculator = LossNTKCalculation(
-            metric_fn=LPNorm(order=2),
-            model=production_model,
-            dataset=data_set,
+            metric_fn=loss.metric,
+            model=model,
+            dataset=test_data_set,
         )
 
         # Compute the loss NTK
-        loss_ntk = loss_ntk_calculator.compute_loss_ntk(
-            x_i=data_set, model=production_model
-        )["empirical"]
-
-        # Now for comparison calculate regular ntk
-        ntk = production_model.compute_ntk(data_set["inputs"], infinite=False)[
+        loss_ntk = loss_ntk_calculator.compute_loss_ntk(x_i=test_data_set, model=model)[
             "empirical"
         ]
-        # Calculate Loss derivative fn
-        loss_derivative_calculator = LossDerivative(LPNormLoss(order=2))
+
+        # Now for comparison calculate regular ntk
+        ntk = model.compute_ntk(test_data_set["inputs"], infinite=False)["empirical"]
 
         # predictions calculation analogous to the one in jax recording
-        predictions = production_model(data_set["inputs"])
+        predictions = model(test_data_set["inputs"])
         if type(predictions) is tuple:
             predictions = predictions[0]
 
         # calculation of loss derivatives
         # note: here we need the derivatives of the subloss, not the regular loss fn
-        loss_derivatives = onp.empty(shape=(len(predictions), len(predictions[0])))
+        loss_derivatives = onp.empty(shape=(len(predictions)))
         for i in range(len(loss_derivatives)):
-            # The weird indexing here is because of axis constraints in LPNormLoss
-            loss_derivatives[i] = loss_derivative_calculator.calculate(
-                predictions[i : i + 1], data_set["targets"][i : i + 1]
-            )[0]
+            loss_derivatives[i] = (
+                predictions[i, 0] / np.abs(predictions[i, 0])
+                if predictions[i, 0] != 0
+                else 0
+            )
 
         # Calculate the loss NTK from the loss derivatives and the ntk
         loss_ntk_2 = np.einsum(
-            "ik, jl, ijkl-> ij", loss_derivatives, loss_derivatives, ntk
+            "i, j, ijkl-> ij", loss_derivatives, loss_derivatives, ntk
         )
 
         # Assert that the loss NTKs are the same
-        assert_array_almost_equal(loss_ntk, loss_ntk_2, decimal=4)
+        assert_array_almost_equal(loss_ntk, loss_ntk_2, decimal=6)
 
         calculator1 = EigenSpaceAnalysis(matrix=loss_ntk)
         calculator2 = EigenSpaceAnalysis(matrix=loss_ntk_2)
@@ -256,4 +252,4 @@ class TestLossNTKCalculation:
         eigenvalues1 = calculator1.compute_eigenvalues(normalize=False)
         eigenvalue2 = calculator2.compute_eigenvalues(normalize=False)
 
-        assert_array_almost_equal(eigenvalues1, eigenvalue2, decimal=4)
+        assert_array_almost_equal(eigenvalues1, eigenvalue2, decimal=6)

@@ -35,6 +35,17 @@ from znnl.models.jax_model import JaxModel
 
 
 class LossNTKCalculation:
+    """
+    Class to calculate the loss NTK matrix for a given model and dataset.
+
+    The loss NTK matrix is defined as
+    .. math::
+        (\\Lambda_L)_{ij} = \\sum_\\theta\\frac{\\partial\\ell_i}{\\partial\\theta}
+        \\frac{\\partial\\ell_j}{\\partial\\theta}}.
+    Where :math:`\\ell_i` is the loss function for the single datapoint :math:`i` and
+    :math:`\\theta` are the parameters of the network.
+    """
+
     def __init__(
         self,
         metric_fn: Callable,
@@ -145,19 +156,16 @@ class LossNTKCalculation:
 
     def _function_for_loss_ntk(self, params, datapoint) -> float:
         """
-        Helper function to create a subloss apply function.
-        The datapoint here has to be shaped so that its an array of length
-        input dimension + output dimension. This is done so that the inputs
-        and targets can be understood by the neural tangents empirical_ntk_fn
-        function. It gets unpacked by the _unshape_data function in here.
+        Helper function that calculates the subloss for single datapoints.
 
         Parameters
         ----------
         params : dict
                 The parameters of the model.
-        datapoint : np.ndarray
-                The datapoint for which to calculate the subloss. Shaped as
-                described in the description of this function.
+        datapoint : np.ndarray (batch_length, input_dimension + output_dimension)
+                The datapoint for which to calculate the subloss. The indicated
+                shaping is necessary so that this function can be understood by the
+                empirical NTK function of the neural tangents library.
 
         Returns
         -------
