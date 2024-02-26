@@ -32,7 +32,6 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 import jax.numpy as np
 import numpy as onp
 import optax
-from flax import linen as nn
 from neural_tangents import stax
 from numpy.testing import assert_array_almost_equal
 
@@ -41,28 +40,6 @@ from znnl.data import MNISTGenerator
 from znnl.distance_metrics import LPNorm
 from znnl.loss_functions import LPNormLoss
 from znnl.models import FlaxModel, NTModel
-
-
-# Defines a simple CNN module
-class ProductionModule(nn.Module):
-    """
-    Simple CNN module.
-    """
-
-    @nn.compact
-    def __call__(self, x):
-        x = nn.Conv(features=16, kernel_size=(3, 3))(x)
-        x = nn.relu(x)
-        x = nn.max_pool(x, window_shape=(3, 3), strides=(2, 2))
-        x = nn.Conv(features=16, kernel_size=(3, 3))(x)
-        x = nn.relu(x)
-        x = nn.max_pool(x, window_shape=(3, 3), strides=(2, 2))
-        x = x.reshape((x.shape[0], -1))  # flatten
-        x = nn.Dense(features=10)(x)
-        x = nn.relu(x)
-        x = nn.Dense(10)(x)
-
-        return x
 
 
 class TestLossNTKCalculation:
@@ -77,11 +54,19 @@ class TestLossNTKCalculation:
         """
         # Define a dummy model and dataset to be able to define a
         # LossNTKCalculation class
-        production_model = FlaxModel(
-            flax_module=ProductionModule(),
+        feed_forward_model = stax.serial(
+            stax.Dense(5),
+            stax.Relu(),
+            stax.Dense(2),
+            stax.Relu(),
+        )
+
+        # Initialize the model
+        test_model = NTModel(
             optimizer=optax.adam(learning_rate=0.01),
-            input_shape=(1, 28, 28, 1),
+            input_shape=(1, 5),
             trace_axes=(),
+            nt_module=feed_forward_model,
         )
 
         data_generator = MNISTGenerator(ds_size=20)
@@ -93,7 +78,7 @@ class TestLossNTKCalculation:
         # Initialize the loss NTK calculation
         loss_ntk_calculator = LossNTKCalculation(
             metric_fn=LPNorm(order=2),
-            model=production_model,
+            model=test_model,
             dataset=data_set,
         )
 
