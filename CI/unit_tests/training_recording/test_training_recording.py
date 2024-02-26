@@ -66,9 +66,6 @@ class TestModelRecording:
             eigenvalues=True,
             trace=True,
             loss_derivative=True,
-            loss_ntk=True,
-            loss_ntk_eigenvalues=True,
-            loss_ntk_entropy=True,
         )
         recorder.instantiate_recorder(data_set=self.dummy_data_set)
         _exclude_list = [
@@ -78,6 +75,7 @@ class TestModelRecording:
             "name",
             "storage_path",
             "chunk_size",
+            "use_loss_ntk",
         ]
         for key, val in vars(recorder).items():
             if key[0] != "_" and key not in _exclude_list:
