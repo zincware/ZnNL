@@ -109,9 +109,11 @@ class SimpleTraining:
 
         self.review_metric = None
 
-        # Add the loss and accuracy function to the recorders and re-instantiate them
+        # Add the loss and accuracy function and the model
+        # to the recorders and re-instantiate them
         if self.recorders is not None:
             for item in self.recorders:
+                item._model = self.model
                 item.loss_fn = loss_fn
                 item.accuracy_fn = accuracy_fn
                 item.instantiate_recorder()

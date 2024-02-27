@@ -75,6 +75,7 @@ class TestModelRecording:
             "name",
             "storage_path",
             "chunk_size",
+            "use_loss_ntk",
         ]
         for key, val in vars(recorder).items():
             if key[0] != "_" and key not in _exclude_list:

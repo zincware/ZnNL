@@ -37,6 +37,7 @@ from znnl.accuracy_functions.accuracy_function import AccuracyFunction
 from znnl.analysis.eigensystem import EigenSpaceAnalysis
 from znnl.analysis.entropy import EntropyAnalysis
 from znnl.analysis.loss_fn_derivative import LossDerivative
+from znnl.analysis.loss_ntk_calculation import LossNTKCalculation
 from znnl.loss_functions import SimpleLoss
 from znnl.models.jax_model import JaxModel
 from znnl.training_recording.data_storage import DataStorage
@@ -157,6 +158,9 @@ class JaxRecorder:
     loss_derivative: bool = False
     _loss_derivative_array: list = None
 
+    # Use Loss NTK
+    use_loss_ntk: bool = False
+
     # Class helpers
     update_rate: int = 1
     _loss_fn: SimpleLoss = None
@@ -165,8 +169,12 @@ class JaxRecorder:
     _model: JaxModel = None
     _data_set: dict = None
     _compute_ntk: bool = False  # Helps to know if we can compute it once and share.
+    _compute_loss_ntk: bool = (
+        False  # Helps to know if we can compute it once and share.
+    )
     _compute_loss_derivative: bool = False
     _loss_derivative_fn: LossDerivative = False
+    _loss_ntk_calculator: LossNTKCalculation = None
     _index_count: int = 0  # Helps to avoid problems with non-1 update rates.
     _data_storage: DataStorage = None  # For writing to disk.
 
@@ -178,7 +186,7 @@ class JaxRecorder:
         self._selected_properties = [
             value
             for value in list(vars(self))
-            if value[0] != "_" and vars(self)[value] is True
+            if value[0] != "_" and value != "use_loss_ntk" and vars(self)[value] is True
         ]
 
     def _build_or_resize_array(self, name: str, overwrite: bool):
@@ -254,18 +262,37 @@ class JaxRecorder:
             self._index_count = 0
 
         # Check if we need an NTK computation and update the class accordingly
-        if any([
-            "ntk" in self._selected_properties,
-            "covariance_ntk" in self._selected_properties,
-            "magnitude_ntk" in self._selected_properties,
-            "entropy" in self._selected_properties,
-            "magnitude_entropy" in self._selected_properties,
-            "magnitude_variance" in self._selected_properties,
-            "covariance_entropy" in self._selected_properties,
-            "eigenvalues" in self._selected_properties,
-            "trace" in self._selected_properties,
-        ]):
+        if any(
+            [
+                "ntk" in self._selected_properties,
+                "covariance_ntk" in self._selected_properties,
+                "magnitude_ntk" in self._selected_properties,
+                "entropy" in self._selected_properties,
+                "magnitude_entropy" in self._selected_properties,
+                "magnitude_variance" in self._selected_properties,
+                "covariance_entropy" in self._selected_properties,
+                "eigenvalues" in self._selected_properties,
+                "trace" in self._selected_properties,
+            ]
+        ):
             self._compute_ntk = True
+
+        # Check if we need a loss NTK computation and update the class accordingly
+        if self.use_loss_ntk:
+            try:
+                self._loss_ntk_calculator = LossNTKCalculation(
+                    metric_fn=self._loss_fn.metric,
+                    model=self._model,
+                    dataset=self._data_set,
+                )
+            except AttributeError:
+                # This happens frequently during the instantiation of the recorder.
+                # As this shouldn't lead to a problem if the loss function is set later,
+                # before the loss NTK is computed, we just log the issue and continue.
+                logger.info(
+                    "Warning: The loss function hasn't been set yet."
+                    "Please set it before training."
+                )
 
         if "loss_derivative" in self._selected_properties:
             self._loss_derivative_fn = LossDerivative(self._loss_fn)
@@ -300,7 +327,7 @@ class JaxRecorder:
             parsed_data["predictions"] = predictions
 
             # Compute ntk here to avoid repeated computation.
-            if self._compute_ntk:
+            if self._compute_ntk and not self.use_loss_ntk:
                 try:
                     ntk = self._model.compute_ntk(
                         self._data_set["inputs"], infinite=False
@@ -320,6 +347,15 @@ class JaxRecorder:
                     self.covariance_entropy = False
                     self.eigenvalues = False
                     self._read_selected_attributes()
+
+            # Compute loss ntk here to avoid repeated computation.
+            if self._compute_ntk and self.use_loss_ntk:
+                parsed_data["ntk"] = self._loss_ntk_calculator.compute_loss_ntk(
+                    x_i=self._data_set,
+                    x_j=None,
+                    model=self._model,
+                    infinite=False,  # Set true to compute infinite width limit
+                )["empirical"]
 
             for item in self._selected_properties:
                 call_fn = getattr(self, f"_update_{item}")  # get the callable function
