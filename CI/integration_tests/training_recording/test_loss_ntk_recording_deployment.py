@@ -51,14 +51,16 @@ class TestLossNTKRecorderDeployment:
         Create a model and data for the tests.
         """
 
-        network = stax.serial(stax.Dense(5), stax.Relu(), stax.Dense(1), stax.Relu())
+        network = stax.serial(
+            stax.Dense(10), stax.Relu(), stax.Dense(10), stax.Relu(), stax.Dense(1)
+        )
         cls.model = NTModel(
             nt_module=network, input_shape=(5,), optimizer=optax.adam(1e-3)
         )
 
         cls.data_set = {
             "inputs": np.random.rand(10, 5),
-            "targets": np.random.randint(0, 2, 10),
+            "targets": np.random.randint(0, 2, (10, 1)),
         }
 
         cls.ntk_recorder = JaxRecorder(
@@ -99,6 +101,8 @@ class TestLossNTKRecorderDeployment:
         ntk_recording = self.ntk_recorder.gather_recording()
         loss_ntk_recording = self.loss_ntk_recorder.gather_recording()
 
-        # assert_array_almost_equal(
-        #    np.abs(ntk_recording.ntk), np.abs(loss_ntk_recording.ntk), decimal=5
-        # )
+        # For LPNormLoss of order 2 and a 1D output Network, the NTK and the loss NTK
+        # should be the same up to a factor of +1 or -1.
+        assert_array_almost_equal(
+            np.abs(ntk_recording.ntk), np.abs(loss_ntk_recording.ntk), decimal=5
+        )
