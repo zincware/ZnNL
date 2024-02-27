@@ -30,9 +30,9 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 import numpy as np
-from numpy.testing import assert_array_almost_equal
 import optax
 from neural_tangents import stax
+from numpy.testing import assert_array_almost_equal
 
 from znnl.loss_functions import LPNormLoss
 from znnl.models import NTModel
