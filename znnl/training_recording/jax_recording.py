@@ -41,9 +41,9 @@ from znnl.loss_functions import SimpleLoss
 from znnl.models.jax_model import JaxModel
 from znnl.training_recording.data_storage import DataStorage
 from znnl.utils.matrix_utils import (
-    calculate_l_pq_norm,
     compute_magnitude_density,
     normalize_gram_matrix,
+    flatten_rank_4_tensor,
 )
 
 logger = logging.getLogger(__name__)
@@ -71,6 +71,8 @@ class JaxRecorder:
             If true, loss will be recorded.
     accuracy : bool (default=False)
             If true, accuracy will be recorded.
+    network_predictions : bool (default=False)
+            If true, network predictions will be recorded.
     ntk : bool (default=False)
             If true, the ntk will be recorded. Warning, large overhead.
     covariance_ntk : bool (default = False)
@@ -97,6 +99,9 @@ class JaxRecorder:
             output will be recorded.
     update_rate : int (default=1)
             How often the values are updated.
+    flatten_ntk : bool (default=False)
+            If true, an NTK of rank 4 will be flattened to a rank 2 tensor.
+            In case of an NTK of rank 2, this has no effect.
 
     Notes
     -----
@@ -108,6 +113,7 @@ class JaxRecorder:
     name: str = "my_recorder"
     storage_path: str = "./"
     chunk_size: int = 100
+    flatten_ntk: bool = False
 
     # Model Loss
     loss: bool = True
@@ -116,6 +122,10 @@ class JaxRecorder:
     # Model accuracy
     accuracy: bool = False
     _accuracy_array: list = None
+
+    # Model predictions
+    network_predictions: bool = False
+    _network_predictions_array: list = None
 
     # NTK Matrix
     ntk: bool = False
@@ -178,7 +188,7 @@ class JaxRecorder:
         self._selected_properties = [
             value
             for value in list(vars(self))
-            if value[0] != "_" and vars(self)[value] is True
+            if value[0] != "_" and vars(self)[value] is True and value != "flatten_ntk"
         ]
 
     def _build_or_resize_array(self, name: str, overwrite: bool):
@@ -304,8 +314,10 @@ class JaxRecorder:
                 try:
                     ntk = self._model.compute_ntk(
                         self._data_set["inputs"], infinite=False
-                    )
-                    parsed_data["ntk"] = ntk["empirical"]
+                    )["empirical"]
+                    if self.flatten_ntk and len(ntk.shape) == 4:
+                        ntk = flatten_rank_4_tensor(ntk)
+                    parsed_data["ntk"] = ntk
                 except NotImplementedError:
                     logger.info(
                         "NTK calculation is not yet available for this model. Removing "
@@ -432,6 +444,17 @@ class JaxRecorder:
             )
             self.accuracy = False
             self._read_selected_attributes()
+
+    def _update_network_predictions(self, parsed_data: dict):
+        """
+        Update the network predictions array.
+
+        Parameters
+        ----------
+        parsed_data : dict
+                Data computed before the update to prevent repeated calculations.
+        """
+        self._network_predictions_array.append(parsed_data["predictions"])
 
     def _update_ntk(self, parsed_data: dict):
         """
@@ -584,8 +607,8 @@ class JaxRecorder:
         vector_loss_derivative = self._loss_derivative_fn.calculate(
             parsed_data["predictions"], self._data_set["targets"]
         )
-        loss_derivative = calculate_l_pq_norm(vector_loss_derivative)
-        self._loss_derivative_array.append(loss_derivative)
+        # loss_derivative = calculate_l_pq_norm(vector_loss_derivative)
+        self._loss_derivative_array.append(vector_loss_derivative)
 
     def gather_recording(self, selected_properties: list = None) -> dataclass:
         """

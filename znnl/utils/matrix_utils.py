@@ -86,7 +86,12 @@ def normalize_gram_matrix(gram_matrix: np.ndarray):
 
     normalizing_matrix = np.sqrt(repeated_diagonals * repeated_diagonals.T)
 
-    return gram_matrix / normalizing_matrix
+    # Check for zeros in the normalizing matrix
+    normalizing_matrix = np.where(
+        normalizing_matrix == 0, 0, 1 / normalizing_matrix
+    )  # Avoid division by zero
+
+    return gram_matrix * normalizing_matrix
 
 
 def compute_magnitude_density(gram_matrix: np.ndarray) -> np.ndarray:
@@ -134,3 +139,31 @@ def calculate_l_pq_norm(matrix: np.ndarray, p: int = 2, q: int = 2):
     inner_sum = np.sum(np.power(matrix, q), axis=-1)
     outer_sum = np.sum(np.power(inner_sum, q / p), axis=-1)
     return np.power(outer_sum, 1 / q)
+
+
+def flatten_rank_4_tensor(tensor: np.ndarray) -> np.ndarray:
+    """
+    Flatten a rank 4 tensor to a rank 2 tensor using a specific reshaping.
+
+    The tensor is assumed to be of shape (n, n, m, m). The reshaping is done by
+    concatenating first with the third and then with the fourth dimension, resulting
+    in a tensor of shape (n * m, n * m).
+
+    Parameters
+    ----------
+    tensor : np.ndarray (shape=(n, n, m, m))
+            Tensor to flatten.
+
+    Returns
+    -------
+    flattened_tensor : np.ndarray (shape=(n * m, n * m))
+            Flattened tensor.
+    """
+
+    assert tensor.shape[0] == tensor.shape[1]
+    assert tensor.shape[2] == tensor.shape[3]
+
+    _tensor = np.moveaxis(tensor, [1, 2], [2, 1])
+    return _tensor.reshape(
+        _tensor.shape[0] * _tensor.shape[1], _tensor.shape[0] * _tensor.shape[1]
+    )
