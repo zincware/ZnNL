@@ -1,0 +1,34 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: ZnNL
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Konstantin
+    family-names: Nikolaou
+    email: knikolaou@icp.uni-stuttgart.de
+    affiliation: University of Stuttgart
+    orcid: 'https://orcid.org/0009-0000-9926-680X'
+  - given-names: Samuel
+    family-names: Tovey
+    email: stovey@icp.uni-stuttgart.de
+    affiliation: University of Stuttgart
+    orcid: 'https://orcid.org/0000-0001-9537-8361'
+# identifiers:
+#   - type: doi
+#     value: 10.48550/arXiv.2307.00994
+version: 0.0.1
+date-released: 2021-07-19
+repository-code: 'https://github.com/zincware/ZnNL'
+abstract: >-
+  Zinware package for Neural Learning (ZnNL) is a Python package for studying the 
+  fundamental nature of learning in neural networks. It is designed to be a flexible and 
+  extensible platform for investigating the theoretical aspects of learning. 
+keywords:
+  - Neural Networks
+  - Machine Learning
+  - Theory of Learning
