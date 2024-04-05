@@ -25,6 +25,7 @@ Summary
 -------
 Unit tests for the loss aware reservoir training class.
 """
+
 import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
@@ -33,6 +34,7 @@ from typing import Callable, List, Optional, Union
 
 import numpy as np
 import optax
+from flax import linen as nn
 from jax import random
 from neural_tangents import stax
 from numpy.testing import assert_array_equal
@@ -40,7 +42,7 @@ from numpy.testing import assert_array_equal
 from znnl.accuracy_functions import AccuracyFunction
 from znnl.distance_metrics import DistanceMetric
 from znnl.loss_functions import MeanPowerLoss
-from znnl.models import JaxModel, NTModel
+from znnl.models import FlaxModel, JaxModel, NTModel
 from znnl.training_recording import JaxRecorder
 from znnl.training_strategies import LossAwareReservoir, RecursiveMode
 from znnl.training_strategies.training_decorator import train_func
@@ -97,10 +99,45 @@ class LarDecoratorTester(LossAwareReservoir):
         return epochs, batch_size
 
 
+class FlaxArchitecture(nn.Module):
+    """
+    Test model for the Flax tests.
+    """
+
+    @nn.compact
+    def __call__(self, x):
+        x = nn.Dense(5, use_bias=True)(x)
+        x = nn.relu(x)
+        x = nn.Dense(features=1, use_bias=True)(x)
+        return x
+
+
 class TestLossAwareReservoir:
     """
     Unit test suite of the loss aware reservoir training strategy.
     """
+
+    @classmethod
+    def setup_class(cls):
+        """
+        Create models and data for the tests.
+        """
+        key1, key2 = random.split(random.PRNGKey(1), 2)
+        x = random.normal(key1, (10, 8))
+        y = random.normal(key1, (10, 1))
+        cls.train_ds = {"inputs": x, "targets": y}
+        cls.test_ds = {"inputs": x, "targets": y}
+
+        cls.nt_model = NTModel(
+            nt_module=stax.serial(stax.Dense(5), stax.Relu(), stax.Dense(1)),
+            optimizer=optax.adam(learning_rate=0.001),
+            input_shape=(1, 8),
+        )
+        cls.flax_model = FlaxModel(
+            flax_module=FlaxArchitecture(),
+            optimizer=optax.adam(learning_rate=0.001),
+            input_shape=(1, 8),
+        )
 
     def test_reservoir_sorting(self):
         """
@@ -139,77 +176,120 @@ class TestLossAwareReservoir:
         selection_idx = np.argsort(np.abs(raw_x))[::-1][:4]
         assert_array_equal(reservoir, selection_idx)
 
-    @classmethod
-    def setup_class(cls):
+    def test_update_reservoir(self):
         """
-        Create data for the tests.
-        """
-        key1, key2 = random.split(random.PRNGKey(1), 2)
-        x = random.normal(key1, (10, 8))
-        y = random.normal(key1, (10, 1))
-        cls.train_ds = {"inputs": x, "targets": y}
-        cls.test_ds = {"inputs": x, "targets": y}
+        Test the method _update_reservoir.
 
-    def test_latest_point_exclusion(self):
-        """
-        Test the method _update_reservoir excludes the latest points from train_ds.
-
-        When selecting latest_points > 0, this number of points is separated from the
-        train data. The selected points will be appended to every batch.
-        This test checks if the method _update_reservoir removes the latest_points from
-        the data, as they cannot be part of the reservoir. The reservoir must only
-        consist of already seen data.
+        Test whether the method excludes the latest points from train_ds.
+        When selecting latest_points > 0, this number of points is separated from
+        the train data. The selected points will be appended to every batch.
+        This test checks if the method _update_reservoir removes the latest_points
+        from the data, as they cannot be part of the reservoir. The reservoir must
+        only consist of already seen data.
             1. For reservoir_size = len(train_ds)
                 * Shrinking reservoir for latest_points = 1
                 * Shrinking reservoir for latest_points = 4
+                * Shrink the reservoir to include not points for latest_points = 10
             2. For reservoir_size = 5 and len(train_ds) = 10
                 * No shrinking reservoir size for latest_points = 4
+
+        Perform both tests for nt and flax models.
         """
 
-        model = NTModel(
-            nt_module=stax.serial(stax.Dense(5), stax.Relu(), stax.Dense(1)),
-            optimizer=optax.adam(learning_rate=0.001),
-            input_shape=(1, 8),
-        )
+        nt_model = self.nt_model
+        flax_model = self.flax_model
 
         # Test for latest_points = 1
-        trainer = LossAwareReservoir(
-            model=model,
+        nt_trainer = LossAwareReservoir(
+            model=nt_model,
+            loss_fn=MeanPowerLoss(order=2),
+            disable_loading_bar=True,
+            reservoir_size=10,
+            latest_points=1,
+        )
+        flax_trainer = LossAwareReservoir(
+            model=flax_model,
             loss_fn=MeanPowerLoss(order=2),
             disable_loading_bar=True,
             reservoir_size=10,
             latest_points=1,
         )
 
-        trainer.train_data_size = len(self.train_ds["inputs"])
-        reservoir = trainer._update_reservoir(train_ds=self.train_ds)
-        assert len(self.train_ds["inputs"]) - 1 == len(reservoir)
+        nt_trainer.train_data_size = self.train_ds["inputs"].shape[0]
+        flax_trainer.train_data_size = self.train_ds["inputs"].shape[0]
+        reservoir = nt_trainer._update_reservoir(train_ds=self.train_ds)
+        assert self.train_ds["inputs"].shape[0] - 1 == len(reservoir)
+        reservoir = flax_trainer._update_reservoir(train_ds=self.train_ds)
+        assert self.train_ds["inputs"].shape[0] - 1 == len(reservoir)
 
         # Test for latest_points = 4
-        trainer = LossAwareReservoir(
-            model=model,
+        nt_trainer = LossAwareReservoir(
+            model=nt_model,
+            loss_fn=MeanPowerLoss(order=2),
+            disable_loading_bar=True,
+            reservoir_size=10,
+            latest_points=4,
+        )
+        flax_trainer = LossAwareReservoir(
+            model=flax_model,
             loss_fn=MeanPowerLoss(order=2),
             disable_loading_bar=True,
             reservoir_size=10,
             latest_points=4,
         )
 
-        trainer.train_data_size = len(self.train_ds["inputs"])
-        reservoir = trainer._update_reservoir(train_ds=self.train_ds)
-        assert len(self.train_ds["inputs"]) - 4 == len(reservoir)
+        nt_trainer.train_data_size = self.train_ds["inputs"].shape[0]
+        flax_trainer.train_data_size = self.train_ds["inputs"].shape[0]
+        reservoir = nt_trainer._update_reservoir(train_ds=self.train_ds)
+        assert self.train_ds["inputs"].shape[0] - 4 == len(reservoir)
+        reservoir = flax_trainer._update_reservoir(train_ds=self.train_ds)
+        assert self.train_ds["inputs"].shape[0] - 4 == len(reservoir)
+
+        # Test for latest_points = 10
+        nt_trainer = LossAwareReservoir(
+            model=nt_model,
+            loss_fn=MeanPowerLoss(order=2),
+            disable_loading_bar=True,
+            reservoir_size=10,
+            latest_points=10,
+        )
+        flax_trainer = LossAwareReservoir(
+            model=flax_model,
+            loss_fn=MeanPowerLoss(order=2),
+            disable_loading_bar=True,
+            reservoir_size=10,
+            latest_points=10,
+        )
+
+        nt_trainer.train_data_size = self.train_ds["inputs"].shape[0]
+        flax_trainer.train_data_size = self.train_ds["inputs"].shape[0]
+        reservoir = nt_trainer._update_reservoir(train_ds=self.train_ds)
+        assert 0 == len(reservoir)
+        reservoir = flax_trainer._update_reservoir(train_ds=self.train_ds)
+        assert 0 == len(reservoir)
 
         # Test for latest_points = 2 but for reservoir_size = 5. The reservoir size
         # should not be affected now.
-        trainer = LossAwareReservoir(
-            model=model,
+        nt_trainer = LossAwareReservoir(
+            model=nt_model,
+            loss_fn=MeanPowerLoss(order=2),
+            disable_loading_bar=True,
+            reservoir_size=5,
+            latest_points=4,
+        )
+        flax_trainer = LossAwareReservoir(
+            model=flax_model,
             loss_fn=MeanPowerLoss(order=2),
             disable_loading_bar=True,
             reservoir_size=5,
             latest_points=4,
         )
 
-        trainer.train_data_size = len(self.train_ds["inputs"])
-        reservoir = trainer._update_reservoir(train_ds=self.train_ds)
+        nt_trainer.train_data_size = self.train_ds["inputs"].shape[0]
+        flax_trainer.train_data_size = self.train_ds["inputs"].shape[0]
+        reservoir = nt_trainer._update_reservoir(train_ds=self.train_ds)
+        assert 5 == len(reservoir)
+        reservoir = flax_trainer._update_reservoir(train_ds=self.train_ds)
         assert 5 == len(reservoir)
 
     def test_update_training_kwargs(self):

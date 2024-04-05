@@ -25,6 +25,7 @@ Summary
 -------
 Test the RND class.
 """
+
 import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
@@ -112,7 +113,7 @@ class TestSimpleTraining:
         The model is an optional input in the training strategy construction.
         The input of a model can be handled by frameworks adding the model during the
         workflow of that framework (an example is RND).
-        Testing for a KeyError if no model was added but the training method is
+        Testing for a ValueError if no model was added but the training method is
         executed.
         """
 
@@ -122,7 +123,7 @@ class TestSimpleTraining:
             disable_loading_bar=True,
         )
 
-        assert_raises(KeyError, trainer.train_model, self.train_ds, self.test_ds, 1)
+        assert_raises(ValueError, trainer.train_model, self.train_ds, self.test_ds, 1)
 
     def test_update_training_kwargs(self):
         """

@@ -24,10 +24,13 @@ If you use this module please cite us with:
 Summary
 -------
 """
+
+from znnl.data.abalone import AbaloneDataGenerator
 from znnl.data.cifar10 import CIFAR10Generator
 from znnl.data.confined_particles import ConfinedParticles
 from znnl.data.data_generator import DataGenerator
 from znnl.data.mnist import MNISTGenerator
+from znnl.data.mpg_generator import MPGDataGenerator
 from znnl.data.points_on_a_circle import PointsOnCircle
 from znnl.data.points_on_a_lattice import PointsOnLattice
 
@@ -38,4 +41,6 @@ __all__ = [
     PointsOnCircle.__name__,
     MNISTGenerator.__name__,
     CIFAR10Generator.__name__,
+    MPGDataGenerator.__name__,
+    AbaloneDataGenerator.__name__,
 ]

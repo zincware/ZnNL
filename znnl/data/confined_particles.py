@@ -23,7 +23,9 @@ If you use this module please cite us with:
 
 Summary
 -------
+Data generator for confined particles.
 """
+
 from abc import ABC
 
 import jax

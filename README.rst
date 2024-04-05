@@ -2,7 +2,7 @@
 
 ZnNL
 ====
-A Python library for stuyding neural learning.
+A Python library for studying neural learning.
 
 Installation
 ------------

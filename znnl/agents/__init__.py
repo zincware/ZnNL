@@ -24,6 +24,7 @@ If you use this module please cite us with:
 Summary
 -------
 """
+
 from znnl.agents.agent import Agent
 from znnl.agents.approximate_maximum_entropy import ApproximateMaximumEntropy
 from znnl.agents.maximum_entropy import MaximumEntropy

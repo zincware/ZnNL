@@ -24,6 +24,7 @@ If you use this module please cite us with:
 Summary
 -------
 """
+
 import logging
 from typing import Callable, List, Union
 
@@ -244,7 +245,7 @@ class PartitionedTraining(SimpleTraining):
                 Number of epochs to train over.
                 Each epoch defines a training phase.
         train_ds_selection : list
-                             (default = [slice(-1, None, None), slice(None, None, None)])
+                        (default = [slice(-1, None, None), slice(None, None, None)])
                 The train is selected by a np.array of indices or slices.
                 Each slice or array defines a training phase.
         batch_size : list (default = [1, 1])
@@ -303,7 +304,9 @@ class PartitionedTraining(SimpleTraining):
             state, train_metrics = self._train_epoch(
                 state=state, train_ds=train_data, batch_size=batch_size[training_phase]
             )
-            self.review_metric = self._evaluate_model(state.params, test_ds)
+            self.review_metric = self._evaluate_model(
+                {"params": state.params, "batch_stats": state.batch_stats}, test_ds
+            )
             train_losses.append(train_metrics["loss"])
 
             # Update the loading bar

@@ -24,6 +24,7 @@ If you use this module please cite us with:
 Summary
 -------
 """
+
 import logging
 from typing import Callable, List, Optional, Tuple, Union
 
@@ -157,6 +158,7 @@ class LossAwareReservoir(SimpleTraining):
         Updates the reservoir in the following steps:
 
         * Exclude latest_points from the train_data
+        * Check whether the the reservoir will be empty or it can cover all data
         * Compute distance of representations of the remaining training set
         * Sort the training set according to the distance
 
@@ -179,13 +181,18 @@ class LossAwareReservoir(SimpleTraining):
         else:
             old_data = {k: v[: -self.latest_points, ...] for k, v in train_ds.items()}
 
-        distances = self._compute_distance(old_data)
-
+        # If the reservoir no old data is available, return an empty array
+        if old_data["inputs"].shape[0] == 0:
+            data_idx = np.array([])
         # Return the old train data indices if the reservoir can cover them all
-        if self.reservoir_size >= self.train_data_size - self.latest_points:
-            return np.arange(self.train_data_size - self.latest_points)
+        elif self.reservoir_size >= self.train_data_size - self.latest_points:
+            data_idx = np.arange(self.train_data_size - self.latest_points)
         # If the reservoir is smaller than the train, data select data via the loss
-        return np.argsort(distances)[::-1][: self.reservoir_size]
+        else:
+            distances = self._compute_distance(old_data)
+            data_idx = np.argsort(distances)[::-1][: self.reservoir_size]
+
+        return data_idx
 
     def _append_latest_points(self, data_idx: List[int], freq: int = 1):
         """
@@ -344,7 +351,12 @@ class LossAwareReservoir(SimpleTraining):
             latest_data = {
                 k: v[-self.latest_points :, ...] for k, v in train_ds.items()
             }
-            state, metrics = self._train_step(state, latest_data)
+            state, metrics = self._train_step(
+                state=state,
+                batch=latest_data,
+                loss_fn=self.loss_fn,
+                compute_metrics_fn=self._compute_metrics,
+            )
             batch_metrics = [metrics]
         else:
             batches_per_epoch = len(self.reservoir) // batch_size
@@ -357,7 +369,12 @@ class LossAwareReservoir(SimpleTraining):
             for permutation in permutations:
                 permutation = self._append_latest_points(permutation)
                 batch = {k: v[permutation, ...] for k, v in train_ds.items()}
-                state, metrics = self._train_step(state, batch)
+                state, metrics = self._train_step(
+                    state=state,
+                    batch=batch,
+                    loss_fn=self.loss_fn,
+                    compute_metrics_fn=self._compute_metrics,
+                )
                 batch_metrics.append(metrics)
 
         # Get the metrics off device for printing.
@@ -439,7 +456,9 @@ class LossAwareReservoir(SimpleTraining):
             state, train_metrics = self._train_epoch(
                 state=state, train_ds=train_ds, batch_size=batch_size
             )
-            self.review_metric = self._evaluate_model(state.params, test_ds)
+            self.review_metric = self._evaluate_model(
+                {"params": state.params, "batch_stats": state.batch_stats}, test_ds
+            )
             train_losses.append(train_metrics["loss"])
 
             # Update the loading bar

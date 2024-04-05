@@ -24,6 +24,7 @@ If you use this module please cite us with:
 Summary
 -------
 """
+
 import logging
 from typing import Callable, List, Sequence, Union
 
@@ -76,6 +77,7 @@ class FlaxModel(JaxModel):
         layer_stack: List[nn.Module] = None,
         flax_module: nn.Module = None,
         trace_axes: Union[int, Sequence[int]] = (-1,),
+        store_on_device: bool = True,
         seed: int = None,
     ):
         """
@@ -99,6 +101,9 @@ class FlaxModel(JaxModel):
                 The default value is trace_axes(-1,), which reduces the NTK to a tensor
                 of rank 2.
                 For a full NTK set trace_axes=().
+        store_on_device : bool, default True
+                Whether to store the NTK on the device or not.
+                This should be set False for large NTKs that do not fit in GPU memory.
         seed : int, default None
                 Random seed for the RNG. Uses a random int if not specified.
         """
@@ -122,24 +127,8 @@ class FlaxModel(JaxModel):
             seed=seed,
             trace_axes=trace_axes,
             ntk_batch_size=batch_size,
+            store_on_device=store_on_device,
         )
-
-    def _ntk_apply_fn(self, params, inputs: np.ndarray):
-        """
-        Return an NTK capable apply function.
-
-        Parameters
-        ----------
-        params : dict
-                Network parameters to use in the calculation.
-        inputs : np.ndarray
-                Data on which to apply the network
-
-        Returns
-        -------
-        Acts on the data with the model architecture and parameter set.
-        """
-        return self.model.apply({"params": params}, inputs, mutable=["batch_stats"])[0]
 
     def _init_params(self, kernel_init: Callable = None, bias_init: Callable = None):
         """Initialize a state for the model parameters.
@@ -164,8 +153,36 @@ class FlaxModel(JaxModel):
 
         return params
 
-    def apply(self, params: dict, inputs: np.ndarray):
-        """Apply the model to a feature vector.
+    def _ntk_apply_fn(self, params, inputs: np.ndarray):
+        """
+        Return an NTK capable apply function.
+
+        Parameters
+        ----------
+        params: dict
+                Contains the model parameters to use for the model computation.
+                It is a dictionary of structure
+                {'params': params, 'batch_stats': batch_stats}
+        inputs : np.ndarray
+                Feature vector on which to apply the model.
+
+        TODO(Konsti): Make the apply function work with the batch_stats.
+
+        Returns
+        -------
+        Acts on the data with the model architecture and parameter set.
+        """
+        return self.model.apply(
+            {"params": params["params"]}, inputs, mutable=["batch_stats"]
+        )[0]
+
+    def train_apply_fn(self, params: dict, inputs: np.ndarray):
+        """
+        Apply function used for training the model.
+
+        This is the function that is used to apply the model to the data in the training
+        loop. It is defined for each child class indivudally and is used to create the
+        train state.
 
         Parameters
         ----------
@@ -174,8 +191,31 @@ class FlaxModel(JaxModel):
         inputs : np.ndarray
                 Feature vector on which to apply the model.
 
+        TODO(Konsti): Make the apply function work with the batch_stats.
+
         Returns
         -------
         Output of the model.
         """
-        return self.apply_fn({"params": params}, inputs)
+        return self.apply_fn({"params": params["params"]}, inputs)
+
+    def apply(self, params: dict, inputs: np.ndarray):
+        """
+        Apply the model to a feature vector.
+
+        Parameters
+        ----------
+        params: dict
+                Contains the model parameters to use for the model computation.
+                It is a dictionary of structure
+                {'params': params, 'batch_stats': batch_stats}
+        inputs : np.ndarray
+                Feature vector on which to apply the model.
+
+        TODO(Konsti): Make the apply function work with the batch_stats.
+
+        Returns
+        -------
+        Output of the model.
+        """
+        return self.apply_fn({"params": params["params"]}, inputs)

@@ -24,6 +24,7 @@ If you use this module please cite us with:
 Summary
 -------
 """
+
 import copy
 import logging
 import time
@@ -100,7 +101,7 @@ class RND(Agent):
         self.target = target_network
         self.predictor = predictor_network
         self.training_strategy = training_strategy
-        self.training_strategy.model = self.predictor
+        self.training_strategy.set_model(self.predictor)
         self.metric = distance_metric
         self.data_generator = data_generator
         self.point_selector = point_selector

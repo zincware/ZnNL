@@ -24,6 +24,7 @@ If you use this module please cite us with:
 Summary
 -------
 """
+
 import tempfile
 from pathlib import Path
 
@@ -60,6 +61,7 @@ class TestModelRecording:
             magnitude_ntk=True,
             entropy=True,
             magnitude_entropy=True,
+            magnitude_variance=True,
             covariance_entropy=True,
             eigenvalues=True,
             trace=True,
@@ -99,6 +101,7 @@ class TestModelRecording:
                 magnitude_ntk=True,
                 entropy=False,
                 magnitude_entropy=False,
+                magnitude_variance=False,
                 covariance_entropy=False,
                 eigenvalues=False,
             )
@@ -135,3 +138,29 @@ class TestModelRecording:
         # Test overwriting.
         recorder.instantiate_recorder(data_set=self.dummy_data_set, overwrite=True)
         assert recorder._ntk_array == []
+
+    def test_magnitude_variance(self):
+        """
+        Test the magnitude variance function.
+        """
+        recorder = JaxRecorder(
+            loss=False,
+            accuracy=False,
+            ntk=False,
+            entropy=False,
+            magnitude_variance=True,
+            eigenvalues=False,
+        )
+        recorder.instantiate_recorder(data_set=self.dummy_data_set)
+
+        # Create some test data.
+        data = onp.random.uniform(1.0, 2.0, size=(100))
+        ntk = onp.eye(100) * data
+        # calculate the magnitude variance
+        recorder._update_magnitude_variance(parsed_data={"ntk": ntk})
+        # calculate the expected variance
+        expected_variance = onp.var(onp.sqrt(data) / onp.sqrt(data).mean())
+        # check that the variance is correct
+        testing.assert_almost_equal(
+            recorder._magnitude_variance_array, expected_variance
+        )
