@@ -18,7 +18,7 @@ plotly
 flax
 tqdm
 pandas
-neural-tangents==0.6.4
+neural-tangents
 tensorflow-datasets
 isort
 tensorflow
