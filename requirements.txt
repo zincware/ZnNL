@@ -13,7 +13,8 @@ tensorflow_probability
 scipy
 scikit-learn
 jaxlib
-jax
+# Temp fix of version of jax until the next release
+jax<=0.4.25
 plotly
 flax
 tqdm
