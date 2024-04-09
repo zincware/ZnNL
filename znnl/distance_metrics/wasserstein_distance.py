@@ -24,6 +24,7 @@ If you use this module please cite us with:
 Summary
 -------
 """
+
 import jax.numpy as np
 from jax.nn import softmax
 from scipy.stats import wasserstein_distance

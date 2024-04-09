@@ -24,6 +24,7 @@ If you use this module please cite us with:
 Summary
 -------
 """
+
 from znnl.distance_metrics.exponential_repulsion import ExponentialRepulsion
 from znnl.loss_functions.simple_loss import SimpleLoss
 
