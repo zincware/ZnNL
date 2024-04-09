@@ -24,6 +24,7 @@ If you use this module please cite us with:
 Summary
 -------
 """
+
 from abc import ABC
 from typing import Callable, Optional, Tuple
 
@@ -95,13 +96,9 @@ class ContrastiveLoss:
         self.repulsive_pot_fn = repulsive_pot_fn
         self.external_pot_fn = external_pot_fn
 
-        self.turn_off_potentials = np.array(
-            [
-                turn_off_attractive_potential,
-                turn_off_repulsive_potential,
-                turn_off_external_potential,
-            ]
-        )
+        self.turn_off_attractive_potential = turn_off_attractive_potential
+        self.turn_off_repulsive_potential = turn_off_repulsive_potential
+        self.turn_off_external_potential = turn_off_external_potential
 
         self._set_default_potentials()
 
@@ -136,26 +133,32 @@ class ContrastiveLoss:
 
         Returns
         -------
-        pair_sim : Tuple[np.array, np.array]
-                Tuple of arrays containing the indices of the pairs of similar labels.
-        pair_diff : Tuple[np.array, np.array]
-                Tuple of arrays containing the indices of the pairs of different labels.
+        mask_sim : np.array
+                Mask for data points with similar labels.
+                The mask is a binary array with 1 for similar labels and 0 for different
+                labels.
+                It has the shape (n_pairs, )
+        mask_diff : np.array
+                Mask for data points with different labels.
+                The mask is a binary array with 1 for different labels and 0 for similar
+                labels.
+                It has the shape (n_pairs, )
+        map_idx : Tuple[np.array, np.array]
+                Tuple of arrays containing the indices of the pairs of similar and
+                different labels.
+                It has the shape (2, n_pairs)
         """
         # Gram matrix of vectors
         matrix: np.ndarray = np.einsum("ij, kj -> ik", targets, targets)
 
         # Get the indices of the upper triangle of the gram matrix
-        triangle_idx: Tuple[np.array, np.array] = np.triu_indices(len(matrix), 1)
+        map_idx: Tuple[np.array, np.array] = np.triu_indices(len(matrix), 1)
 
         # Create masks for similar and different pairs using the triangle indices
-        mask_sim: np.array = np.bool_(matrix[triangle_idx])
-        mask_diff: np.array = np.logical_not(mask_sim)
+        mask_sim: np.array = np.array(matrix[map_idx], dtype=int)
+        mask_diff: np.array = np.array((mask_sim - 1) * -1, dtype=int)
 
-        # Compute the indices of pairs of similar and different labels
-        pair_sim = (triangle_idx[0][mask_sim], triangle_idx[1][mask_sim])
-        pair_diff = (triangle_idx[0][mask_diff], triangle_idx[1][mask_diff])
-
-        return pair_sim, pair_diff
+        return mask_sim, mask_diff, map_idx
 
     def compute_losses(self, inputs: np.ndarray, targets: np.ndarray):
         """
@@ -175,18 +178,25 @@ class ContrastiveLoss:
         losses : Tuple[float, float, float]
                 Tuple of the attractive, repulsive and external losses.
         """
+        mask_sim, mask_diff, map_idx = self.create_label_map(targets=targets)
 
-        att_map, rep_map = self.create_label_map(targets=targets)
+        data_left = np.take(inputs, map_idx[0], axis=0)
+        data_right = np.take(inputs, map_idx[1], axis=0)
 
-        attractive_loss = self.attractive_pot_fn(
-            np.take(inputs, att_map[0], axis=0),
-            np.take(inputs, att_map[1], axis=0),
-        )
-        repulsive_loss = self.repulsive_pot_fn(
-            np.take(inputs, rep_map[0], axis=0),
-            np.take(inputs, rep_map[1], axis=0),
-        )
-        external_loss = self.external_pot_fn(inputs)
+        if self.turn_off_attractive_potential:
+            attractive_loss = 0
+        else:
+            attractive_loss = self.attractive_pot_fn(data_left, data_right, mask_sim)
+
+        if self.turn_off_repulsive_potential:
+            repulsive_loss = 0
+        else:
+            repulsive_loss = self.repulsive_pot_fn(data_left, data_right, mask_diff)
+
+        if self.turn_off_external_potential:
+            external_loss = 0
+        else:
+            external_loss = self.external_pot_fn(inputs)
 
         return attractive_loss, repulsive_loss, external_loss
 
@@ -211,9 +221,7 @@ class ContrastiveLoss:
             inputs, targets
         )
 
-        return_list = np.array([attractive_loss, repulsive_loss, external_loss])
-        take_idx = np.where(self.turn_off_potentials == False)[0]
-        return np.sum(np.take(return_list, take_idx))
+        return np.array([attractive_loss, repulsive_loss, external_loss]).sum()
 
 
 class ExternalPotential(ABC):
