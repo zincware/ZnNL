@@ -73,6 +73,6 @@ class SimpleLoss(ABC):
                 total loss of all points based on the similarity measurement
         """
         if mask is not None:
-            return np.sum(self.metric(point_1, point_2) * mask, axis=0)
+            return np.mean(self.metric(point_1, point_2) * mask, axis=0)
         else:
-            return np.sum(self.metric(point_1, point_2), axis=0)
+            return np.mean(self.metric(point_1, point_2), axis=0)
