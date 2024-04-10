@@ -26,102 +26,32 @@ Summary
 """
 
 from abc import ABC
-from typing import Callable, Optional, Tuple
+from typing import Tuple
 
 import jax.numpy as np
 
-from znnl.distance_metrics.distance_metric import DistanceMetric
-from znnl.distance_metrics.order_n_difference import OrderNDifference
-from znnl.loss_functions.exponential_repulsion_loss import ExponentialRepulsionLoss
-from znnl.loss_functions.mean_power_error import MeanPowerLoss
-from znnl.loss_functions.simple_loss import SimpleLoss
 
-
-class ContrastiveLoss:
+class ContrastiveLoss(ABC):
     """
-    Class for the Contrastive Loss.
+    Abstract base class for the Contrastive Loss.
 
-    The contrastive loss is a loss function, which is not based on a distance metric.
-
+    The contrastive loss is a loss function, incorporating contrastive interactions
+    between representations of data samples. It is used to learn similarity between
+    data samples.
     It is fully differentiable and can be used to train neural networks.
-    The contrastive coss is defined through three loss/potential functions:
-    - Attractive potential
-    - Repulsive potential
-    - External potential
-    For each of these potentials, users can define their own or use
-    the default potential functions.
-    The potential functions are combined into a total loss function by summation.
-    Note that the potential values should be of similar magnitude otherwise one
-    potential can dominate the others.
-
-    The default potential functions are:
-    - Attractive potential: L_p norm (p=2)
-    - Repulsive potential: Exponential repulsion Loss(default parameters)
-    - External potential: ExternalPotential (default parameters)
-
-    The default loss functions can be turned off by setting the corresponding
-    boolean to True. All loss functions are always evaluated, but the loss is only added
-    to the total loss if the corresponding boolean is False.
     """
 
-    def __init__(
-        self,
-        attractive_pot_fn: Optional[SimpleLoss] = None,
-        repulsive_pot_fn: Optional[SimpleLoss] = None,
-        external_pot_fn: Optional[Callable] = None,
-        turn_off_attractive_potential: bool = False,
-        turn_off_repulsive_potential: bool = False,
-        turn_off_external_potential: bool = False,
-    ):
+    def __init__(self):
         """
         Constructor for the Contrastive Loss class.
-
-        Parameters
-        ----------
-        attractive_pot_fn : SimpleLoss
-                The attractive potential function.
-        repulsive_pot_fn : SimpleLoss
-                The repulsive potential function.
-        external_pot_fn : Callable
-                The external potential function.
-        turn_off_attractive_potential : bool (default: False)
-                Turn off the attractive potential.
-        turn_off_repulsive_potential : bool (default: False)
-                Turn off the repulsive potential.
-        turn_off_external_potential : bool (default: False)
-                Turn off the external potential.
         """
-
-        self.attractive_pot_fn = attractive_pot_fn
-        self.repulsive_pot_fn = repulsive_pot_fn
-        self.external_pot_fn = external_pot_fn
-
-        self.turn_off_attractive_potential = turn_off_attractive_potential
-        self.turn_off_repulsive_potential = turn_off_repulsive_potential
-        self.turn_off_external_potential = turn_off_external_potential
-
-        self._set_default_potentials()
-
-    def _set_default_potentials(self):
-        """
-        Set the default potentials for the Contrastive Loss.
-
-        The default potentials are:
-        - Attractive potential: L_p norm(p=2)
-        - Repulsive potential: Exponential repulsion
-        - External potential: ExternalPotential
-        """
-        if self.attractive_pot_fn is None:
-            self.attractive_pot_fn = MeanPowerLoss(order=2)
-        if self.repulsive_pot_fn is None:
-            self.repulsive_pot_fn = ExponentialRepulsionLoss()
-        if self.external_pot_fn is None:
-            self.external_pot_fn = ExternalPotential()
+        super().__init__()
 
     @staticmethod
-    def create_label_map(targets: np.ndarray):
+    def create_label_map_symmetric(targets: np.ndarray):
         """
-        Compute the indices of pairs of similar and different labels.
+        Compute the indices of pairs of similar and different labels assuming symmetry
+        of the interactions.
 
         Find pairs of similar label and pairs of different labels in the one-hot encoded
         targets of a dataset.
@@ -152,19 +82,58 @@ class ContrastiveLoss:
         matrix: np.ndarray = np.einsum("ij, kj -> ik", targets, targets)
 
         # Get the indices of the upper triangle of the gram matrix
-        map_idx: Tuple[np.array, np.array] = np.triu_indices(len(matrix), 1)
+        idx_map: Tuple[np.array, np.array] = np.triu_indices(len(matrix), 1)
 
         # Create masks for similar and different pairs using the triangle indices
-        mask_sim: np.array = np.array(matrix[map_idx], dtype=int)
-        mask_diff: np.array = np.array((mask_sim - 1) * -1, dtype=int)
+        sim_mask: np.array = np.array(matrix[idx_map], dtype=int)
+        diff_mask: np.array = np.array((sim_mask - 1) * -1, dtype=int)
 
-        return mask_sim, mask_diff, map_idx
+        return sim_mask, diff_mask, idx_map
+
+    @staticmethod
+    def create_label_map(targets: np.ndarray):
+        """
+        Compute the indices of pairs of similar and different labels for interactions
+        without symmetry.
+
+        Find pairs of similar label and pairs of different labels in the one-hot encoded
+        targets of a dataset.
+
+        Parameters
+        ----------
+        targets : np.ndarray
+                The one-hot encoded targets of the dataset.
+
+        Returns
+        -------
+        pos_mask : np.ndarray
+                Mask for data points with similar labels.
+                The mask is a binary array with 1 for similar labels and 0 for different
+                labels.
+                It has the shape (n, n) with n being the number of data points.
+        neg_mask : np.ndarray
+                Mask for data points with different labels.
+                The mask is a binary array with 1 for different labels and 0 for similar
+                labels.
+                It has the shape (n, n) with n being the number of data points.
+        """
+        # Gram matrix of vectors
+        pos_mask: np.ndarray = np.einsum("ij, kj -> ik", targets, targets)
+
+        # Create negative mask
+        neg_mask = 1 - pos_mask
+
+        # Remove the diagonal of the gram matrix
+        pos_mask = pos_mask - np.eye(len(pos_mask))
+
+        return pos_mask, neg_mask
 
     def compute_losses(self, inputs: np.ndarray, targets: np.ndarray):
         """
         Compute the contrastive losses.
 
-        This method returns the attractive, repulsive and external losses separately.
+        This method returns all losses computed.
+        Depending on the implementation, it can return multiple losses.
 
         Parameters
         ----------
@@ -175,30 +144,10 @@ class ContrastiveLoss:
 
         Returns
         -------
-        losses : Tuple[float, float, float]
-                Tuple of the attractive, repulsive and external losses.
+        losses : Tuple[float]
+                Tuple of all losses computed.
         """
-        mask_sim, mask_diff, map_idx = self.create_label_map(targets=targets)
-
-        data_left = np.take(inputs, map_idx[0], axis=0)
-        data_right = np.take(inputs, map_idx[1], axis=0)
-
-        if self.turn_off_attractive_potential:
-            attractive_loss = 0
-        else:
-            attractive_loss = self.attractive_pot_fn(data_left, data_right, mask_sim)
-
-        if self.turn_off_repulsive_potential:
-            repulsive_loss = 0
-        else:
-            repulsive_loss = self.repulsive_pot_fn(data_left, data_right, mask_diff)
-
-        if self.turn_off_external_potential:
-            external_loss = 0
-        else:
-            external_loss = self.external_pot_fn(inputs)
-
-        return attractive_loss, repulsive_loss, external_loss
+        raise NotImplementedError("Implemented in child classes.")
 
     def __call__(self, inputs: np.ndarray, targets: np.ndarray) -> float:
         """
@@ -217,71 +166,6 @@ class ContrastiveLoss:
                 total loss of all points based on the similarity measurement
         """
 
-        attractive_loss, repulsive_loss, external_loss = self.compute_losses(
-            inputs, targets
-        )
+        losses: Tuple = self.compute_losses(inputs, targets)
 
-        return np.array([attractive_loss, repulsive_loss, external_loss]).sum()
-
-
-class ExternalPotential(ABC):
-    """
-    Class for the external potential function.
-
-    An external potential function is a function that maps a place in space to a
-    potential value.
-    """
-
-    def __init__(
-        self,
-        distance_metric: Optional[DistanceMetric] = None,
-        scale: Optional[float] = 1.0,
-        center: Optional[np.array] = None,
-    ):
-        """
-        Constructor for the simple loss parent class.
-
-        Parameters
-        ----------
-        distance_metric : Optional[DistanceMetric]
-                The distance metric used to compute the external potential.
-        scale : Optional[float]
-                The factor scaling the width of the external potential relative to the
-                input space.
-                Values larger than 1.0 will result a wider potential.
-                Values smaller than 1.0 will result in a narrower potential.
-        center : Optional[np.array]
-                The center of the external potential.
-                Has to be of the same shape as points in the input space.
-        """
-        super().__init__()
-        if distance_metric is None:
-            distance_metric = OrderNDifference(order=4)
-        self.metric = distance_metric
-        self.scale = scale
-        self.center = center
-
-    def __call__(self, point_1: np.array) -> float:
-        """
-        Call the external potential function.
-
-        First setting the center point which defines the minimum of the external
-        potential. Then computing the external potential for the given points by using
-        the distance metric.
-
-        Parameters
-        ----------
-        point_1 : np.array
-                The points for which the external potential is computed.
-
-        Returns
-        -------
-        loss : float
-                Total loss of all points based on the similarity measurement
-        """
-        if self.center:
-            point_2 = np.repeat(self.center[None, ...], point_1.shape[0], axis=0)
-        else:
-            point_2 = np.zeros_like(point_1)
-
-        return np.mean(self.metric(point_1 / self.scale, point_2 / self.scale), axis=0)
+        return np.array([losses]).sum()
