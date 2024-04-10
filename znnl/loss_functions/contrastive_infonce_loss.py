@@ -25,16 +25,9 @@ Summary
 -------
 """
 
-from abc import ABC
-from typing import Optional, Tuple
-
 import jax.numpy as np
 
-from znnl.distance_metrics.distance_metric import DistanceMetric
-from znnl.distance_metrics.order_n_difference import OrderNDifference
 from znnl.loss_functions.contrastive_loss import ContrastiveLoss
-from znnl.loss_functions.exponential_repulsion_loss import ExponentialRepulsionLoss
-from znnl.loss_functions.mean_power_error import MeanPowerLoss
 
 
 class ContrastiveInfoNCELoss(ContrastiveLoss):
