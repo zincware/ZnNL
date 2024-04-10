@@ -26,7 +26,12 @@ Summary
 """
 
 from znnl.loss_functions.absolute_angle_difference import AngleDistanceLoss
-from znnl.loss_functions.contrastive_loss import ContrastiveLoss, ExternalPotential
+from znnl.loss_functions.contrastive_infonce_loss import ContrastiveInfoNCELoss
+from znnl.loss_functions.contrastive_isolated_potential_loss import (
+    ContrastiveIsolatedPotentialLoss,
+    ExternalPotential,
+)
+from znnl.loss_functions.contrastive_loss import ContrastiveLoss
 from znnl.loss_functions.cosine_distance import CosineDistanceLoss
 from znnl.loss_functions.cross_entropy_loss import CrossEntropyLoss
 from znnl.loss_functions.exponential_repulsion_loss import ExponentialRepulsionLoss
@@ -48,4 +53,6 @@ __all__ = [
     ExponentialRepulsionLoss.__name__,
     ContrastiveLoss.__name__,
     ExternalPotential.__name__,
+    ContrastiveIsolatedPotentialLoss.__name__,
+    ContrastiveInfoNCELoss.__name__,
 ]
