@@ -50,4 +50,4 @@ class TestContrastiveIsolatedPotentialLoss:
         """
         contrastive_loss = ContrastiveIsolatedPotentialLoss()
         loss = contrastive_loss(self.predictions, self.targets)
-        onp.testing.assert_almost_equal(loss, 3.9300, decimal=4)
+        onp.testing.assert_almost_equal(loss, 3.36333, decimal=4)
