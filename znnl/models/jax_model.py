@@ -127,7 +127,6 @@ class JaxModel:
             batch_size=ntk_batch_size,
             store_on_device=store_on_device,
         )
-        self.empirical_ntk_jit = jax.jit(self.empirical_ntk)
         self.apply_jit = jax.jit(self.apply)
 
     def init_model(
@@ -249,7 +248,7 @@ class JaxModel:
         """
         if x_j is None:
             x_j = x_i
-        empirical_ntk = self.empirical_ntk_jit(
+        empirical_ntk = self.empirical_ntk(
             x_i,
             x_j,
             {

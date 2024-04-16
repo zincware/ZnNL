@@ -104,45 +104,47 @@ class TSNEVisualizer:
         fig_dict["layout"]["xaxis2"] = {"domain": [0.8, 1.0]}
         fig_dict["layout"]["yaxis2"] = {"anchor": "x2"}
         fig_dict["layout"]["hovermode"] = "closest"
-        fig_dict["layout"]["updatemenus"] = [{
-            "buttons": [
-                {
-                    "args": [
-                        None,
-                        {
-                            "frame": {"duration": 500, "redraw": False},
-                            "fromcurrent": True,
-                            "transition": {
-                                "duration": 300,
-                                "easing": "quadratic-in-out",
+        fig_dict["layout"]["updatemenus"] = [
+            {
+                "buttons": [
+                    {
+                        "args": [
+                            None,
+                            {
+                                "frame": {"duration": 500, "redraw": False},
+                                "fromcurrent": True,
+                                "transition": {
+                                    "duration": 300,
+                                    "easing": "quadratic-in-out",
+                                },
                             },
-                        },
-                    ],
-                    "label": "Play",
-                    "method": "animate",
-                },
-                {
-                    "args": [
-                        [None],
-                        {
-                            "frame": {"duration": 0, "redraw": False},
-                            "mode": "immediate",
-                            "transition": {"duration": 0},
-                        },
-                    ],
-                    "label": "Pause",
-                    "method": "animate",
-                },
-            ],
-            "direction": "left",
-            "pad": {"r": 10, "t": 87},
-            "showactive": False,
-            "type": "buttons",
-            "x": 0.1,
-            "xanchor": "right",
-            "y": 0,
-            "yanchor": "top",
-        }]
+                        ],
+                        "label": "Play",
+                        "method": "animate",
+                    },
+                    {
+                        "args": [
+                            [None],
+                            {
+                                "frame": {"duration": 0, "redraw": False},
+                                "mode": "immediate",
+                                "transition": {"duration": 0},
+                            },
+                        ],
+                        "label": "Pause",
+                        "method": "animate",
+                    },
+                ],
+                "direction": "left",
+                "pad": {"r": 10, "t": 87},
+                "showactive": False,
+                "type": "buttons",
+                "x": 0.1,
+                "xanchor": "right",
+                "y": 0,
+                "yanchor": "top",
+            }
+        ]
 
         sliders_dict = {
             "active": 0,
@@ -163,20 +165,24 @@ class TSNEVisualizer:
         }
 
         # Add initial data
-        fig_dict["data"].append({
-            "x": self.dynamic[0][:, 0],
-            "y": self.dynamic[0][:, 1],
-            "mode": "markers",
-            "name": "Predictor",
-        })
-        fig_dict["data"].append({
-            "x": self.reference[0][:, 0],
-            "y": self.reference[0][:, 1],
-            "mode": "markers",
-            "xaxis": "x2",
-            "yaxis": "y2",
-            "name": "Target",
-        })
+        fig_dict["data"].append(
+            {
+                "x": self.dynamic[0][:, 0],
+                "y": self.dynamic[0][:, 1],
+                "mode": "markers",
+                "name": "Predictor",
+            }
+        )
+        fig_dict["data"].append(
+            {
+                "x": self.reference[0][:, 0],
+                "y": self.reference[0][:, 1],
+                "mode": "markers",
+                "xaxis": "x2",
+                "yaxis": "y2",
+                "name": "Target",
+            }
+        )
 
         # Make the figure frames.
         for i, item in enumerate(self.dynamic):
