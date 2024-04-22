@@ -34,9 +34,9 @@ class ContrastiveInfoNCELoss(ContrastiveLoss):
     """
     Class for the Contrastive InfoNCE Loss.
 
-    The InfoNCE loss is a type of contrastive loss function.
-    It is used to train neural networks by maximizing the mutual information between
-    the input and the output of the network.
+    The InfoNCE loss is a type of contrastive loss function based on information
+`    theory and Noise-Contrastive Estimation (NCE). It is used to train neural networks
+    by maximizing the mutual information between representations of data samples.
 
     The InfoNCE loss is an implementation of a contrastive loss function using a
     repulsive and attractive potential in one term.
