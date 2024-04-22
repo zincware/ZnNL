@@ -41,11 +41,11 @@ class ExponentialRepulsion(DistanceMetric):
 
     It is mainly used for the calculation of the contraction loss.
 
-    The default values for alpha and temp are chosen such that the repulsion is
+    The default values for alpha and temperature are chosen such that the repulsion is
     of equal strength as the default attraction of the contraction loss.
     """
 
-    def __init__(self, alpha: float = 0.01, temp: float = 0.1):
+    def __init__(self, alpha: float = 0.01, temperature: float = 0.1):
         """
         Constructor for the exponential repulsion loss class.
 
@@ -54,14 +54,14 @@ class ExponentialRepulsion(DistanceMetric):
         alpha : float (default=0.01)
                 Factor defining the strength of the repulsion, i.e. the value of the
                 repulsion for zero distance.
-        temp : float (default=0.1)
+        temperature : float (default=0.1)
                 Factor defining the length scale on which the repulsion is taking place.
                 This can be interpreted as a temperature parameter softening the
                 repulsion.
 
         """
         self.alpha = alpha
-        self.temp = temp
+        self.temperature = temperature
 
     def __call__(self, point_1: np.ndarray, point_2: np.ndarray, **kwargs):
         """
@@ -79,7 +79,7 @@ class ExponentialRepulsion(DistanceMetric):
         point_2 : np.ndarray (n_points, point_dimension)
             Second set of points in the comparison.
         kwargs
-                Miscellaneous keyword arguments for the specific metric.
+            Miscellaneous keyword arguments for the specific metric.
 
         Returns
         -------
@@ -87,4 +87,4 @@ class ExponentialRepulsion(DistanceMetric):
                 Array of distances for each point.
         """
         absolute = np.abs(point_1 - point_2)
-        return np.mean(self.alpha * np.exp(-absolute / self.temp), axis=1)
+        return np.mean(self.alpha * np.exp(-absolute / self.temperature), axis=1)

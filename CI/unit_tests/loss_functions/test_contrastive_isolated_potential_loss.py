@@ -66,7 +66,7 @@ class TestContrastiveIsolatedPotentialLoss:
         targets = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])  # one-hot
         contrastive_loss = ContrastiveIsolatedPotentialLoss(
             turn_off_external_potential=True,
-            repulsive_pot_fn=ExponentialRepulsionLoss(alpha=1, temp=1),
+            repulsive_pot_fn=ExponentialRepulsionLoss(alpha=1, temperature=1),
         )
         loss = contrastive_loss(predictions, targets)
         onp.testing.assert_almost_equal(loss, 1.0, decimal=4)

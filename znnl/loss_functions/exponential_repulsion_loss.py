@@ -38,7 +38,7 @@ class ExponentialRepulsionLoss(SimpleLoss):
     two points.
     """
 
-    def __init__(self, alpha: float = 0.01, temp: float = 0.1):
+    def __init__(self, alpha: float = 0.01, temperature: float = 0.1):
         """
         Constructor for the exponential repulsion loss class.
 
@@ -47,10 +47,10 @@ class ExponentialRepulsionLoss(SimpleLoss):
         alpha : float (default=0.01)
                 Factor defining the strength of the repulsion, i.e. the value of the
                 repulsion for zero distance.
-        temp : float (default=0.1)
+        temperature : float (default=0.1)
                 Factor defining the length scale on which the repulsion is taking place.
                 This can be interpreted as a temperature parameter softening the
                 repulsion.
         """
         super(ExponentialRepulsionLoss, self).__init__()
-        self.metric = ExponentialRepulsion(alpha=alpha, temp=temp)
+        self.metric = ExponentialRepulsion(alpha=alpha, temperature=temperature)

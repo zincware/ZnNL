@@ -54,12 +54,12 @@ class TestExponentialRepulsion:
             of negative length -1 return alpha/beta*exp(-1).
         4. Test if two points on the diagonal of an N-dimensional hypercube
             of length 2 return alpha*exp(-1) return alpha when rescaling with
-            temp=2.
+            temperature=2.
 
         """
         alpha = 17.0
-        temp = 1.0
-        potential = ExponentialRepulsion(alpha=alpha, temp=temp)
+        temperature = 1.0
+        potential = ExponentialRepulsion(alpha=alpha, temperature=temperature)
 
         # 1.
         point_1 = [[1.0, 1.0, 1.0]]
@@ -82,8 +82,8 @@ class TestExponentialRepulsion:
 
         # 4.
         alpha = 17.0
-        temp = 2.0
-        potential = ExponentialRepulsion(alpha=alpha, temp=temp)
+        temperature = 2.0
+        potential = ExponentialRepulsion(alpha=alpha, temperature=temperature)
         point_1 = [[0.0, 0.0, 0.0, 0.0]]
         point_2 = [[2.0, 2.0, 2.0, 2.0]]
         result = potential(np.array(point_1), np.array(point_2))
