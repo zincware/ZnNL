@@ -25,7 +25,7 @@ Summary
 -------
 """
 
-from typing import Callable, Optional
+from typing import Callable, Optional, Tuple
 
 import jax.numpy as np
 
@@ -121,7 +121,7 @@ class ContrastiveIsolatedPotentialLoss(ContrastiveLoss):
         if self.external_pot_fn is None:
             self.external_pot_fn = ExternalPotential()
 
-    def compute_losses(self, inputs: np.ndarray, targets: np.ndarray):
+    def compute_losses(self, inputs: np.ndarray, targets: np.ndarray) -> Tuple[float]:
         """
         Compute the CIP losses.
 
@@ -136,7 +136,7 @@ class ContrastiveIsolatedPotentialLoss(ContrastiveLoss):
 
         Returns
         -------
-        losses : Tuple[float, float, float]
+        losses : Tuple[float]
                 Tuple of the attractive, repulsive and external losses.
         """
         sim_mask, diff_mask, idx_map = self.create_label_map_symmetric(targets=targets)

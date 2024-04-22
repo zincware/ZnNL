@@ -26,7 +26,7 @@ Summary
 """
 
 from abc import ABC
-from typing import Tuple
+from typing import Tuple, Union
 
 import jax.numpy as np
 
@@ -48,7 +48,9 @@ class ContrastiveLoss(ABC):
         super().__init__()
 
     @staticmethod
-    def create_label_map_symmetric(targets: np.ndarray):
+    def create_label_map_symmetric(
+        targets: np.ndarray,
+    ) -> Tuple[np.ndarray, np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         """
         Compute the indices of pairs of similar and different labels assuming symmetry
         of the interactions.
@@ -63,20 +65,22 @@ class ContrastiveLoss(ABC):
 
         Returns
         -------
-        mask_sim : np.array
-                Mask for data points with similar labels.
-                The mask is a binary array with 1 for similar labels and 0 for different
-                labels.
-                It has the shape (n_pairs, )
-        mask_diff : np.array
-                Mask for data points with different labels.
-                The mask is a binary array with 1 for different labels and 0 for similar
-                labels.
-                It has the shape (n_pairs, )
-        map_idx : Tuple[np.array, np.array]
-                Tuple of arrays containing the indices of the pairs of similar and
-                different labels.
-                It has the shape (2, n_pairs)
+        label_map: Tuple[mask_sim, mask_diff, map_idx]
+
+            mask_sim : np.array
+                    Mask for data points with similar labels.
+                    The mask is a binary array with 1 for similar labels and 0 for different
+                    labels.
+                    It has the shape (n_pairs, )
+            mask_diff : np.array
+                    Mask for data points with different labels.
+                    The mask is a binary array with 1 for different labels and 0 for similar
+                    labels.
+                    It has the shape (n_pairs, )
+            map_idx : Tuple[np.array, np.array]
+                    Tuple of arrays containing the indices of the pairs of similar and
+                    different labels.
+                    It has the shape (2, n_pairs)
         """
         # Gram matrix of vectors
         matrix: np.ndarray = np.einsum("ij, kj -> ik", targets, targets)
@@ -91,7 +95,7 @@ class ContrastiveLoss(ABC):
         return sim_mask, diff_mask, idx_map
 
     @staticmethod
-    def create_label_map(targets: np.ndarray):
+    def create_label_map(targets: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
         Compute the indices of pairs of similar and different labels for interactions
         without symmetry.
@@ -106,16 +110,18 @@ class ContrastiveLoss(ABC):
 
         Returns
         -------
-        pos_mask : np.ndarray
-                Mask for data points with similar labels.
-                The mask is a binary array with 1 for similar labels and 0 for different
-                labels.
-                It has the shape (n, n) with n being the number of data points.
-        neg_mask : np.ndarray
-                Mask for data points with different labels.
-                The mask is a binary array with 1 for different labels and 0 for similar
-                labels.
-                It has the shape (n, n) with n being the number of data points.
+        label_map: Tuple[pos_mask, neg_mask]
+
+            pos_mask : np.ndarray
+                    Mask for data points with similar labels.
+                    The mask is a binary array with 1 for similar labels and 0 for different
+                    labels.
+                    It has the shape (n, n) with n being the number of data points.
+            neg_mask : np.ndarray
+                    Mask for data points with different labels.
+                    The mask is a binary array with 1 for different labels and 0 for similar
+                    labels.
+                    It has the shape (n, n) with n being the number of data points.
         """
         # Gram matrix of vectors
         pos_mask: np.ndarray = np.einsum("ij, kj -> ik", targets, targets)
@@ -128,7 +134,9 @@ class ContrastiveLoss(ABC):
 
         return pos_mask, neg_mask
 
-    def compute_losses(self, inputs: np.ndarray, targets: np.ndarray):
+    def compute_losses(
+        self, inputs: np.ndarray, targets: np.ndarray
+    ) -> Union[float, Tuple[float]]:
         """
         Compute the contrastive losses.
 
@@ -166,6 +174,9 @@ class ContrastiveLoss(ABC):
                 total loss of all points based on the similarity measurement
         """
 
-        losses: Tuple = self.compute_losses(inputs, targets)
+        losses = self.compute_losses(inputs, targets)
 
-        return np.array([losses]).sum()
+        if len(losses) > 1:
+            return np.array([losses]).sum()
+        else:
+            return losses

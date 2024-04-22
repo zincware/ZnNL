@@ -35,7 +35,7 @@ class ContrastiveInfoNCELoss(ContrastiveLoss):
     Class for the Contrastive InfoNCE Loss.
 
     The InfoNCE loss is a type of contrastive loss function based on information
-`    theory and Noise-Contrastive Estimation (NCE). It is used to train neural networks
+    theory and Noise-Contrastive Estimation (NCE). It is used to train neural networks
     by maximizing the mutual information between representations of data samples.
 
     The InfoNCE loss is an implementation of a contrastive loss function using a
@@ -59,7 +59,7 @@ class ContrastiveInfoNCELoss(ContrastiveLoss):
         super().__init__()
         self.temperature = temperature
 
-    def compute_losses(self, inputs: np.ndarray, targets: np.ndarray):
+    def compute_losses(self, inputs: np.ndarray, targets: np.ndarray) -> float:
         """
         Compute the contrastive InfoNCE loss.
 
@@ -76,7 +76,7 @@ class ContrastiveInfoNCELoss(ContrastiveLoss):
 
         Returns
         -------
-        losses : float
+        loss : float
                 The InfoNCE loss.
         """
         # Create the map of which pairs are similar and which are different
