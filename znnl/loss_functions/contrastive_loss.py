@@ -176,7 +176,7 @@ class ContrastiveLoss(ABC):
 
         losses = self.compute_losses(inputs, targets)
 
-        if len(losses) > 1:
+        if isinstance(losses, tuple):
             return np.array([losses]).sum()
         else:
             return losses
