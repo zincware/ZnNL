@@ -49,7 +49,12 @@ class WassersteinLoss(SimpleLoss):
         """
         Constructor for the Wasserstein loss class.
         """
-        logger.warning("The Wasserstein loss cannot be used for gradient calculations.")
+        logger.warning(
+            "The Wasserstein loss cannot be used for gradient calculations, "
+            "and therefore not for neural network training. "
+            "It can be used to compare two distributions, however, the current "
+            "implementation is not differentiable!"
+        )
 
         super(WassersteinLoss, self).__init__()
         self.metric = WassersteinDistance()
