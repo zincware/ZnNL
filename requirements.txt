@@ -13,3 +13,5 @@ tensorflow-datasets>=4.9.4
 tensorflow>=2.16.1
 jupyter>=1.0.0
 transformers>=4.40.0
+jax>=0.4.26
+jaxlib>=0.4.26
