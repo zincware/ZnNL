@@ -1,0 +1,10 @@
+isort>=5.13.2
+black>=24.4.0
+sphinx>=7.3.7
+sphinx_copybutton>=0.5.2
+sphinx_rtd_theme>=2.0.0
+nbsphinx>=0.9.3
+pytest>=8.1.1
+numpydoc>=1.7.0
+flake8>=7.0.0
+pre_commit>=3.7.0

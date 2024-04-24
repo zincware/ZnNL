@@ -369,7 +369,7 @@ class SimpleTraining:
         state = self.model.model_state
 
         loading_bar = trange(
-            1, epochs + 1, ncols=100, unit="batch", disable=self.disable_loading_bar
+            0, epochs, ncols=100, unit="batch", disable=self.disable_loading_bar
         )
 
         train_losses = []
