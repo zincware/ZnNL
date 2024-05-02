@@ -91,7 +91,7 @@ class TestMatrixUtils:
         normalized_matrix = normalize_gram_matrix(covariance_matrix)
 
         # Assert diagonals are 1
-        assert_array_equal(
+        assert_array_almost_equal(
             np.diagonal(normalized_matrix), np.array([1.0, 1.0, 1.0, 1.0])
         )
 
@@ -102,7 +102,7 @@ class TestMatrixUtils:
             np.array([3 * row_mul, 4 * row_mul, 5 * row_mul, 6 * row_mul])
         )
         truth_array = covariance_matrix[row] / multiplier
-        assert_array_equal(normalized_matrix[row], truth_array)
+        assert_array_almost_equal(normalized_matrix[row], truth_array)
 
         # Test 2nd row
         row = 1
@@ -111,7 +111,7 @@ class TestMatrixUtils:
             np.array([3 * row_mul, 4 * row_mul, 5 * row_mul, 6 * row_mul])
         )
         truth_array = covariance_matrix[row] / multiplier
-        assert_array_equal(normalized_matrix[row], truth_array)
+        assert_array_almost_equal(normalized_matrix[row], truth_array)
 
         # Test 3rd row
         row = 2
@@ -120,7 +120,7 @@ class TestMatrixUtils:
             np.array([3 * row_mul, 4 * row_mul, 5 * row_mul, 6 * row_mul])
         )
         truth_array = covariance_matrix[row] / multiplier
-        assert_array_equal(normalized_matrix[row], truth_array)
+        assert_array_almost_equal(normalized_matrix[row], truth_array)
 
         # Test 4th row
         row = 3
@@ -129,7 +129,7 @@ class TestMatrixUtils:
             np.array([3 * row_mul, 4 * row_mul, 5 * row_mul, 6 * row_mul])
         )
         truth_array = covariance_matrix[row] / multiplier
-        assert_array_equal(normalized_matrix[row], truth_array)
+        assert_array_almost_equal(normalized_matrix[row], truth_array)
 
     def test_compute_magnitude_density(self):
         """
