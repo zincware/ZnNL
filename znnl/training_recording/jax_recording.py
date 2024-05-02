@@ -599,7 +599,8 @@ class JaxRecorder:
         """
         Update the loss derivative array.
 
-        The loss derivative is normalized by the L_pq matrix norm.
+        The loss derivative records the derivative of the loss function with respect to
+        the network output, returning a vector of the same shape as the network output.
 
         Parameters
         ----------
@@ -609,7 +610,6 @@ class JaxRecorder:
         vector_loss_derivative = self._loss_derivative_fn.calculate(
             parsed_data["predictions"], self._data_set["targets"]
         )
-        # loss_derivative = calculate_l_pq_norm(vector_loss_derivative)
         self._loss_derivative_array.append(vector_loss_derivative)
 
     def gather_recording(self, selected_properties: list = None) -> dataclass:
