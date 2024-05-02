@@ -46,6 +46,7 @@ from znnl.utils.matrix_utils import (
     compute_magnitude_density,
     normalize_gram_matrix,
 )
+import itertools
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +71,11 @@ class JaxRecorder:
             Amount of data to keep in memory before it is dumped to a hdf5 database.
     class_specific : bool (default=False)
             If true, all activated properties will be recorded for each class
-            individually. This is requires a classifcation problem.
+            individually. This requires a classifcation problem.
+            For this to work, there must be at least one instance of each class in the
+            data set used for recording.
+            Labels do not need to be one-hot encoded, however, need to start from 0
+            and be consecutive.
     loss : bool (default=True)
             If true, loss will be recorded.
     accuracy : bool (default=False)
@@ -87,6 +92,11 @@ class JaxRecorder:
             If true, entropy will be recorded. Warning, large overhead.
     covariance_entropy : bool (default=False)
             If true, the entropy of the covariance ntk will be recorded.
+            Warning, large overhead.
+    entropy_class_correlations : bool (default=False)
+            If true, the entropy of every class and class combination will be recorded.
+            This results in 2^n - 1 entropy computations, where n is the number of 
+            classes.
             Warning, large overhead.
     magnitude_variance : bool (default=False)
             If true, the variance of the gradient magnitudes of the ntk will be
@@ -142,6 +152,10 @@ class JaxRecorder:
     covariance_entropy: bool = False
     _covariance_entropy_array: list = None
 
+    # Entropy of the class correlations
+    entropy_class_correlations: bool = False
+    _entropy_class_correlations_array: list = None
+
     # Magnitude Variance of the model
     magnitude_variance: bool = False
     _magnitude_variance_array: list = None
@@ -177,6 +191,7 @@ class JaxRecorder:
 
     # For class specific recording, _class_idx contains (class_labels, indices)
     _class_idx: tuple = None
+    _class_combinations: list = None
 
     def _read_selected_attributes(self):
         """
@@ -217,27 +232,29 @@ class JaxRecorder:
 
     def _get_class_indices(self):
         """
-        Get the indices of the classes.
+        Get indices of the classes, when class specific properties are recorded.
 
         Returns
         -------
         class_specific_idx : tuple
                 Tuple of (class_labels, indices).
+
                 class_labels : np.ndarray
-                        Array of class labels, containing all unique labels.
-                indices : list
-                        List of indices for each class with each entry containing a
+                        Array of class labels, containing all unique labels formatted
+                        as integer labels.
+                indices : np.array
+                        Array of indices for each class with each entry containing a
                         numpy array of indices for each class.
 
         """
         class_idx = np.unique(self._data_set["targets"], axis=0, return_index=True)[1]
-        class_idx_sorted = np.sort(class_idx)
-        class_labels = self._data_set["targets"][class_idx_sorted]
+        class_idx = np.sort(class_idx)
+        class_labels = np.take(self._data_set["targets"], class_idx, axis=0)
         label_dim = class_labels.shape[1]
         if label_dim > 1:
             targets = np.argmax(self._data_set["targets"], axis=1)
             class_specific_idx = (
-                class_labels,
+                np.argmax(class_labels, axis=1),
                 [np.where(targets == np.argmax(i))[0] for i in class_labels],
             )
         else:
@@ -248,6 +265,45 @@ class JaxRecorder:
             )
 
         return class_specific_idx
+    
+    def _get_class_combinations(self):
+        """
+        Get data indices of all class combinations.
+
+        Create sublists of indices for each class itself and all combinations of
+        classes. 
+        For n classes, there are 2^n - 1 combinations of classes, for which the
+        a list of indices is created.
+
+        Returns
+        -------
+        combination_idx :
+                Tuple of (class_specific_idx, class_combinations).
+
+                class_specific_idx : Tuple of (class_labels, indices).
+                        For more information, see the documentation of the
+                        _get_class_indices function.
+                class_combinations : list
+                        List of all possible combinations of indices of classes.
+                        Each index refers to the position of the class in the
+                        class_specific_idx[0] array.
+        """
+        # Get the indices for each class 
+        class_specific_idx = self._get_class_indices()
+        class_labels, _ = class_specific_idx
+
+        # Get the number of classes
+        num_classes = np.shape(class_labels)[0]
+
+        # Create labels for the classes
+        classes = np.arange(num_classes)
+
+        # Create all possible combinations of classes
+        class_combinations = []
+        for i in range(1, num_classes + 1):
+            class_combinations.extend(list(itertools.combinations(classes, i)))
+
+        return class_specific_idx, class_combinations
 
     def instantiate_recorder(self, data_set: dict = None, overwrite: bool = False):
         """
@@ -279,8 +335,19 @@ class JaxRecorder:
             )
 
         # Get indices for class specific recording.
-        self._class_idx = self._get_class_indices()
+        if self.class_specific:
+            self._class_idx = self._get_class_indices()
+            # Check if saving the NTK is selected, if so, unset it and log a warning.
+            if self.ntk:
+                logger.info(
+                    "Class specific recording and NTK recording are not compatible. "
+                    "Unsetting NTK recording. Please instantiate another recorder for "
+                    "NTK recording, without class specific recording."
+                )
+                self.ntk = False
 
+        if self.entropy_class_correlations:
+            self._class_idx, self._class_combinations = self._get_class_combinations()
         # populate the class attribute
         self._read_selected_attributes()
 
@@ -312,6 +379,7 @@ class JaxRecorder:
                 "covariance_entropy" in self._selected_properties,
                 "eigenvalues" in self._selected_properties,
                 "trace" in self._selected_properties,
+                "entropy_class_correlations" in self._selected_properties,
             ]
         ):
             self._compute_ntk = True
@@ -319,12 +387,12 @@ class JaxRecorder:
         if "loss_derivative" in self._selected_properties:
             self._loss_derivative_fn = LossDerivative(self._loss_fn)
 
-    @staticmethod
-    def class_specific_update_fn(
-        call_fn: callable, class_indices: np.ndarray, parsed_data: dict
-    ):
+    def class_specific_update_fn(self, call_fn: callable, indices: np.ndarray, parsed_data: dict):
         """
         Update the class specific arrays.
+
+        TODO: This only works for an NTK of rank 2. We need to generalize this for
+        NTKs of rank 4. 
 
         Parameters
         ----------
@@ -339,13 +407,35 @@ class JaxRecorder:
         -------
         Updates the class specific arrays.
         """
-        # Get the class
-        parsed_data["predictions"] = np.take(
-            parsed_data["predictions"], class_indices, axis=0
-        )
-        parsed_data["targets"] = np.take(parsed_data["targets"], class_indices, axis=0)
-        parsed_data["ntk"] = parsed_data["ntk"][class_indices, class_indices, ...]
-        return call_fn(parsed_data)
+        # Get the class specific predictions
+        data = self._select_class_specific_data(indices, parsed_data)
+        call_fn(data)
+
+    @staticmethod
+    def _select_class_specific_data(indices: np.ndarray, parsed_data: dict):
+        """
+        Select class specific data.
+
+        Parameters
+        ----------
+        indices : np.ndarray
+                Indices of the classes to update.
+        parsed_data : dict
+                Data computed before the update to prevent repeated calculations.
+
+        Returns
+        -------
+        Updates the class specific arrays.
+        """
+        # Get the class specific predictions
+        data = {"predictions": np.take(parsed_data["predictions"], indices, axis=0)}
+        data["targets"] = np.take(parsed_data["targets"], indices, axis=0)
+        try:
+            data["ntk"] = parsed_data["ntk"][np.ix_(indices, indices)]
+        except KeyError:
+            pass
+
+        return data
 
     def update_recorder(self, epoch: int, model: JaxModel):
         """
@@ -376,6 +466,9 @@ class JaxRecorder:
                 predictions = predictions[0]
             parsed_data["predictions"] = predictions
 
+            # Add the targets to the parsed data.
+            parsed_data["targets"] = self._data_set["targets"]
+
             # Compute ntk here to avoid repeated computation.
             if self._compute_ntk:
                 try:
@@ -396,17 +489,47 @@ class JaxRecorder:
                     self.magnitude_variance = False
                     self.covariance_entropy = False
                     self.eigenvalues = False
+                    self.entropy_class_correlations = False
                     self._read_selected_attributes()
 
             for item in self._selected_properties:
                 call_fn = getattr(self, f"_update_{item}")  # get the callable function
 
-                if self.class_specific:
-                    # Vmap over the classes.
-                    vmapped_call_fn = vmap(
-                        self.class_specific_update_fn, in_axes=(None, 0, None)
-                    )
-                    call_fn = vmapped_call_fn(call_fn, self._class_idx[1], parsed_data)
+                if self.class_specific and item != "entropy_class_correlations":
+
+                    # Loop over the classes and update the properties.
+                    for class_label in self._class_idx[0]:
+                        self.class_specific_update_fn(
+                            call_fn=call_fn,
+                            indices=self._class_idx[1][class_label],
+                            parsed_data=parsed_data,
+                        )
+
+                    # Re-format the updated changes in the corresponding arrays.
+                    array = self.__dict__[f"_{item}_array"]
+                    # Update the array by putting the last len(self._class_idx[0])
+                    # elements of the array into a sub-array.
+                    old_array = array[: -len(self._class_idx[0])]
+                    new_array = [array[-len(self._class_idx[0]) :]]
+                    self.__dict__[f"_{item}_array"] = old_array + new_array
+
+                elif item == "entropy_class_correlations":
+                    for class_combination in self._class_combinations:
+                        # Get the indices for the class combination
+                        indices = np.concatenate([self._class_idx[1][i] for i in class_combination])
+                        self.class_specific_update_fn(
+                            call_fn=call_fn,
+                            indices=indices,
+                            parsed_data=parsed_data,
+                        )
+                    # Re-format the updated changes in the corresponding arrays.
+                    array = self.__dict__[f"_{item}_array"]
+                    # Update the array by putting the last len(self._class_combinations)
+                    # elements of the array into a sub-array.
+                    old_array = array[: -len(self._class_combinations)]
+                    new_array = [array[-len(self._class_combinations) :]]
+                    self.__dict__[f"_{item}_array"] = old_array + new_array
+
                 else:
                     call_fn(parsed_data)
 
@@ -495,7 +618,7 @@ class JaxRecorder:
                 Data computed before the update to prevent repeated calculations.
         """
         self._loss_array.append(
-            self._loss_fn(parsed_data["predictions"], self._data_set["targets"])
+            self._loss_fn(parsed_data["predictions"], parsed_data["targets"])
         )
 
     def _update_accuracy(self, parsed_data: dict):
@@ -509,7 +632,7 @@ class JaxRecorder:
         """
         try:
             self._accuracy_array.append(
-                self._accuracy_fn(parsed_data["predictions"], self._data_set["targets"])
+                self._accuracy_fn(parsed_data["predictions"], parsed_data["targets"])
             )
         except TypeError:
             logger.info(
@@ -587,6 +710,29 @@ class JaxRecorder:
             effective=False, normalize_eig=True
         )
         self._covariance_entropy_array.append(entropy)
+
+    def _update_entropy_class_correlations(self, parsed_data: dict):
+        """
+        Update the entropy entropy of all class correlations using the covariance NTK.
+
+        The entropy of the class correlations calculates the entropy all classes and 
+        class combinations. This results in 2^n - 1 entropy computations, where n is the
+        number of classes.
+
+        For more information to the covariance NTK, see the documentation of the
+        covariance entropy.
+
+        Parameters
+        ----------
+        parsed_data : dict
+                Data computed before the update to prevent repeated calculations.
+        """
+        cov_ntk = normalize_gram_matrix(parsed_data["ntk"])
+        calculator = EntropyAnalysis(matrix=cov_ntk)
+        entropy = calculator.compute_von_neumann_entropy(
+            effective=False, normalize_eig=True
+        )
+        self._entropy_class_correlations_array.append(entropy)
 
     def _update_magnitude_entropy(self, parsed_data: dict):
         """
@@ -668,7 +814,7 @@ class JaxRecorder:
                 Data computed before the update to prevent repeated calculations.
         """
         vector_loss_derivative = self._loss_derivative_fn.calculate(
-            parsed_data["predictions"], self._data_set["targets"]
+            parsed_data["predictions"], parsed_data["targets"]
         )
         loss_derivative = calculate_l_pq_norm(vector_loss_derivative)
         self._loss_derivative_array.append(loss_derivative)
@@ -694,7 +840,7 @@ class JaxRecorder:
             comparison = [i in self._selected_properties for i in selected_properties]
             # Throw away data that was not saved in the first place.
             if not all(comparison):
-                logger.info(
+                Warning(
                     "You have asked for properties that were not recorded. Removing"
                     " the impossible elements."
                 )
@@ -740,3 +886,4 @@ class JaxRecorder:
         }
 
         return DataSet(**selected_data)
+    

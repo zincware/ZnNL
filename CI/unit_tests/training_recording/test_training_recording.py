@@ -34,6 +34,11 @@ import numpy as onp
 from numpy import testing
 
 from znnl.training_recording import JaxRecorder
+from znnl.loss_functions import MeanPowerLoss
+from neural_tangents import stax
+from znnl import models
+import optax
+import copy
 
 
 class TestModelRecording:
@@ -48,6 +53,28 @@ class TestModelRecording:
         """
         dummy_data = onp.random.uniform(size=(5, 2, 3))
         cls.dummy_data_set = {"inputs": dummy_data, "targets": dummy_data}
+
+        # Create some test data for class specific recording.
+        class_specific_input = onp.random.uniform(size=(10, 2, 3))
+        class_specific_target = np.concatenate([np.eye(5), np.eye(5)], axis=0)
+        predictions = onp.random.uniform(size=(10, 5))
+        grads = onp.random.uniform(size=(10, 100))
+        ntk = np.einsum("ij, kj -> ik", grads, grads)
+        cls.class_specific_data = {
+            "inputs": class_specific_input,
+            "targets": class_specific_target,
+        }
+        cls.class_specific_parsed_data = {
+            "ntk": ntk,
+            "predictions": predictions,
+            "targets": class_specific_target,
+        }
+
+        # Create a model
+        cls.architecture = stax.serial(
+            stax.Flatten(), stax.Dense(8), stax.Relu(), stax.Dense(5)
+        )
+
 
     def test_instantiation(self):
         """
@@ -67,6 +94,7 @@ class TestModelRecording:
             eigenvalues=True,
             trace=True,
             loss_derivative=True,
+            entropy_class_correlations=True,
         )
         recorder.instantiate_recorder(data_set=self.dummy_data_set)
         _exclude_list = [
@@ -181,12 +209,9 @@ class TestModelRecording:
             magnitude_variance=True,
             eigenvalues=False,
         )
-        dummy_data_input = onp.random.uniform(size=(10, 2, 3))
-        dummy_data_target = np.concatenate([np.eye(5), np.eye(5)], axis=0)
-        dummy_data_set = {"inputs": dummy_data_input, "targets": dummy_data_target}
-        recorder.instantiate_recorder(data_set=dummy_data_set)
+        recorder.instantiate_recorder(data_set=self.class_specific_data)
         class_labels, class_indices = recorder._class_idx
-        assert np.all(class_labels == np.eye(5))
+        assert np.all(class_labels == np.arange(5))
         assert np.all(np.array(class_indices) == np.arange(10).reshape(2, 5).T)
 
         # Test non-one-hot encoding.
@@ -207,3 +232,148 @@ class TestModelRecording:
         class_labels, class_indices = recorder._class_idx
         assert np.all(class_labels == x)
         assert np.all(np.array(class_indices) == np.arange(10).reshape(2, 5).T)
+
+    def test_class_specific_update_fn(self):
+        """
+        Test the class specific update function.
+        """
+        recorder = JaxRecorder(
+            class_specific=True,
+            ntk=True,
+            trace=True,
+            eigenvalues=True,
+        )
+
+        # Instantiate the recorder
+        recorder.instantiate_recorder(data_set=self.class_specific_data)
+        assert recorder._class_idx[1][0].tolist() == [0, 5]
+
+        # Test trace update
+        recorder.class_specific_update_fn(
+            call_fn=recorder._update_trace, 
+            indices=recorder._class_idx[1][0],
+            parsed_data=self.class_specific_parsed_data,
+        )
+        # Check that the trace has been selected correctly.
+        ntk = self.class_specific_parsed_data["ntk"]
+        assert np.array(recorder._trace_array) == ntk[0, 0] + ntk[5, 5]
+
+        # Test eigenvalues update
+        recorder.class_specific_update_fn(
+            call_fn=recorder._update_eigenvalues, 
+            indices=recorder._class_idx[1][0],
+            parsed_data=self.class_specific_parsed_data,
+        )
+        # Check shape of the eigenvalues
+        assert np.shape(recorder._eigenvalues_array) == (1, 2)
+
+    def test_multi_class_update(self):
+        """
+        Test the multi-class update function.
+        """
+        recorder = JaxRecorder(
+            class_specific=True,
+            loss=True,
+            ntk=True,
+            entropy=True,
+            trace=True,
+            magnitude_variance=True,
+            eigenvalues=True,
+        )
+
+        # Instantiate the recorder
+        recorder._loss_fn = MeanPowerLoss(order=2)
+        recorder.instantiate_recorder(data_set=self.class_specific_data)
+
+        # Define a model
+        model = models.NTModel(
+            nt_module=self.architecture,
+            optimizer=optax.adam(learning_rate=0.01),
+            input_shape=(1, 2, 3),
+        )
+
+        # Test trace update
+        recorder.update_recorder(epoch=1, model=model)
+
+        # Check the shape of the arrays
+        assert np.shape(recorder._loss_array) == (1, 5)
+        assert np.shape(recorder._entropy_array) == (1, 5)
+        assert np.shape(recorder._trace_array) == (1, 5)
+        assert np.shape(recorder._magnitude_variance_array) == (1, 5)
+        assert np.shape(recorder._eigenvalues_array) == (1, 5, 2)
+        # Even though NTK is selected, it should not be updated.
+        assert np.shape(recorder._ntk_array) == () 
+
+        # Update the recorder again
+        recorder.update_recorder(epoch=2, model=model)
+
+        # Check the shape of the arrays
+        assert np.shape(recorder._loss_array) == (2, 5)
+        assert np.shape(recorder._entropy_array) == (2, 5)
+        assert np.shape(recorder._trace_array) == (2, 5)
+        assert np.shape(recorder._magnitude_variance_array) == (2, 5)
+        assert np.shape(recorder._eigenvalues_array) == (2, 5, 2)
+        # Even though NTK is selected, it should not be updated.
+        assert np.shape(recorder._ntk_array) == () 
+
+    def test_class_combinations(self):
+        """
+        Test the class combinations method.
+
+        This method is used to calculate the combinations of all classes.
+        """
+        recorder = JaxRecorder(
+            entropy_class_correlations=True,
+        )
+
+        # Instantiate the recorder
+        recorder.instantiate_recorder(data_set=copy.deepcopy(self.class_specific_data))
+
+        # Test for one-hot encoding
+        recorder._data_set["targets"] = np.concatenate([np.eye(3), np.eye(3)], axis=0)
+        _, class_combinations = recorder._get_class_combinations()
+        assert np.all(np.array(class_combinations[:3]) == np.arange(3).reshape(3, 1))
+        assert np.all(np.array(class_combinations[3:6]) == np.array([[0, 1], [0, 2], [1, 2]]))
+        assert np.all(np.array(class_combinations[6:]) == np.array([[0, 1, 2]]))
+
+        # Test for non-one-hot encoding
+        recorder._data_set["targets"] = np.concatenate([np.arange(3), np.arange(3)], axis=0).reshape(6, 1)
+        _, class_combinations = recorder._get_class_combinations()
+        assert np.all(np.array(class_combinations[:3]) == np.arange(3).reshape(3, 1))
+        assert np.all(np.array(class_combinations[3:6]) == np.array([[0, 1], [0, 2], [1, 2]]))
+        assert np.all(np.array(class_combinations[6:]) == np.array([[0, 1, 2]]))
+
+        # Test for non-consecutive classes
+        idx = np.array([0, 2, 3])
+        recorder._data_set["targets"] = np.concatenate([idx, idx], axis=0).reshape(6, 1)
+        _, class_combinations = recorder._get_class_combinations()
+        assert np.all(np.array(class_combinations[:3]) == np.arange(3).reshape(3, 1))
+        assert np.all(np.array(class_combinations[3:6]) == np.array([[0, 1], [0, 2], [1, 2]]))
+        assert np.all(np.array(class_combinations[6:]) == np.array([[0, 1, 2]]))
+
+    def test_entropy_class_correlation(self):
+        """
+        Test the entropy class correlation method. 
+        """
+        recorder = JaxRecorder(
+            entropy_class_correlations=True,
+        )
+
+        # Instantiate the recorder
+        recorder._loss_fn = MeanPowerLoss(order=2)
+        recorder.instantiate_recorder(data_set=self.class_specific_data)
+
+        # Define a model
+        model = models.NTModel(
+            nt_module=self.architecture,
+            optimizer=optax.adam(learning_rate=0.01),
+            input_shape=(1, 2, 3),
+        )
+        
+        # Test the correlation
+        recorder.update_recorder(epoch=1, model=model)
+        assert np.shape(recorder._entropy_class_correlations_array) == (1, 31)
+
+        # Update the recorder again
+        recorder.update_recorder(epoch=2, model=model)
+        assert np.shape(recorder._entropy_class_correlations_array) == (2, 31)
