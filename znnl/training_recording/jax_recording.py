@@ -44,7 +44,9 @@ from znnl.utils.matrix_utils import (
     compute_magnitude_density,
     flatten_rank_4_tensor,
     normalize_gram_matrix,
+    calculate_trace,
 )
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -179,6 +181,7 @@ class JaxRecorder:
     _loss_derivative_fn: LossDerivative = False
     _index_count: int = 0  # Helps to avoid problems with non-1 update rates.
     _data_storage: DataStorage = None  # For writing to disk.
+    _ntk_rank: Optional[int] = None # Rank of the NTK matrix.
 
     def _read_selected_attributes(self):
         """
@@ -317,7 +320,8 @@ class JaxRecorder:
                     ntk = self._model.compute_ntk(
                         self._data_set["inputs"], infinite=False
                     )["empirical"]
-                    if self.flatten_ntk and len(ntk.shape) == 4:
+                    self._ntk_rank = len(ntk.shape) 
+                    if self.flatten_ntk and self._ntk_rank == 4:
                         ntk = flatten_rank_4_tensor(ntk)
                     parsed_data["ntk"] = ntk
                 except NotImplementedError:
@@ -587,12 +591,15 @@ class JaxRecorder:
         """
         Update the trace of the NTK.
 
+        The trace of the NTK is computed as the mean of the diagonal elements of the 
+        NTK.
+
         Parameters
         ----------
         parsed_data : dict
                 Data computed before the update to prevent repeated calculations.
         """
-        trace = np.trace(parsed_data["ntk"])
+        trace = calculate_trace(parsed_data["ntk"], normalize=True)
         self._trace_array.append(trace)
 
     def _update_loss_derivative(self, parsed_data):
