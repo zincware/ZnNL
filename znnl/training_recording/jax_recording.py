@@ -42,8 +42,8 @@ from znnl.models.jax_model import JaxModel
 from znnl.training_recording.data_storage import DataStorage
 from znnl.utils.matrix_utils import (
     compute_magnitude_density,
-    normalize_gram_matrix,
     flatten_rank_4_tensor,
+    normalize_gram_matrix,
 )
 
 logger = logging.getLogger(__name__)
