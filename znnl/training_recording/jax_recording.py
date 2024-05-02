@@ -113,7 +113,7 @@ class JaxRecorder:
     name: str = "my_recorder"
     storage_path: str = "./"
     chunk_size: int = 100
-    flatten_ntk: bool = False
+    flatten_ntk: bool = True
 
     # Model Loss
     loss: bool = True
