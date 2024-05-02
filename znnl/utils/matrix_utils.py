@@ -168,6 +168,7 @@ def flatten_rank_4_tensor(tensor: np.ndarray) -> np.ndarray:
         _tensor.shape[0] * _tensor.shape[1], _tensor.shape[0] * _tensor.shape[1]
     )
 
+
 def calculate_trace(matrix: np.ndarray, normalize: bool = False) -> np.ndarray:
     """
     Calculate the trace of a matrix, including optional normalization.
