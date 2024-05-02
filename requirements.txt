@@ -12,13 +12,14 @@ nbsphinx
 tensorflow_probability
 scipy
 scikit-learn
-jaxlib
-jax
+# Temp fix of version of jax and jaxlib until the next release
+jax<=0.4.25
+jaxlib<=0.4.25
 plotly
 flax
 tqdm
 pandas
-neural-tangents==0.6.4
+neural-tangents>=0.6.5
 tensorflow-datasets
 isort
 tensorflow
