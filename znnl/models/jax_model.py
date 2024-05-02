@@ -72,7 +72,7 @@ class JaxModel:
         input_shape: Optional[tuple] = None,
         seed: Optional[int] = None,
         ntk_batch_size: int = 10,
-        trace_axes: Union[int, Sequence[int]] = (-1,),
+        trace_axes: Union[int, Sequence[int]] = (),
         store_on_device: bool = True,
         pre_built_model: Union[None, FlaxPreTrainedModel] = None,
         ntk_implementation: Union[None, nt.NtkImplementation] = None,
@@ -92,9 +92,9 @@ class JaxModel:
                 Batch size to use in the NTK computation.
         trace_axes : Union[int, Sequence[int]]
                 Tracing over axes of the NTK.
-                The default value is trace_axes(-1,), which reduces the NTK to a tensor
-                of rank 2.
-                For a full NTK set trace_axes=().
+                The default value is trace_axes=(), providing the full NTK of rank 4.
+                For a traced NTK set trace_axes=(-1,), which reduces the NTK to a
+                tensor of rank 2.
         store_on_device : bool, default True
                 Whether to store the NTK on the device or not.
                 This should be set False for large NTKs that do not fit in GPU memory.
