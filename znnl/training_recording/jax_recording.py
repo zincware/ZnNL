@@ -25,6 +25,7 @@ Summary
 -------
 """
 
+import itertools
 import logging
 from dataclasses import dataclass, make_dataclass
 from os import path
@@ -48,7 +49,6 @@ from znnl.utils.matrix_utils import (
     flatten_rank_4_tensor,
     normalize_gram_matrix,
 )
-import itertools
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +99,7 @@ class JaxRecorder:
             Warning, large overhead.
     entropy_class_correlations : bool (default=False)
             If true, the entropy of every class and class combination will be recorded.
-            This results in 2^n - 1 entropy computations, where n is the number of 
+            This results in 2^n - 1 entropy computations, where n is the number of
             classes.
             Warning, large overhead.
     magnitude_variance : bool (default=False)
@@ -279,13 +279,13 @@ class JaxRecorder:
             )
 
         return class_specific_idx
-    
+
     def _get_class_combinations(self):
         """
         Get data indices of all class combinations.
 
         Create sublists of indices for each class itself and all combinations of
-        classes. 
+        classes.
         For n classes, there are 2^n - 1 combinations of classes, for which the
         a list of indices is created.
 
@@ -302,7 +302,7 @@ class JaxRecorder:
                         Each index refers to the position of the class in the
                         class_specific_idx[0] array.
         """
-        # Get the indices for each class 
+        # Get the indices for each class
         class_specific_idx = self._get_class_indices()
         class_labels, _ = class_specific_idx
 
@@ -401,12 +401,14 @@ class JaxRecorder:
         if "loss_derivative" in self._selected_properties:
             self._loss_derivative_fn = LossDerivative(self._loss_fn)
 
-    def class_specific_update_fn(self, call_fn: callable, indices: np.ndarray, parsed_data: dict):
+    def class_specific_update_fn(
+        self, call_fn: callable, indices: np.ndarray, parsed_data: dict
+    ):
         """
         Update the class specific arrays.
 
         TODO: This only works for an NTK of rank 2. We need to generalize this for
-        NTKs of rank 4. 
+        NTKs of rank 4.
 
         Parameters
         ----------
@@ -533,7 +535,9 @@ class JaxRecorder:
                 elif item == "entropy_class_correlations":
                     for class_combination in self._class_combinations:
                         # Get the indices for the class combination
-                        indices = np.concatenate([self._class_idx[1][i] for i in class_combination])
+                        indices = np.concatenate(
+                            [self._class_idx[1][i] for i in class_combination]
+                        )
                         self.class_specific_update_fn(
                             call_fn=call_fn,
                             indices=indices,
@@ -743,7 +747,7 @@ class JaxRecorder:
         """
         Update the entropy entropy of all class correlations using the covariance NTK.
 
-        The entropy of the class correlations calculates the entropy all classes and 
+        The entropy of the class correlations calculates the entropy all classes and
         class combinations. This results in 2^n - 1 entropy computations, where n is the
         number of classes.
 
@@ -917,4 +921,3 @@ class JaxRecorder:
         }
 
         return DataSet(**selected_data)
-    
