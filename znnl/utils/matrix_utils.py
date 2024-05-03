@@ -162,11 +162,11 @@ def flatten_rank_4_tensor(tensor: np.ndarray) -> np.ndarray:
 
     try:
         assert tensor.shape[0] == tensor.shape[1]
-    except:
+    except AssertionError:
         raise ValueError("The first two dimensions of the tensor must be equal.")
     try:
         assert tensor.shape[2] == tensor.shape[3]
-    except:
+    except AssertionError:
         raise ValueError("The third and fourth dimensions of the tensor must be equal.")
 
     _tensor = np.moveaxis(tensor, [1, 2], [2, 1])
