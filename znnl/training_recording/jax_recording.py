@@ -29,6 +29,7 @@ import logging
 from dataclasses import dataclass, make_dataclass
 from os import path
 from pathlib import Path
+from typing import Optional
 
 import jax.numpy as np
 import numpy as onp
@@ -42,8 +43,9 @@ from znnl.loss_functions import SimpleLoss
 from znnl.models.jax_model import JaxModel
 from znnl.training_recording.data_storage import DataStorage
 from znnl.utils.matrix_utils import (
-    calculate_l_pq_norm,
+    calculate_trace,
     compute_magnitude_density,
+    flatten_rank_4_tensor,
     normalize_gram_matrix,
 )
 import itertools
@@ -80,6 +82,8 @@ class JaxRecorder:
             If true, loss will be recorded.
     accuracy : bool (default=False)
             If true, accuracy will be recorded.
+    network_predictions : bool (default=False)
+            If true, network predictions will be recorded.
     ntk : bool (default=False)
             If true, the ntk will be recorded. Warning, large overhead.
     covariance_ntk : bool (default = False)
@@ -111,6 +115,9 @@ class JaxRecorder:
             output will be recorded.
     update_rate : int (default=1)
             How often the values are updated.
+    flatten_ntk : bool (default=False)
+            If true, an NTK of rank 4 will be flattened to a rank 2 tensor.
+            In case of an NTK of rank 2, this has no effect.
 
     Notes
     -----
@@ -122,6 +129,7 @@ class JaxRecorder:
     name: str = "my_recorder"
     storage_path: str = "./"
     chunk_size: int = 100
+    flatten_ntk: bool = True
     class_specific: bool = False
 
     # Model Loss
@@ -131,6 +139,10 @@ class JaxRecorder:
     # Model accuracy
     accuracy: bool = False
     _accuracy_array: list = None
+
+    # Model predictions
+    network_predictions: bool = False
+    _network_predictions_array: list = None
 
     # NTK Matrix
     ntk: bool = False
@@ -188,6 +200,7 @@ class JaxRecorder:
     _loss_derivative_fn: LossDerivative = False
     _index_count: int = 0  # Helps to avoid problems with non-1 update rates.
     _data_storage: DataStorage = None  # For writing to disk.
+    _ntk_rank: Optional[int] = None  # Rank of the NTK matrix.
 
     # For class specific recording, _class_idx contains (class_labels, indices)
     _class_idx: tuple = None
@@ -203,6 +216,7 @@ class JaxRecorder:
             for value in list(vars(self))
             if value[0] != "_"
             and vars(self)[value] is True
+            and value != "flatten_ntk"
             and value != "class_specific"
         ]
 
@@ -474,8 +488,11 @@ class JaxRecorder:
                 try:
                     ntk = self._model.compute_ntk(
                         self._data_set["inputs"], infinite=False
-                    )
-                    parsed_data["ntk"] = ntk["empirical"]
+                    )["empirical"]
+                    self._ntk_rank = len(ntk.shape)
+                    if self.flatten_ntk and self._ntk_rank == 4:
+                        ntk = flatten_rank_4_tensor(ntk)
+                    parsed_data["ntk"] = ntk
                 except NotImplementedError:
                     logger.info(
                         "NTK calculation is not yet available for this model. Removing "
@@ -642,6 +659,17 @@ class JaxRecorder:
             self.accuracy = False
             self._read_selected_attributes()
 
+    def _update_network_predictions(self, parsed_data: dict):
+        """
+        Update the network predictions array.
+
+        Parameters
+        ----------
+        parsed_data : dict
+                Data computed before the update to prevent repeated calculations.
+        """
+        self._network_predictions_array.append(parsed_data["predictions"])
+
     def _update_ntk(self, parsed_data: dict):
         """
         Update the ntk array.
@@ -794,19 +822,23 @@ class JaxRecorder:
         """
         Update the trace of the NTK.
 
+        The trace of the NTK is computed as the mean of the diagonal elements of the
+        NTK.
+
         Parameters
         ----------
         parsed_data : dict
                 Data computed before the update to prevent repeated calculations.
         """
-        trace = np.trace(parsed_data["ntk"])
+        trace = calculate_trace(parsed_data["ntk"], normalize=True)
         self._trace_array.append(trace)
 
     def _update_loss_derivative(self, parsed_data):
         """
         Update the loss derivative array.
 
-        The loss derivative is normalized by the L_pq matrix norm.
+        The loss derivative records the derivative of the loss function with respect to
+        the network output, returning a vector of the same shape as the network output.
 
         Parameters
         ----------
@@ -816,8 +848,7 @@ class JaxRecorder:
         vector_loss_derivative = self._loss_derivative_fn.calculate(
             parsed_data["predictions"], parsed_data["targets"]
         )
-        loss_derivative = calculate_l_pq_norm(vector_loss_derivative)
-        self._loss_derivative_array.append(loss_derivative)
+        self._loss_derivative_array.append(vector_loss_derivative)
 
     def gather_recording(self, selected_properties: list = None) -> dataclass:
         """

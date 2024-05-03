@@ -86,7 +86,12 @@ def normalize_gram_matrix(gram_matrix: np.ndarray):
 
     normalizing_matrix = np.sqrt(repeated_diagonals * repeated_diagonals.T)
 
-    return gram_matrix / normalizing_matrix
+    # Check for zeros in the normalizing matrix
+    normalizing_matrix = np.where(
+        normalizing_matrix == 0, 0, 1 / normalizing_matrix
+    )  # Avoid division by zero
+
+    return gram_matrix * normalizing_matrix
 
 
 def compute_magnitude_density(gram_matrix: np.ndarray) -> np.ndarray:
@@ -134,3 +139,53 @@ def calculate_l_pq_norm(matrix: np.ndarray, p: int = 2, q: int = 2):
     inner_sum = np.sum(np.power(matrix, q), axis=-1)
     outer_sum = np.sum(np.power(inner_sum, q / p), axis=-1)
     return np.power(outer_sum, 1 / q)
+
+
+def flatten_rank_4_tensor(tensor: np.ndarray) -> np.ndarray:
+    """
+    Flatten a rank 4 tensor to a rank 2 tensor using a specific reshaping.
+
+    The tensor is assumed to be of shape (n, n, m, m). The reshaping is done by
+    concatenating first with the third and then with the fourth dimension, resulting
+    in a tensor of shape (n * m, n * m).
+
+    Parameters
+    ----------
+    tensor : np.ndarray (shape=(n, n, m, m))
+            Tensor to flatten.
+
+    Returns
+    -------
+    flattened_tensor : np.ndarray (shape=(n * m, n * m))
+            Flattened tensor.
+    """
+
+    if not tensor.shape[0] == tensor.shape[1]:
+        raise ValueError("The first two dimensions of the tensor must be equal.")
+    if not tensor.shape[2] == tensor.shape[3]:
+        raise ValueError("The third and fourth dimensions of the tensor must be equal.")
+
+    _tensor = np.moveaxis(tensor, [1, 2], [2, 1])
+    return _tensor.reshape(
+        _tensor.shape[0] * _tensor.shape[1], _tensor.shape[0] * _tensor.shape[1]
+    )
+
+
+def calculate_trace(matrix: np.ndarray, normalize: bool = False) -> np.ndarray:
+    """
+    Calculate the trace of a matrix, including optional normalization.
+
+    Parameters
+    ----------
+    matrix : np.ndarray
+            Matrix to calculate the trace of.
+    normalize : bool (default=True)
+            If true, the trace is normalized by the size of the matrix.
+
+    Returns
+    -------
+    trace : np.ndarray
+            Trace of the matrix.
+    """
+    normalization_factor = np.shape(matrix)[0] if normalize else 1
+    return np.trace(matrix) / normalization_factor

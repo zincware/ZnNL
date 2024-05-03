@@ -26,12 +26,20 @@ Summary
 """
 
 from znnl.loss_functions.absolute_angle_difference import AngleDistanceLoss
+from znnl.loss_functions.contrastive_infonce_loss import ContrastiveInfoNCELoss
+from znnl.loss_functions.contrastive_isolated_potential_loss import (
+    ContrastiveIsolatedPotentialLoss,
+    ExternalPotential,
+)
+from znnl.loss_functions.contrastive_loss import ContrastiveLoss
 from znnl.loss_functions.cosine_distance import CosineDistanceLoss
 from znnl.loss_functions.cross_entropy_loss import CrossEntropyLoss
+from znnl.loss_functions.exponential_repulsion_loss import ExponentialRepulsionLoss
 from znnl.loss_functions.l_p_norm import LPNormLoss
 from znnl.loss_functions.mahalanobis import MahalanobisLoss
 from znnl.loss_functions.mean_power_error import MeanPowerLoss
 from znnl.loss_functions.simple_loss import SimpleLoss
+from znnl.loss_functions.wasserstein_loss import WassersteinLoss
 
 __all__ = [
     AngleDistanceLoss.__name__,
@@ -41,4 +49,10 @@ __all__ = [
     MeanPowerLoss.__name__,
     SimpleLoss.__name__,
     CrossEntropyLoss.__name__,
+    WassersteinLoss.__name__,
+    ExponentialRepulsionLoss.__name__,
+    ContrastiveLoss.__name__,
+    ExternalPotential.__name__,
+    ContrastiveIsolatedPotentialLoss.__name__,
+    ContrastiveInfoNCELoss.__name__,
 ]

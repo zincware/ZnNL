@@ -94,6 +94,7 @@ class TestModelRecording:
             eigenvalues=True,
             trace=True,
             loss_derivative=True,
+            network_predictions=True,
             entropy_class_correlations=True,
         )
         recorder.instantiate_recorder(data_set=self.dummy_data_set)
@@ -104,6 +105,7 @@ class TestModelRecording:
             "name",
             "storage_path",
             "chunk_size",
+            "flatten_ntk",
             "class_specific",
         ]
         for key, val in vars(recorder).items():
