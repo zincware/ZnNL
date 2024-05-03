@@ -185,5 +185,5 @@ def calculate_trace(matrix: np.ndarray, normalize: bool = False) -> np.ndarray:
     trace : np.ndarray
             Trace of the matrix.
     """
-    norlization_factor = np.shape(matrix)[0] if normalize else 1
-    return np.trace(matrix) / norlization_factor
+    normalization_factor = np.shape(matrix)[0] if normalize else 1
+    return np.trace(matrix) / normalization_factor
