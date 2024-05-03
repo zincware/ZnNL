@@ -160,8 +160,10 @@ def flatten_rank_4_tensor(tensor: np.ndarray) -> np.ndarray:
             Flattened tensor.
     """
 
-    assert tensor.shape[0] == tensor.shape[1]
-    assert tensor.shape[2] == tensor.shape[3]
+    if not tensor.shape[0] == tensor.shape[1]:
+        raise ValueError("The first two dimensions of the tensor must be equal.")
+    if not tensor.shape[2] == tensor.shape[3]:
+        raise ValueError("The third and fourth dimensions of the tensor must be equal.")
 
     _tensor = np.moveaxis(tensor, [1, 2], [2, 1])
     return _tensor.reshape(

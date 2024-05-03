@@ -158,9 +158,9 @@ class TestMatrixUtils:
         """
         # Check for assertion errors
         tensor = np.arange(24).reshape((2, 3, 2, 2))
-        assert_raises(AssertionError, flatten_rank_4_tensor, tensor)
+        assert_raises(ValueError, flatten_rank_4_tensor, tensor)
         tensor = np.arange(24).reshape((2, 2, 3, 2))
-        assert_raises(AssertionError, flatten_rank_4_tensor, tensor)
+        assert_raises(ValueError, flatten_rank_4_tensor, tensor)
 
         # Check the flattening
         tensor = np.arange(4 * 4).reshape(2, 2, 2, 2)
