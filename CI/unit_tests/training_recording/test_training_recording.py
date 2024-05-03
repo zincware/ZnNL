@@ -257,7 +257,7 @@ class TestModelRecording:
         )
         # Check that the trace has been selected correctly.
         ntk = self.class_specific_parsed_data["ntk"]
-        assert np.array(recorder._trace_array) == ntk[0, 0] + ntk[5, 5]
+        assert np.array(recorder._trace_array) == (ntk[0, 0] + ntk[5, 5]) / 2
 
         # Test eigenvalues update
         recorder.class_specific_update_fn(
@@ -301,7 +301,7 @@ class TestModelRecording:
         assert np.shape(recorder._entropy_array) == (1, 5)
         assert np.shape(recorder._trace_array) == (1, 5)
         assert np.shape(recorder._magnitude_variance_array) == (1, 5)
-        assert np.shape(recorder._eigenvalues_array) == (1, 5, 2)
+        assert np.shape(recorder._eigenvalues_array) == (1, 10)
         # Even though NTK is selected, it should not be updated.
         assert np.shape(recorder._ntk_array) == ()
 
@@ -313,7 +313,7 @@ class TestModelRecording:
         assert np.shape(recorder._entropy_array) == (2, 5)
         assert np.shape(recorder._trace_array) == (2, 5)
         assert np.shape(recorder._magnitude_variance_array) == (2, 5)
-        assert np.shape(recorder._eigenvalues_array) == (2, 5, 2)
+        assert np.shape(recorder._eigenvalues_array) == (2, 10)
         # Even though NTK is selected, it should not be updated.
         assert np.shape(recorder._ntk_array) == ()
 
@@ -386,3 +386,33 @@ class TestModelRecording:
         # Update the recorder again
         recorder.update_recorder(epoch=2, model=model)
         assert np.shape(recorder._entropy_class_correlations_array) == (2, 31)
+
+    def test_read_class_specific_data(self):
+        """
+        Test the reading of class specific data.
+        """
+        recorder = JaxRecorder(
+            class_specific=True,
+            ntk=True,
+            trace=True,
+            eigenvalues=True,
+        )
+
+        # Instantiate the recorder
+        recorder.instantiate_recorder(data_set=self.class_specific_data)
+
+        # Test the case of having one entry per sample, e.g. for recording the 
+        # eigenvalues.
+        test_record = np.arange(20).reshape(2, 10)
+        class_specific_dict = recorder.read_class_specific_data(test_record)
+        for i, (key, val) in enumerate(class_specific_dict.items()):
+            assert key == i
+            print(val)
+            assert np.all(val == np.array([[i, i + 5], [i+10, i + 15]]))
+
+        # Test the case of having one entry per class, e.g. for recording the trace.
+        test_record = np.arange(10).reshape(2, 5)
+        class_specific_dict = recorder.read_class_specific_data(test_record)
+        for i, (key, val) in enumerate(class_specific_dict.items()):
+            assert key == i
+            assert np.all(val == np.array([i, i + 5]))

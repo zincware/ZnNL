@@ -318,6 +318,44 @@ class JaxRecorder:
             class_combinations.extend(list(itertools.combinations(classes, i)))
 
         return class_specific_idx, class_combinations
+    
+    def read_class_specific_data(self, data_array: np.ndarray):
+        """
+        Read class specific data.
+
+        Due to storage of arrays, class specific data is stored in a list of arrays.
+        This method separates recorded data for each class and returns it as a 
+        dictionary.
+
+        Parameters
+        ----------
+        data_array : np.ndarray
+                Data to read and separate.
+        
+        Returns
+        -------
+        class_specific_data : dict
+                Dictionary containing the separated data.
+        """
+        # Sort the data into class specific arrays.
+        class_specific_data = {}        
+
+        for class_label, indices in zip(self._class_idx[0].tolist(), self._class_idx[1]):
+
+            # Check whether each class has one or multiple entries.
+            if np.shape(data_array)[1] == len(self._class_idx[0]):
+                # This is the case when there is only one entry per class.
+                class_specific_data[class_label] = np.take(data_array, class_label, axis=1)
+            elif np.shape(data_array)[1] > len(self._class_idx[0]):
+                # This is the case when there is one entry per sample.
+                class_specific_data[class_label] = np.take(data_array, indices, axis=1)
+            else:
+                raise ValueError(
+                    "The data array does not have the correct shape for class specific "
+                    "recording."
+                )
+
+        return class_specific_data
 
     def instantiate_recorder(self, data_set: dict = None, overwrite: bool = False):
         """
@@ -362,6 +400,7 @@ class JaxRecorder:
 
         if self.entropy_class_correlations:
             self._class_idx, self._class_combinations = self._get_class_combinations()
+
         # populate the class attribute
         self._read_selected_attributes()
 
@@ -452,7 +491,39 @@ class JaxRecorder:
             pass
 
         return data
+    
+    def _reformat_class_specific_recording(self, data_array: np.ndarray):
+        """
+        Reformat class specific data from the recorder.
 
+        Class specific recording iteratively records appends the data for each class
+        to the corresponding array. In order to get the data back in a usable format,
+        it needs to be reformatted.
+
+        Parameters
+        ----------
+        data_array : np.ndarray
+                Data to reformat.
+
+        Returns
+        -------
+        reformatted_data : np.ndarray
+                Reformatted data.
+        """
+
+        # Separate lastly appended data from the rest.
+        old_data = data_array[: -len(self._class_idx[0])]
+        new_data_unformatted = data_array[-len(self._class_idx[0]) :]
+        # Check if the data is a list of floats or a list of arrays.
+        if np.shape(new_data_unformatted[0]) == ():
+            new_data = np.array(new_data_unformatted)
+        else:
+            new_data = np.concatenate(new_data_unformatted, axis=0)
+        # Append the new data to the old data.
+        data = old_data + [new_data]
+        
+        return data
+    
     def update_recorder(self, epoch: int, model: JaxModel):
         """
         Update the values stored in the recorder.
@@ -526,11 +597,7 @@ class JaxRecorder:
 
                     # Re-format the updated changes in the corresponding arrays.
                     array = self.__dict__[f"_{item}_array"]
-                    # Update the array by putting the last len(self._class_idx[0])
-                    # elements of the array into a sub-array.
-                    old_array = array[: -len(self._class_idx[0])]
-                    new_array = [array[-len(self._class_idx[0]) :]]
-                    self.__dict__[f"_{item}_array"] = old_array + new_array
+                    self.__dict__[f"_{item}_array"] = self._reformat_class_specific_recording(array)
 
                 elif item == "entropy_class_correlations":
                     for class_combination in self._class_combinations:
