@@ -31,6 +31,7 @@ from typing import Callable, List, Sequence, Union
 import jax
 import jax.numpy as np
 from flax import linen as nn
+from neural_tangents import NtkImplementation
 
 from znnl.models.jax_model import JaxModel
 
@@ -77,6 +78,7 @@ class FlaxModel(JaxModel):
         layer_stack: List[nn.Module] = None,
         flax_module: nn.Module = None,
         trace_axes: Union[int, Sequence[int]] = (-1,),
+        ntk_implementation: Union[None, NtkImplementation] = None,
         store_on_device: bool = True,
         seed: int = None,
     ):
@@ -101,6 +103,16 @@ class FlaxModel(JaxModel):
                 The default value is trace_axes(-1,), which reduces the NTK to a tensor
                 of rank 2.
                 For a full NTK set trace_axes=().
+        ntk_implementation : Union[None, NtkImplementation] (default = None)
+                Implementation of the NTK computation.
+                The implementation depends on the trace_axes and the model
+                architecture. The default does automatically take into account the
+                trace_axes. For trace_axes=() the default is NTK_VECTOR_PRODUCTS,
+                for all other cases including trace_axes=(-1,) the default is
+                JACOBIAN_CONTRACTION. For more specific use cases, the user can
+                set the implementation manually.
+                Information about the implementation and specific requirements can be
+                found in the neural_tangents documentation.
         store_on_device : bool, default True
                 Whether to store the NTK on the device or not.
                 This should be set False for large NTKs that do not fit in GPU memory.
@@ -126,6 +138,7 @@ class FlaxModel(JaxModel):
             input_shape=input_shape,
             seed=seed,
             trace_axes=trace_axes,
+            ntk_implementation=ntk_implementation,
             ntk_batch_size=batch_size,
             store_on_device=store_on_device,
         )
