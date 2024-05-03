@@ -87,3 +87,13 @@ class TestLossFunctions:
         """
         loss = MeanPowerLoss(order=2)(self.linear_predictions, self.linear_targets)
         loss == 130.0
+
+    def test_mask(self):
+        """
+        Test the mask implementation in the simple loss using the mean power loss.
+        """
+        mask = np.array([1, 0, 1, 0])
+        loss = MeanPowerLoss(order=2)(
+            self.linear_predictions, self.linear_targets, mask
+        )
+        loss == 65.0
