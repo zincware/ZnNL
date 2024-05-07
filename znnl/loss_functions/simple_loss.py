@@ -26,6 +26,7 @@ Summary
 """
 
 from abc import ABC
+from typing import Optional
 
 import jax.numpy as np
 
@@ -48,19 +49,30 @@ class SimpleLoss(ABC):
         super().__init__()
         self.metric: DistanceMetric = None
 
-    def __call__(self, point_1: np.array, point_2: np.array) -> float:
+    def __call__(
+        self, point_1: np.ndarray, point_2: np.ndarray, mask: Optional[np.array] = None
+    ) -> float:
         """
-        Summation over the tensor of the respective similarity measurement
+        Summation over the tensor of the respective similarity measurement.
+
         Parameters
         ----------
-        point_1 : np.array
-                first neural network representation of the considered points
-        point_2 : np.array
-                second neural network representation of the considered points
+        point_1 : np.ndarray
+                Neural network representations of the considered points.
+                Represented should have the shape (batch_size, n_features)
+        point_2 : np.ndarray
+                Neural network representations of the considered points.
+                Represented should have the shape (batch_size, n_features)
+        mask : np.ndarray, optional
+                Mask to be multiplied to the loss.
+                It needs to have the shape (batch_size, )
 
         Returns
         -------
         loss : float
                 total loss of all points based on the similarity measurement
         """
-        return np.mean(self.metric(point_1, point_2), axis=0)
+        if mask is not None:
+            return np.mean(self.metric(point_1, point_2) * mask, axis=0)
+        else:
+            return np.mean(self.metric(point_1, point_2), axis=0)

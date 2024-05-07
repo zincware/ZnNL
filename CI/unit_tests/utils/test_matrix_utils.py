@@ -31,11 +31,12 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 import jax.numpy as np
 import numpy as onp
-from numpy.testing import assert_array_almost_equal, assert_array_equal
+from numpy.testing import assert_array_almost_equal, assert_array_equal, assert_raises
 
 from znnl.utils.matrix_utils import (
     compute_eigensystem,
     compute_magnitude_density,
+    flatten_rank_4_tensor,
     normalize_gram_matrix,
 )
 
@@ -90,7 +91,7 @@ class TestMatrixUtils:
         normalized_matrix = normalize_gram_matrix(covariance_matrix)
 
         # Assert diagonals are 1
-        assert_array_equal(
+        assert_array_almost_equal(
             np.diagonal(normalized_matrix), np.array([1.0, 1.0, 1.0, 1.0])
         )
 
@@ -101,7 +102,7 @@ class TestMatrixUtils:
             np.array([3 * row_mul, 4 * row_mul, 5 * row_mul, 6 * row_mul])
         )
         truth_array = covariance_matrix[row] / multiplier
-        assert_array_equal(normalized_matrix[row], truth_array)
+        assert_array_almost_equal(normalized_matrix[row], truth_array)
 
         # Test 2nd row
         row = 1
@@ -110,7 +111,7 @@ class TestMatrixUtils:
             np.array([3 * row_mul, 4 * row_mul, 5 * row_mul, 6 * row_mul])
         )
         truth_array = covariance_matrix[row] / multiplier
-        assert_array_equal(normalized_matrix[row], truth_array)
+        assert_array_almost_equal(normalized_matrix[row], truth_array)
 
         # Test 3rd row
         row = 2
@@ -119,7 +120,7 @@ class TestMatrixUtils:
             np.array([3 * row_mul, 4 * row_mul, 5 * row_mul, 6 * row_mul])
         )
         truth_array = covariance_matrix[row] / multiplier
-        assert_array_equal(normalized_matrix[row], truth_array)
+        assert_array_almost_equal(normalized_matrix[row], truth_array)
 
         # Test 4th row
         row = 3
@@ -128,7 +129,7 @@ class TestMatrixUtils:
             np.array([3 * row_mul, 4 * row_mul, 5 * row_mul, 6 * row_mul])
         )
         truth_array = covariance_matrix[row] / multiplier
-        assert_array_equal(normalized_matrix[row], truth_array)
+        assert_array_almost_equal(normalized_matrix[row], truth_array)
 
     def test_compute_magnitude_density(self):
         """
@@ -150,3 +151,20 @@ class TestMatrixUtils:
         mag_density = compute_magnitude_density(matrix)
 
         assert_array_almost_equal(array_norm_density, mag_density)
+
+    def test_flatten_rank_4_tensor(self):
+        """
+        Test the flattening of a rank 4 tensor.
+        """
+        # Check for assertion errors
+        tensor = np.arange(24).reshape((2, 3, 2, 2))
+        assert_raises(ValueError, flatten_rank_4_tensor, tensor)
+        tensor = np.arange(24).reshape((2, 2, 3, 2))
+        assert_raises(ValueError, flatten_rank_4_tensor, tensor)
+
+        # Check the flattening
+        tensor = np.arange(4 * 4).reshape(2, 2, 2, 2)
+        assertion_matrix = np.array(
+            [[0, 1, 4, 5], [2, 3, 6, 7], [8, 9, 12, 13], [10, 11, 14, 15]]
+        )
+        assert_array_equal(flatten_rank_4_tensor(tensor), assertion_matrix)

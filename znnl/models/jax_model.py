@@ -71,9 +71,10 @@ class JaxModel:
         input_shape: Optional[tuple] = None,
         seed: Optional[int] = None,
         ntk_batch_size: int = 10,
-        trace_axes: Union[int, Sequence[int]] = (-1,),
+        trace_axes: Union[int, Sequence[int]] = (),
         store_on_device: bool = True,
         pre_built_model: Union[None, FlaxPreTrainedModel] = None,
+        ntk_implementation: Union[None, nt.NtkImplementation] = None,
     ):
         """
         Construct a znrnd model.
@@ -90,15 +91,25 @@ class JaxModel:
                 Batch size to use in the NTK computation.
         trace_axes : Union[int, Sequence[int]]
                 Tracing over axes of the NTK.
-                The default value is trace_axes(-1,), which reduces the NTK to a tensor
-                of rank 2.
-                For a full NTK set trace_axes=().
+                The default value is trace_axes=(), providing the full NTK of rank 4.
+                For a traced NTK set trace_axes=(-1,), which reduces the NTK to a
+                tensor of rank 2.
         store_on_device : bool, default True
                 Whether to store the NTK on the device or not.
                 This should be set False for large NTKs that do not fit in GPU memory.
         pre_built_model : Union[None, FlaxPreTrainedModel] (default = None)
                 Pre-built model to use instead of building one from scratch here.
                 So far, this is only implemented for Hugging Face flax models.
+        ntk_implementation : Union[None, nt.NtkImplementation] (default = None)
+                Implementation of the NTK computation.
+                The implementation depends on the trace_axes and the model
+                architecture. The default does automatically take into account the
+                trace_axes. For trace_axes=() the default is NTK_VECTOR_PRODUCTS,
+                for all other cases including trace_axes=(-1,) the default is
+                JACOBIAN_CONTRACTION. For more specific use cases, the user can
+                set the implementation manually.
+                Information about the implementation and specific requirements can be
+                found in the neural_tangents documentation.
         """
 
         self.optimizer = optimizer
@@ -121,8 +132,17 @@ class JaxModel:
             self.model_state = self._create_train_state(params=pre_built_model.params)
 
         # Prepare NTK calculation
+        if not ntk_implementation:
+            if trace_axes == ():
+                ntk_implementation = nt.NtkImplementation.NTK_VECTOR_PRODUCTS
+            else:
+                ntk_implementation = nt.NtkImplementation.JACOBIAN_CONTRACTION
         self.empirical_ntk = nt.batch(
-            nt.empirical_ntk_fn(f=self._ntk_apply_fn, trace_axes=trace_axes),
+            nt.empirical_ntk_fn(
+                f=self._ntk_apply_fn,
+                trace_axes=trace_axes,
+                implementation=ntk_implementation,
+            ),
             batch_size=ntk_batch_size,
             store_on_device=store_on_device,
         )

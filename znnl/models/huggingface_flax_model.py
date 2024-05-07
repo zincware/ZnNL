@@ -33,6 +33,7 @@ import jax.numpy as np
 import optax
 from flax import linen as nn
 from flax.training.train_state import TrainState
+from neural_tangents import NtkImplementation
 from transformers import FlaxPreTrainedModel
 
 from znnl.models.jax_model import JaxModel
@@ -53,6 +54,7 @@ class HuggingFaceFlaxModel(JaxModel):
         batch_size: int = 10,
         trace_axes: Union[int, Sequence[int]] = (-1,),
         store_on_device: bool = True,
+        ntk_implementation: Union[None, NtkImplementation] = None,
     ):
         """
         Constructor of a HF flax model.
@@ -73,6 +75,16 @@ class HuggingFaceFlaxModel(JaxModel):
                 The default value is trace_axes(-1,), which reduces the NTK to a tensor
                 of rank 2.
                 For a full NTK set trace_axes=().
+        ntk_implementation : Union[None, NtkImplementation] (default = None)
+                Implementation of the NTK computation.
+                The implementation depends on the trace_axes and the model
+                architecture. The default does automatically take into account the
+                trace_axes. For trace_axes=() the default is NTK_VECTOR_PRODUCTS,
+                for all other cases including trace_axes=(-1,) the default is
+                JACOBIAN_CONTRACTION. For more specific use cases, the user can
+                set the implementation manually.
+                Information about the implementation and specific requirements can be
+                found in the neural_tangents documentation.
         store_on_device : bool, default True
                 Whether to store the NTK on the device or not.
                 This should be set False for large NTKs that do not fit in GPU memory.
@@ -93,6 +105,7 @@ class HuggingFaceFlaxModel(JaxModel):
             trace_axes=trace_axes,
             ntk_batch_size=batch_size,
             store_on_device=store_on_device,
+            ntk_implementation=ntk_implementation,
         )
 
     def _ntk_apply_fn(self, params: dict, inputs: np.ndarray):

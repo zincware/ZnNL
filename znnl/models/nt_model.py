@@ -31,6 +31,7 @@ from typing import Any, Callable, Sequence, Union
 import jax
 import jax.numpy as np
 import neural_tangents as nt
+from neural_tangents import NtkImplementation
 from neural_tangents.stax import serial
 
 from znnl.models.jax_model import JaxModel
@@ -51,6 +52,7 @@ class NTModel(JaxModel):
         nt_module: serial = None,
         batch_size: int = 10,
         trace_axes: Union[int, Sequence[int]] = (-1,),
+        ntk_implementation: Union[None, NtkImplementation] = None,
         store_on_device: bool = True,
         seed: int = None,
     ):
@@ -73,6 +75,16 @@ class NTModel(JaxModel):
                 The default value is trace_axes(-1,), which reduces the NTK to a tensor
                 of rank 2.
                 For a full NTK set trace_axes=().
+        ntk_implementation : Union[None, NtkImplementation] (default = None)
+                Implementation of the NTK computation.
+                The implementation depends on the trace_axes and the model
+                architecture. The default does automatically take into account the
+                trace_axes. For trace_axes=() the default is NTK_VECTOR_PRODUCTS,
+                for all other cases including trace_axes=(-1,) the default is
+                JACOBIAN_CONTRACTION. For more specific use cases, the user can
+                set the implementation manually.
+                Information about the implementation and specific requirements can be
+                found in the neural_tangents documentation.
         store_on_device : bool, default True
                 Whether to store the NTK on the device or not.
                 This should be set False for large NTKs that do not fit in GPU memory.
@@ -91,6 +103,7 @@ class NTModel(JaxModel):
             trace_axes=trace_axes,
             ntk_batch_size=batch_size,
             store_on_device=store_on_device,
+            ntk_implementation=ntk_implementation,
         )
 
     def _init_params(self, kernel_init: Callable = None, bias_init: Callable = None):
