@@ -54,7 +54,7 @@ class TestMatrixUtils:
 
         values, vectors = compute_eigensystem(matrix, normalize=False)
 
-        assert_array_equal(np.real(values), [1, 1])
+        assert_array_equal(np.real(values), [1.0, 1.0])
 
     def test_scaled_eigenvalues(self):
         """

@@ -46,7 +46,6 @@ class TestFlaxHFModule:
         Create a model and data for the tests.
         The resnet config has a 1 dimensional input and a 2 dimensional output.
         """
-
         resnet_config = ResNetConfig(
             num_channels=2,
             embedding_size=64,
@@ -88,3 +87,11 @@ class TestFlaxHFModule:
         """
         with pytest.raises(NotImplementedError):
             self.model.compute_ntk(self.x, infinite=True)
+
+
+if __name__ == "__main__":
+    test_class = TestFlaxHFModule()
+    test_class.setup_class()
+
+    # test_class.test_infinite_failure()
+    test_class.test_ntk_shape()
