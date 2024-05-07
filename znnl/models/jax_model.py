@@ -122,7 +122,7 @@ class JaxModel:
 
         # Prepare NTK calculation
         self.empirical_ntk = nt.batch(
-            nt.empirical_ntk_fn(f=jax.jit(self._ntk_apply_fn), trace_axes=trace_axes),
+            nt.empirical_ntk_fn(f=self._ntk_apply_fn, trace_axes=trace_axes),
             batch_size=ntk_batch_size,
             store_on_device=store_on_device,
         )
