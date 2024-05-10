@@ -37,13 +37,13 @@ from tqdm import trange
 
 from znnl.accuracy_functions.accuracy_function import AccuracyFunction
 from znnl.models.jax_model import JaxModel
+from znnl.ntk_computation.jax_ntk import JAXNTKComputation
 from znnl.optimizers.trace_optimizer import TraceOptimizer
 from znnl.training_recording import JaxRecorder
 from znnl.training_strategies.recursive_mode import RecursiveMode
 from znnl.training_strategies.training_decorator import train_func
 from znnl.training_strategies.training_steps import TrainStep
 from znnl.utils.prng import PRNGKey
-from znnl.ntk_computation.jax_ntk import JAXNTKComputation
 
 logger = logging.getLogger(__name__)
 

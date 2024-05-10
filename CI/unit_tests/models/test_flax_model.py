@@ -37,6 +37,7 @@ from jax import random
 from znnl.models import FlaxModel
 from znnl.ntk_computation import JAXNTKComputation
 
+
 class FlaxTestModule(nn.Module):
     """
     Test model for the Flax tests.
@@ -67,9 +68,7 @@ class TestFlaxModule:
             seed=17,
         )
 
-        ntk_computation = JAXNTKComputation(
-            model.ntk_apply_fn, trace_axes=(-1,)
-        )
+        ntk_computation = JAXNTKComputation(model.ntk_apply_fn, trace_axes=(-1,))
 
         key1, key2 = random.split(random.PRNGKey(1), 2)
         x = random.normal(key1, (3, 8))

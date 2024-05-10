@@ -107,7 +107,9 @@ class TestModelRecording:
                 covariance_entropy=False,
                 eigenvalues=False,
             )
-            recorder.instantiate_recorder(data_set=self.dummy_data_set, ntk_computation=[])
+            recorder.instantiate_recorder(
+                data_set=self.dummy_data_set, ntk_computation=[]
+            )
 
             # Add some dummy data.
             test_data = onp.random.uniform(size=(200,))
@@ -134,11 +136,15 @@ class TestModelRecording:
         assert onp.sum(recorder._ntk_array) != 0.0  # check the data is there
 
         # Check normal resizing on instantiation.
-        recorder.instantiate_recorder(data_set=self.dummy_data_set, overwrite=False, ntk_computation=[])
+        recorder.instantiate_recorder(
+            data_set=self.dummy_data_set, overwrite=False, ntk_computation=[]
+        )
         assert onp.shape(recorder._ntk_array) == (10, 5, 5)
 
         # Test overwriting.
-        recorder.instantiate_recorder(data_set=self.dummy_data_set, overwrite=True, ntk_computation=[])
+        recorder.instantiate_recorder(
+            data_set=self.dummy_data_set, overwrite=True, ntk_computation=[]
+        )
         assert recorder._ntk_array == []
 
     def test_magnitude_variance(self):

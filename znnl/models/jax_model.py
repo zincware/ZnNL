@@ -203,7 +203,6 @@ class JaxModel:
         """
         raise NotImplementedError("Implemented in child class")
 
-
     def __call__(self, feature_vector: np.ndarray):
         """
         Call the network.

@@ -31,7 +31,7 @@ from jax import random
 from transformers import FlaxResNetForImageClassification, ResNetConfig
 
 from znnl.models import HuggingFaceFlaxModel
-from znnl.ntk_computation import JAXNTKComputation 
+from znnl.ntk_computation import JAXNTKComputation
 
 
 class TestFlaxHFModule:

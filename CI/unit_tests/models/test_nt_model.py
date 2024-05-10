@@ -36,6 +36,7 @@ from neural_tangents import stax
 from znnl.models import NTModel
 from znnl.ntk_computation import JAXNTKComputation
 
+
 class TestNTModule:
     """
     Test suite for the neural tangents module.
@@ -72,9 +73,13 @@ class TestNTModule:
         )
 
         ntk_computation_1 = JAXNTKComputation(nt_model_1.ntk_apply_fn, trace_axes=(-1,))
-        ntk_1 = ntk_computation_1.compute_ntk({"params": nt_model_1.model_state.params}, x1)
+        ntk_1 = ntk_computation_1.compute_ntk(
+            {"params": nt_model_1.model_state.params}, x1
+        )
         ntk_computation_2 = JAXNTKComputation(nt_model_2.ntk_apply_fn, trace_axes=())
-        ntk_2 = ntk_computation_2.compute_ntk({"params": nt_model_2.model_state.params}, x1)
+        ntk_2 = ntk_computation_2.compute_ntk(
+            {"params": nt_model_2.model_state.params}, x1
+        )
 
         assert ntk_1.shape == (3, 3)
         assert ntk_2.shape == (3, 3, 5, 5)

@@ -34,8 +34,8 @@ from neural_tangents import stax
 
 from znnl.data import MNISTGenerator
 from znnl.models import NTModel
-from znnl.optimizers import TraceOptimizer
 from znnl.ntk_computation import JAXNTKComputation
+from znnl.optimizers import TraceOptimizer
 
 
 class TestTraceOptimizer:
@@ -86,10 +86,11 @@ class TestTraceOptimizer:
         ntk_computation = JAXNTKComputation(
             model.ntk_apply_fn, trace_axes=(-1,), batch_size=5
         )
-        
 
         # Get theoretical values
-        ntk = ntk_computation.compute_ntk({"params": model.model_state.params}, data.train_ds["inputs"])
+        ntk = ntk_computation.compute_ntk(
+            {"params": model.model_state.params}, data.train_ds["inputs"]
+        )
         expected_lr = scale_factor / np.trace(ntk)
 
         # Compute actual values
