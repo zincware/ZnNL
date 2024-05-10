@@ -51,7 +51,7 @@ class NTModel(JaxModel):
         input_shape: tuple,
         nt_module: serial = None,
         batch_size: int = 10,
-        trace_axes: Union[int, Sequence[int]] = (-1,),
+        trace_axes: Union[int, Sequence[int]] = (),
         ntk_implementation: Union[None, NtkImplementation] = None,
         store_on_device: bool = True,
         seed: int = None,
@@ -72,9 +72,9 @@ class NTModel(JaxModel):
                 Batch size to use in the NTK computation.
         trace_axes : Union[int, Sequence[int]]
                 Tracing over axes of the NTK.
-                The default value is trace_axes(-1,), which reduces the NTK to a tensor
-                of rank 2.
-                For a full NTK set trace_axes=().
+                The default value is trace_axes=(), providing the full NTK of rank 4.
+                For a traced NTK set trace_axes=(-1,), which reduces the NTK to a
+                tensor of rank 2.
         ntk_implementation : Union[None, NtkImplementation] (default = None)
                 Implementation of the NTK computation.
                 The implementation depends on the trace_axes and the model
