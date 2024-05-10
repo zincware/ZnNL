@@ -48,6 +48,7 @@ from znnl.utils.matrix_utils import (
     compute_magnitude_density,
     flatten_rank_4_tensor,
     normalize_gram_matrix,
+    unflatten_rank_2_tensor,
 )
 
 logger = logging.getLogger(__name__)
@@ -248,6 +249,8 @@ class JaxRecorder:
         """
         Get indices of the classes, when class specific properties are recorded.
 
+        TODO: Generalize this method for rank 4 NTKs.
+
         Returns
         -------
         class_specific_idx : tuple
@@ -261,8 +264,8 @@ class JaxRecorder:
                         numpy array of indices for each class.
 
         """
-        class_idx = np.unique(self._data_set["targets"], axis=0, return_index=True)[1]
-        class_idx = np.sort(class_idx)
+        t, class_idx = np.unique(self._data_set["targets"], axis=0, return_index=True)
+        class_idx = class_idx[np.argsort(np.argmax(t, axis=1))]
         class_labels = np.take(self._data_set["targets"], class_idx, axis=0)
         label_dim = class_labels.shape[1]
         if label_dim > 1:
@@ -318,34 +321,38 @@ class JaxRecorder:
             class_combinations.extend(list(itertools.combinations(classes, i)))
 
         return class_specific_idx, class_combinations
-    
+
     def read_class_specific_data(self, data_array: np.ndarray):
         """
         Read class specific data.
 
         Due to storage of arrays, class specific data is stored in a list of arrays.
-        This method separates recorded data for each class and returns it as a 
+        This method separates recorded data for each class and returns it as a
         dictionary.
 
         Parameters
         ----------
         data_array : np.ndarray
                 Data to read and separate.
-        
+
         Returns
         -------
         class_specific_data : dict
                 Dictionary containing the separated data.
         """
         # Sort the data into class specific arrays.
-        class_specific_data = {}        
+        class_specific_data = {}
 
-        for class_label, indices in zip(self._class_idx[0].tolist(), self._class_idx[1]):
+        for class_label, indices in zip(
+            self._class_idx[0].tolist(), self._class_idx[1]
+        ):
 
             # Check whether each class has one or multiple entries.
             if np.shape(data_array)[1] == len(self._class_idx[0]):
                 # This is the case when there is only one entry per class.
-                class_specific_data[class_label] = np.take(data_array, class_label, axis=1)
+                class_specific_data[class_label] = np.take(
+                    data_array, class_label, axis=1
+                )
             elif np.shape(data_array)[1] > len(self._class_idx[0]):
                 # This is the case when there is one entry per sample.
                 class_specific_data[class_label] = np.take(data_array, indices, axis=1)
@@ -466,10 +473,12 @@ class JaxRecorder:
         data = self._select_class_specific_data(indices, parsed_data)
         call_fn(data)
 
-    @staticmethod
-    def _select_class_specific_data(indices: np.ndarray, parsed_data: dict):
+    def _select_class_specific_data(self, indices: np.ndarray, parsed_data: dict):
         """
-        Select class specific data.
+        Select class specific data from the parsed data.
+
+        Using pre-selected indices, the data corresponding to a single class is
+        selected from the parsed data.
 
         Parameters
         ----------
@@ -482,16 +491,41 @@ class JaxRecorder:
         -------
         Updates the class specific arrays.
         """
+
         # Get the class specific predictions
         data = {"predictions": np.take(parsed_data["predictions"], indices, axis=0)}
         data["targets"] = np.take(parsed_data["targets"], indices, axis=0)
+
+        # Get the class specific NTK entries
         try:
-            data["ntk"] = parsed_data["ntk"][np.ix_(indices, indices)]
+            ntk = parsed_data["ntk"]
+            raw_data_shape = np.shape(parsed_data["predictions"])
+
+            if self._ntk_rank == 2:
+                ntk = ntk[np.ix_(indices, indices)]
+                data["ntk"] = ntk
+            elif self._ntk_rank == 4 and self.flatten_ntk:
+                ntk = unflatten_rank_2_tensor(ntk, raw_data_shape[0], raw_data_shape[1])
+                ntk = ntk[np.ix_(indices, indices)]
+                data["ntk"] = flatten_rank_4_tensor(ntk)
+            elif self._ntk_rank == 4 and not self.flatten_ntk:
+                ntk = unflatten_rank_2_tensor(ntk, raw_data_shape[0], raw_data_shape[1])
+                ntk = ntk[np.ix_(indices, indices)]
+                data["ntk"] = ntk
+                logger.warning(
+                    "The NTK is of rank 4 and not flattened. This may lead to "
+                    "unexpected results or errors in calculations of observations."
+                )
+            else:
+                raise ValueError(
+                    "The NTK rank is not supported for class specific recording."
+                )
+
         except KeyError:
             pass
 
         return data
-    
+
     def _reformat_class_specific_recording(self, data_array: np.ndarray):
         """
         Reformat class specific data from the recorder.
@@ -521,9 +555,9 @@ class JaxRecorder:
             new_data = np.concatenate(new_data_unformatted, axis=0)
         # Append the new data to the old data.
         data = old_data + [new_data]
-        
+
         return data
-    
+
     def update_recorder(self, epoch: int, model: JaxModel):
         """
         Update the values stored in the recorder.
@@ -588,16 +622,18 @@ class JaxRecorder:
                 if self.class_specific and item != "entropy_class_correlations":
 
                     # Loop over the classes and update the properties.
-                    for class_label in self._class_idx[0]:
+                    for i, class_label in enumerate(self._class_idx[0]):
                         self.class_specific_update_fn(
                             call_fn=call_fn,
-                            indices=self._class_idx[1][class_label],
+                            indices=self._class_idx[1][i],
                             parsed_data=parsed_data,
                         )
 
                     # Re-format the updated changes in the corresponding arrays.
                     array = self.__dict__[f"_{item}_array"]
-                    self.__dict__[f"_{item}_array"] = self._reformat_class_specific_recording(array)
+                    self.__dict__[f"_{item}_array"] = (
+                        self._reformat_class_specific_recording(array)
+                    )
 
                 elif item == "entropy_class_correlations":
                     for class_combination in self._class_combinations:
@@ -829,7 +865,7 @@ class JaxRecorder:
         cov_ntk = normalize_gram_matrix(parsed_data["ntk"])
         calculator = EntropyAnalysis(matrix=cov_ntk)
         entropy = calculator.compute_von_neumann_entropy(
-            effective=False, normalize_eig=True
+            effective=True, normalize_eig=True
         )
         self._entropy_class_correlations_array.append(entropy)
 

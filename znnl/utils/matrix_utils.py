@@ -171,6 +171,44 @@ def flatten_rank_4_tensor(tensor: np.ndarray) -> np.ndarray:
     )
 
 
+def unflatten_rank_2_tensor(tensor: np.ndarray, n: int, m: int) -> np.ndarray:
+    """
+    Unflatten a rank 2 tensor to a rank 4 tensor using a specific reshaping.
+
+    The tensor is assumed to be of shape (n * m, n * m). The reshaping is done by
+    concatenating first with the third and then with the fourth dimension, resulting
+    in a tensor of shape (n, n, m, m).
+
+    Parameters
+    ----------
+    tensor : np.ndarray (shape=(n * m, n * m))
+            Tensor to unflatten.
+    n : int
+            First dimension of the unflattened tensor.
+    m : int
+            Second dimension of the unflattened tensor.
+
+    Returns
+    -------
+    unflattened_tensor : np.ndarray (shape=(n, n, m, m))
+            Unflattened tensor.
+    """
+
+    if not n * m == tensor.shape[0]:
+        raise ValueError(
+            "The shape of the tensor does not match the given dimensions. "
+            f"Expected {n * m} but got {tensor.shape[0]}."
+        )
+    if not n * m == tensor.shape[1]:
+        raise ValueError(
+            "The shape of the tensor does not match the given dimensions. "
+            f"Expected {n * m} but got {tensor.shape[1]}."
+        )
+
+    _tensor = tensor.reshape(n, m, n, m)
+    return np.moveaxis(_tensor, [2, 1], [1, 2])
+
+
 def calculate_trace(matrix: np.ndarray, normalize: bool = False) -> np.ndarray:
     """
     Calculate the trace of a matrix, including optional normalization.

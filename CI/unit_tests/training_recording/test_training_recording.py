@@ -39,6 +39,7 @@ from numpy import testing
 from znnl import models
 from znnl.loss_functions import MeanPowerLoss
 from znnl.training_recording import JaxRecorder
+from znnl.utils import flatten_rank_4_tensor, unflatten_rank_2_tensor
 
 
 class TestModelRecording:
@@ -244,6 +245,7 @@ class TestModelRecording:
             trace=True,
             eigenvalues=True,
         )
+        recorder._ntk_rank = 2
 
         # Instantiate the recorder
         recorder.instantiate_recorder(data_set=self.class_specific_data)
@@ -401,14 +403,14 @@ class TestModelRecording:
         # Instantiate the recorder
         recorder.instantiate_recorder(data_set=self.class_specific_data)
 
-        # Test the case of having one entry per sample, e.g. for recording the 
+        # Test the case of having one entry per sample, e.g. for recording the
         # eigenvalues.
         test_record = np.arange(20).reshape(2, 10)
         class_specific_dict = recorder.read_class_specific_data(test_record)
         for i, (key, val) in enumerate(class_specific_dict.items()):
             assert key == i
             print(val)
-            assert np.all(val == np.array([[i, i + 5], [i+10, i + 15]]))
+            assert np.all(val == np.array([[i, i + 5], [i + 10, i + 15]]))
 
         # Test the case of having one entry per class, e.g. for recording the trace.
         test_record = np.arange(10).reshape(2, 5)
@@ -416,3 +418,37 @@ class TestModelRecording:
         for i, (key, val) in enumerate(class_specific_dict.items()):
             assert key == i
             assert np.all(val == np.array([i, i + 5]))
+
+    def test_select_class_specific_data(self):
+        """
+        Test the selection of class specific data.
+        """
+        recorder = JaxRecorder(
+            class_specific=True,
+            ntk=True,
+            trace=True,
+            eigenvalues=True,
+        )
+
+        # Instantiate the recorder with traced NTK-like data.
+        recorder._ntk_rank = 2
+        data = self.class_specific_parsed_data
+        data["ntk"] = np.arange(100).reshape(10, 10)
+        recorder.instantiate_recorder(data_set=data)
+        # Test it for label 0
+        indices = np.array([0, 5])
+        selected_data = recorder._select_class_specific_data(indices, data)
+        assert np.all(selected_data["ntk"] == np.array([[0, 5], [50, 55]]))
+
+        # Instantiate the recorder with full NTK-like data.
+        recorder._ntk_rank = 4
+        data = self.class_specific_parsed_data
+        data["ntk"] = np.arange(2500).reshape(50, 50)
+        recorder.instantiate_recorder(data_set=data)
+        # Test a dummy selection
+        indices = np.array([0, 5])
+        selected_data = recorder._select_class_specific_data(indices, data)
+        # Calculate the true selection
+        ntk_ = unflatten_rank_2_tensor(data["ntk"], 10, 5)
+        true_selection = flatten_rank_4_tensor(ntk_[np.ix_(indices, indices)])
+        assert np.all(selected_data["ntk"] == true_selection)

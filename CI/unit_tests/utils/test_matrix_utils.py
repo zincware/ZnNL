@@ -38,6 +38,7 @@ from znnl.utils.matrix_utils import (
     compute_magnitude_density,
     flatten_rank_4_tensor,
     normalize_gram_matrix,
+    unflatten_rank_2_tensor,
 )
 
 
@@ -168,3 +169,23 @@ class TestMatrixUtils:
             [[0, 1, 4, 5], [2, 3, 6, 7], [8, 9, 12, 13], [10, 11, 14, 15]]
         )
         assert_array_equal(flatten_rank_4_tensor(tensor), assertion_matrix)
+
+    def test_unflatten_rank_2_tensor(self):
+        """
+        Test the unflattening of a rank 2 tensor.
+
+        It should invert the operation of flatten_rank_4_tensor.
+        """
+        # Check for assertion errors
+        tensor = np.arange(24).reshape((6, 4))
+        n = 2
+        m = 3
+        assert_raises(ValueError, unflatten_rank_2_tensor, tensor, n, m)
+        tensor = np.arange(24).reshape((4, 6))
+        assert_raises(ValueError, unflatten_rank_2_tensor, tensor, n, m)
+
+        # Check the unflattening
+        tensor = np.arange(4 * 4).reshape(2, 2, 2, 2)
+        flattened_tensor = flatten_rank_4_tensor(tensor)
+        unflattened_tensor = unflatten_rank_2_tensor(flattened_tensor, 2, 2)
+        assert_array_equal(unflattened_tensor, tensor)
