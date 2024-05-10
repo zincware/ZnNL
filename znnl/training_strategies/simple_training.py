@@ -43,6 +43,7 @@ from znnl.training_strategies.recursive_mode import RecursiveMode
 from znnl.training_strategies.training_decorator import train_func
 from znnl.training_strategies.training_steps import TrainStep
 from znnl.utils.prng import PRNGKey
+from znnl.ntk_computation.jax_ntk import JAXNTKComputation
 
 logger = logging.getLogger(__name__)
 
@@ -368,6 +369,11 @@ class SimpleTraining:
         """
         state = self.model.model_state
 
+        if isinstance(self.model.optimizer, TraceOptimizer):
+            ntk_computation = JAXNTKComputation(
+                self.model.ntk_apply_fn, trace_axes=(-1,), batch_size=batch_size
+            )
+
         loading_bar = trange(
             0, epochs, ncols=100, unit="batch", disable=self.disable_loading_bar
         )
@@ -386,7 +392,7 @@ class SimpleTraining:
                 state = self.model.optimizer.apply_optimizer(
                     model_state=state,
                     data_set=train_ds["inputs"],
-                    ntk_fn=self.model.compute_ntk,
+                    ntk_fn=ntk_computation.compute_ntk,
                     epoch=i,
                 )
 

@@ -40,8 +40,8 @@ class JAXNTKComputation:
     def __init__(
         self,
         apply_fn: Callable,
-        ntk_implementation: nt.NtkImplementation,
         batch_size: int = 10,
+        ntk_implementation: nt.NtkImplementation = None,
         trace_axes: tuple = (),
         store_on_device: bool = False,
     ):
@@ -60,6 +60,8 @@ class JAXNTKComputation:
                         return model.apply(
                             params, x, train=False, mutable=['batch_stats']
                         )[0]
+        batch_size : int
+                Size of batch to use in the NTk calculation.
         ntk_implementation : Union[None, NtkImplementation] (default = None)
                 Implementation of the NTK computation.
                 The implementation depends on the trace_axes and the model
@@ -70,8 +72,6 @@ class JAXNTKComputation:
                 set the implementation manually.
                 Information about the implementation and specific requirements can be
                 found in the neural_tangents documentation.
-        batch_size : int
-                Size of batch to use in the NTk calculation.
         trace_axes : Union[int, Sequence[int]]
                 Tracing over axes of the NTK.
                 The default value is trace_axes(-1,), which reduces the NTK to a tensor
@@ -82,6 +82,10 @@ class JAXNTKComputation:
                 This should be set False for large NTKs that do not fit in GPU memory.
         """
         self.apply_fn = apply_fn
+        self.batch_size = batch_size
+        self.ntk_implementation = ntk_implementation
+        self.trace_axes = trace_axes
+        self.store_on_device = store_on_device
 
         # Prepare NTK calculation
         if not ntk_implementation:
@@ -91,7 +95,7 @@ class JAXNTKComputation:
                 ntk_implementation = nt.NtkImplementation.JACOBIAN_CONTRACTION
         self.empirical_ntk = nt.batch(
             nt.empirical_ntk_fn(
-                f=self._ntk_apply_fn,
+                f=apply_fn,
                 trace_axes=trace_axes,
                 implementation=ntk_implementation,
             ),
@@ -117,4 +121,4 @@ class JAXNTKComputation:
         np.ndarray
             The NTK matrix.
         """
-        return self.empirical_ntk(x_i, x_j, params=params)
+        return self.empirical_ntk(x_i, x_j, params)

@@ -40,6 +40,7 @@ from znnl.analysis.entropy import EntropyAnalysis
 from znnl.analysis.loss_fn_derivative import LossDerivative
 from znnl.loss_functions import SimpleLoss
 from znnl.models.jax_model import JaxModel
+from znnl.ntk_computation.jax_ntk import JAXNTKComputation
 from znnl.training_recording.data_storage import DataStorage
 from znnl.utils.matrix_utils import (
     calculate_trace,
@@ -182,6 +183,7 @@ class JaxRecorder:
     _index_count: int = 0  # Helps to avoid problems with non-1 update rates.
     _data_storage: DataStorage = None  # For writing to disk.
     _ntk_rank: Optional[int] = None  # Rank of the NTK matrix.
+    _ntk_computation: JAXNTKComputation = None  # NTK computation object.
 
     def _read_selected_attributes(self):
         """
@@ -218,7 +220,12 @@ class JaxRecorder:
 
         return data
 
-    def instantiate_recorder(self, data_set: dict = None, overwrite: bool = False):
+    def instantiate_recorder(
+        self,
+        data_set: dict = None,
+        overwrite: bool = False,
+        ntk_computation: JAXNTKComputation = None,
+    ):
         """
         Prepare the recorder for training.
 
@@ -229,6 +236,9 @@ class JaxRecorder:
         overwrite : bool (default=False)
                 If true and there is data already in the array, this will be removed and
                 a new array created.
+        ntk_computation : JAXNTKComputation (default=None)
+                Computation of the NTK matrix.
+                If the ntk is to be computed, this is required.
 
         Returns
         -------
@@ -260,6 +270,15 @@ class JaxRecorder:
             else:
                 all_attributes[f"_{item}_array"] = self._build_or_resize_array(
                     f"_{item}_array", overwrite
+                )
+
+        # Check if the NTK computation is required.
+        if self._ntk_computation is None:
+            self._ntk_computation = ntk_computation
+            if self._compute_ntk:
+                raise AttributeError(
+                    "NTK computation is required for this recorder. Please provide a "
+                    "JAXNTKComputation object."
                 )
 
         # If over-writing, reset the index count
@@ -317,9 +336,17 @@ class JaxRecorder:
             # Compute ntk here to avoid repeated computation.
             if self._compute_ntk:
                 try:
-                    ntk = self._model.compute_ntk(
-                        self._data_set["inputs"], infinite=False
-                    )["empirical"]
+                    try:
+                        batch_stats = self._model.model_state.batch_stats
+                    except:
+                        batch_stats
+                    ntk = self._ntk_computation.compute_ntk(
+                        params={
+                            "params": self._model.model_state.params,
+                            "batch_stats": self._model.model_state.batch_stats,
+                        },
+                        x_i=self._data_set["inputs"],
+                    )
                     self._ntk_rank = len(ntk.shape)
                     if self.flatten_ntk and self._ntk_rank == 4:
                         ntk = flatten_rank_4_tensor(ntk)

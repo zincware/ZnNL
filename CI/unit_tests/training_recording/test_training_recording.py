@@ -107,7 +107,7 @@ class TestModelRecording:
                 covariance_entropy=False,
                 eigenvalues=False,
             )
-            recorder.instantiate_recorder(data_set=self.dummy_data_set)
+            recorder.instantiate_recorder(data_set=self.dummy_data_set, ntk_computation=[])
 
             # Add some dummy data.
             test_data = onp.random.uniform(size=(200,))
@@ -127,18 +127,18 @@ class TestModelRecording:
         recorder = JaxRecorder(
             loss=False, accuracy=False, ntk=True, entropy=False, eigenvalues=False
         )
-        recorder.instantiate_recorder(data_set=self.dummy_data_set)
+        recorder.instantiate_recorder(data_set=self.dummy_data_set, ntk_computation=[])
 
         # Populate the arrays deliberately.
         recorder._ntk_array = onp.random.uniform(size=(10, 5, 5)).tolist()
         assert onp.sum(recorder._ntk_array) != 0.0  # check the data is there
 
         # Check normal resizing on instantiation.
-        recorder.instantiate_recorder(data_set=self.dummy_data_set, overwrite=False)
+        recorder.instantiate_recorder(data_set=self.dummy_data_set, overwrite=False, ntk_computation=[])
         assert onp.shape(recorder._ntk_array) == (10, 5, 5)
 
         # Test overwriting.
-        recorder.instantiate_recorder(data_set=self.dummy_data_set, overwrite=True)
+        recorder.instantiate_recorder(data_set=self.dummy_data_set, overwrite=True, ntk_computation=[])
         assert recorder._ntk_array == []
 
     def test_magnitude_variance(self):
@@ -153,7 +153,7 @@ class TestModelRecording:
             magnitude_variance=True,
             eigenvalues=False,
         )
-        recorder.instantiate_recorder(data_set=self.dummy_data_set)
+        recorder.instantiate_recorder(data_set=self.dummy_data_set, ntk_computation=[])
 
         # Create some test data.
         data = onp.random.uniform(1.0, 2.0, size=(100))

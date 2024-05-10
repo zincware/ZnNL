@@ -35,7 +35,7 @@ from flax import linen as nn
 from jax import random
 
 from znnl.models import FlaxModel
-
+from znnl.ntk_computation import JAXNTKComputation
 
 class FlaxTestModule(nn.Module):
     """
@@ -67,24 +67,11 @@ class TestFlaxModule:
             seed=17,
         )
 
-        key1, key2 = random.split(random.PRNGKey(1), 2)
-        x = random.normal(key1, (3, 8))
-        ntk = model.compute_ntk(x)["empirical"]
-        assert ntk.shape == (3, 3)
-
-    def test_infinite_failure(self):
-        """
-        Test that the call to the infinite NTK fails.
-        """
-        model = FlaxModel(
-            flax_module=FlaxTestModule(),
-            optimizer=optax.adam(learning_rate=0.001),
-            input_shape=(8,),
-            seed=17,
+        ntk_computation = JAXNTKComputation(
+            model.ntk_apply_fn, trace_axes=(-1,)
         )
 
         key1, key2 = random.split(random.PRNGKey(1), 2)
         x = random.normal(key1, (3, 8))
-
-        with pytest.raises(NotImplementedError):
-            model.compute_ntk(x, infinite=True)
+        ntk = ntk_computation.compute_ntk({"params": model.model_state.params}, x)
+        assert ntk.shape == (3, 3)
