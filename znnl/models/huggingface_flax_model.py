@@ -27,17 +27,12 @@ Module for using a Flax model from Hugging Face in ZnNL.
 """
 
 import logging
-from typing import Any, Callable, List, Sequence, Union
+from typing import Any, Callable
 
 import jax.numpy as np
-import optax
-from flax import linen as nn
-from flax.training.train_state import TrainState
-from neural_tangents import NtkImplementation
 from transformers import FlaxPreTrainedModel
 
 from znnl.models.jax_model import JaxModel
-from znnl.optimizers.trace_optimizer import TraceOptimizer
 
 logger = logging.getLogger(__name__)
 
@@ -51,9 +46,6 @@ class HuggingFaceFlaxModel(JaxModel):
         self,
         pre_built_model: FlaxPreTrainedModel,
         optimizer: Callable,
-        batch_size: int = 10,
-        store_on_device: bool = True,
-        ntk_implementation: Union[None, NtkImplementation] = None,
     ):
         """
         Constructor of a HF flax model.
@@ -83,7 +75,7 @@ class HuggingFaceFlaxModel(JaxModel):
             optimizer=optimizer,
         )
 
-    def _ntk_apply_fn(self, params: dict, inputs: np.ndarray):
+    def ntk_apply_fn(self, params: dict, inputs: np.ndarray):
         """
         Return an NTK capable apply function.
 
