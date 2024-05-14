@@ -55,7 +55,6 @@ class TestNTModelSeed:
             nt_module=test_model,
             optimizer=optax.adam(learning_rate=0.001),
             input_shape=(1,),
-            batch_size=1,
             seed=17,
         )
 
@@ -63,7 +62,6 @@ class TestNTModelSeed:
             nt_module=test_model,
             optimizer=optax.adam(learning_rate=0.001),
             input_shape=(1,),
-            batch_size=1,
             seed=17,
         )
         return nt_model_1, nt_model_2

@@ -39,6 +39,7 @@ from neural_tangents import stax
 from numpy import testing
 
 import znnl as rnd
+from znnl.ntk_computation import JAXNTKComputation
 
 
 class TestRecorderDeployment:
@@ -78,8 +79,14 @@ class TestRecorderDeployment:
             input_shape=(1, 28, 28, 1),
         )
 
-        cls.train_recorder.instantiate_recorder(data_set=cls.data_generator.train_ds)
-        cls.test_recorder.instantiate_recorder(data_set=cls.data_generator.test_ds)
+        cls.train_recorder.instantiate_recorder(
+            data_set=cls.data_generator.train_ds,
+            ntk_computation=JAXNTKComputation(cls.production_model.ntk_apply_fn),
+        )
+        cls.test_recorder.instantiate_recorder(
+            data_set=cls.data_generator.test_ds,
+            ntk_computation=JAXNTKComputation(cls.production_model.ntk_apply_fn),
+        )
 
         # Define training strategy
         cls.training_strategy = rnd.training_strategies.SimpleTraining(
