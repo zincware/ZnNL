@@ -95,12 +95,10 @@ class TestFlaxHFModule:
         cls.resnet18 = HuggingFaceFlaxModel(
             resnet18,
             optax.sgd(learning_rate=1e-3),
-            batch_size=3,
         )
         cls.resnet50 = HuggingFaceFlaxModel(
             resnet50,
             optax.sgd(learning_rate=1e-3),
-            batch_size=3,
         )
 
         key = random.PRNGKey(0)
