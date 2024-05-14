@@ -26,7 +26,7 @@ Summary
 """
 
 import logging
-from typing import Callable, List, Sequence, Union
+from typing import Callable, List
 
 import jax
 import jax.numpy as np

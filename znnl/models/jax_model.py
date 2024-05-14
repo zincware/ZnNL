@@ -25,7 +25,7 @@ Summary
 -------
 """
 
-from typing import Any, Callable, Optional, Sequence, Union
+from typing import Any, Callable, Optional, Union
 
 import jax
 import jax.numpy as np
@@ -34,7 +34,6 @@ import optax
 from flax.training.train_state import TrainState
 from transformers import FlaxPreTrainedModel
 
-from znnl.ntk_computation.jax_ntk import JAXNTKComputation
 from znnl.optimizers.trace_optimizer import TraceOptimizer
 from znnl.utils.prng import PRNGKey
 

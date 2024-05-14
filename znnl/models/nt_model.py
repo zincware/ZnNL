@@ -26,7 +26,7 @@ Summary
 """
 
 import logging
-from typing import Any, Callable, Union
+from typing import Callable, Union
 
 import jax
 import jax.numpy as np
