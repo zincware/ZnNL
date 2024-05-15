@@ -26,6 +26,9 @@ Summary
 """
 
 from znnl.training_recording.data_storage import DataStorage
-from znnl.training_recording.jax_recording import JaxRecorder
+from znnl.training_recording.papyrus_jax_recording import JaxRecorder
 
-__all__ = [JaxRecorder.__name__, DataStorage.__name__]
+__all__ = [
+    JaxRecorder.__name__,
+    DataStorage.__name__,
+]
