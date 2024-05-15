@@ -25,7 +25,7 @@ Summary
 -------
 """
 
-from typing import Callable, Optional
+from typing import Callable, List, Optional
 
 import jax.numpy as np
 import neural_tangents as nt
@@ -105,7 +105,7 @@ class JAXNTKComputation:
 
     def compute_ntk(
         self, params: dict, x_i: np.ndarray, x_j: Optional[np.ndarray] = None
-    ) -> np.ndarray:
+    ) -> List[np.ndarray]:
         """
         Compute the Neural Tangent Kernel (NTK) for the neural network.
 
@@ -118,7 +118,7 @@ class JAXNTKComputation:
 
         Returns
         -------
-        np.ndarray
+        List[np.ndarray]
             The NTK matrix.
         """
-        return self.empirical_ntk(x_i, x_j, params)
+        return [self.empirical_ntk(x_i, x_j, params)]
