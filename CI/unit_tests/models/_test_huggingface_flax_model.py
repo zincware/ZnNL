@@ -26,7 +26,6 @@ Summary
 """
 
 import optax
-import pytest
 from jax import random
 from transformers import FlaxResNetForImageClassification, ResNetConfig
 

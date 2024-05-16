@@ -30,7 +30,6 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 import optax
-import pytest
 from flax import linen as nn
 from jax import random
 
