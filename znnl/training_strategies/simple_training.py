@@ -110,13 +110,6 @@ class SimpleTraining:
 
         self.review_metric = None
 
-        # Add the loss and accuracy function to the recorders and re-instantiate them
-        if self.recorders is not None:
-            for item in self.recorders:
-                item.loss_fn = loss_fn
-                item.accuracy_fn = accuracy_fn
-                item.instantiate_recorder()
-
         # Initialize the train step
         self._train_step = None
         self._init_train_step()
@@ -384,7 +377,7 @@ class SimpleTraining:
             # Update the recorder properties
             if self.recorders is not None:
                 for item in self.recorders:
-                    item.update_recorder(epoch=i, model=self.model)
+                    item.record(epoch=i, model=self.model)
 
             loading_bar.set_description(f"Epoch: {i}")
 
