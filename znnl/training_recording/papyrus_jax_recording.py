@@ -195,7 +195,7 @@ class JaxRecorder(BaseRecorder):
         Parameters
         ----------
         model : JaxModel
-                The neural network module containing the parameters to use for 
+                The neural network module containing the parameters to use for
                 recording.
 
         Returns
@@ -226,7 +226,7 @@ class JaxRecorder(BaseRecorder):
         epoch : int
                 The epoch of the training process.
         model : JaxModel
-                The neural network module containing the parameters to use for 
+                The neural network module containing the parameters to use for
                 recording.
         kwargs : Any
                 Additional keyword arguments that are directly added to the neural
