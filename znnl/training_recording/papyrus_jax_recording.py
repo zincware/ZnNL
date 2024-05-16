@@ -25,7 +25,7 @@ Summary
 -------
 """
 
-from typing import Dict, List
+from typing import List
 
 import numpy as onp
 from papyrus.measurements import BaseMeasurement
@@ -78,6 +78,7 @@ class JaxRecorder(BaseRecorder):
         measurements: List[BaseMeasurement],
         chunk_size: int = 1e5,
         overwrite: bool = False,
+        update_rate: int = 1,
     ):
         """
         Constructor method of the BaseRecorder class.
@@ -97,6 +98,7 @@ class JaxRecorder(BaseRecorder):
                 Whether to overwrite the existing data in the database.
         """
         super().__init__(name, storage_path, measurements, chunk_size, overwrite)
+        self.update_rate = update_rate
 
         self.neural_state = {}
 
@@ -122,12 +124,11 @@ class JaxRecorder(BaseRecorder):
 
         Parameters
         ----------
+        model : JaxModel (default=None)
+                The neural network module to record during training.
         data_set : dict (default=None)
                 Data to record during training. The first key needs to be the input data
                 and the second key the target data.
-        overwrite : bool (default=False)
-                If true and there is data already in the array, this will be removed and
-                a new array created.
         ntk_computation : JAXNTKComputation (default=None)
                 Computation of the NTK matrix.
                 If the ntk is to be computed, this is required.
@@ -187,14 +188,15 @@ class JaxRecorder(BaseRecorder):
                 f"{self.neural_state.keys()}."
             )
 
-    def _compute_neural_state(self, params: Dict[str, onp.ndarray]):
+    def _compute_neural_state(self, model: JaxModel):
         """
         Compute the neural state.
 
         Parameters
         ----------
-        params : Dict[str, onp.ndarray]
-                The parameters of the neural network.
+        model : JaxModel
+                The neural network module containing the parameters to use for 
+                recording.
 
         Returns
         -------
@@ -203,8 +205,8 @@ class JaxRecorder(BaseRecorder):
         if self._ntk_computation:
             ntk = self._ntk_computation.compute_ntk(
                 params={
-                    "params": self._model.model_state.params,
-                    "batch_stats": self._model.model_state.batch_stats,
+                    "params": model.model_state.params,
+                    "batch_stats": model.model_state.batch_stats,
                 },
                 x_i=self._data_set[list(self._data_set.keys())[0]],
             )
@@ -213,7 +215,7 @@ class JaxRecorder(BaseRecorder):
             predictions = self._model(self._data_set[list(self._data_set.keys())[0]])
             self.neural_state["predictions"] = [predictions]
 
-    def record(self, epoch: int, params: Dict[str, onp.ndarray], **kwargs):
+    def record(self, epoch: int, model: JaxModel, **kwargs):
         """
         Perform the recording of a neural state.
 
@@ -222,9 +224,10 @@ class JaxRecorder(BaseRecorder):
         Parameters
         ----------
         epoch : int
-                The epoch of recording.
-        params : Dict[str, onp.ndarray]
-                The parameters of the neural network.
+                The epoch of the training process.
+        model : JaxModel
+                The neural network module containing the parameters to use for 
+                recording.
         kwargs : Any
                 Additional keyword arguments that are directly added to the neural
                 state.
@@ -234,15 +237,16 @@ class JaxRecorder(BaseRecorder):
         result : onp.ndarray
                 The result of the recorder.
         """
-        # Compute the neural state
-        self._compute_neural_state(params)
-        # Add all other kwargs to the neural state dictionary
-        self.neural_state.update(kwargs)
-        for key, val in self._data_set.items():
-            self.neural_state[key] = [val]
-        # Check if incoming data is complete
-        self._check_keys()
-        # Perform measurements
-        self._measure(**self.neural_state)
-        # Store the measurements
-        self._store(epoch)
+        if epoch % self.update_rate == 0:
+            # Compute the neural state
+            self._compute_neural_state(model)
+            # Add all other kwargs to the neural state dictionary
+            self.neural_state.update(kwargs)
+            for key, val in self._data_set.items():
+                self.neural_state[key] = [val]
+            # Check if incoming data is complete
+            self._check_keys()
+            # Perform measurements
+            self._measure(**self.neural_state)
+            # Store the measurements
+            self.store(ignore_chunk_size=False)
