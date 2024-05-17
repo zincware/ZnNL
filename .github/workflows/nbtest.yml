@@ -11,8 +11,6 @@ jobs:
       steps:
         - uses: actions/checkout@v2
         - uses: actions/setup-python@v2
-          env: 
-            super_secret: ${{ secrets.PAPYRUS_ACCESS }}
           with:
             python-version: "3.11"
         - name: Install dev requirements
@@ -20,6 +18,7 @@ jobs:
             pip3 install nbmake
         - name: Install package
           run: |
+            git config --global url."https://${{ secrets.PAPYRUS_ACCESS }}@github".insteadOf https://github
             pip3 install .
         - name: Notebook test
           run: |
