@@ -13,6 +13,8 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install dependencies
+        env: 
+          super_secret: ${{ secrets.PAPYRUS_ACCESS }}
         run: |
           sudo apt install pandoc
           pip install -r dev-requirements.txt
