@@ -91,6 +91,7 @@ class TestTraceOptimizer:
         ntk = ntk_computation.compute_ntk(
             {"params": model.model_state.params}, data.train_ds["inputs"]
         )
+        ntk = np.array(ntk).mean(axis=0)
         expected_lr = scale_factor / np.trace(ntk)
 
         # Compute actual values

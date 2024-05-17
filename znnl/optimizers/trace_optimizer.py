@@ -84,6 +84,7 @@ class TraceOptimizer:
         if epoch % self.rescale_interval == 0:
             # Compute the ntk trace.
             ntk = ntk_fn({"params": model_state.params}, data_set)
+            ntk = np.array(ntk).mean(axis=0)
             trace = np.trace(ntk)
 
             # Create the new optimizer.
