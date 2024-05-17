@@ -26,7 +26,6 @@ Summary
 """
 
 import tempfile
-from pathlib import Path
 
 import numpy as onp
 import optax
@@ -187,7 +186,7 @@ class TestJaxRecorder:
             ntk_computation=self.ntk_computation,
         )
 
-        recorder.record(model=self.model, accuracy=[onp.array([0.5])])
+        recorder.record(model=self.model, accuracy=[onp.array([0.5])], epoch=0)
 
         # Check if the neural state is updated
         assert recorder.neural_state["accuracy"] == [onp.array([0.5])]

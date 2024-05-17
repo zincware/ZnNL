@@ -29,6 +29,7 @@ import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
+import jax.numpy as np
 import optax
 from jax import random
 from neural_tangents import stax
@@ -81,5 +82,5 @@ class TestNTModule:
             {"params": nt_model_2.model_state.params}, x1
         )
 
-        assert ntk_1.shape == (3, 3)
-        assert ntk_2.shape == (3, 3, 5, 5)
+        assert np.shape(ntk_1) == (1, 3, 3)
+        assert np.shape(ntk_2) == (1, 15, 15)

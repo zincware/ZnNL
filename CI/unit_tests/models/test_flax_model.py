@@ -29,6 +29,7 @@ import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
+import jax.numpy as np
 import optax
 from flax import linen as nn
 from jax import random
@@ -72,4 +73,4 @@ class TestFlaxModule:
         key1, key2 = random.split(random.PRNGKey(1), 2)
         x = random.normal(key1, (3, 8))
         ntk = ntk_computation.compute_ntk({"params": model.model_state.params}, x)
-        assert ntk.shape == (3, 3)
+        assert np.shape(ntk) == (1, 3, 3)
