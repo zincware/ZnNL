@@ -15,4 +15,4 @@ jupyter>=1.0.0
 transformers>=4.40.0
 jax>=0.4.26
 jaxlib>=0.4.26
-papyrus @ git+https://github.com/zincware/papyrus@Konsti_Recorders
+papyrus @ git+https://${{secrets.PAPYRUS_ACCESS}}@github.com/zincware/papyrus@Konsti_Recorders
