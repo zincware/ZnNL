@@ -25,23 +25,37 @@ Summary
 -------
 """
 
-from abc import ABC
 from typing import Callable, List, Optional
 
 import jax.numpy as np
 import neural_tangents as nt
-from papyrus.utils.matrix_utils import flatten_rank_4_tensor
+from jax import random
+
+from znnl.ntk_computation.jax_ntk import JAXNTKComputation
 
 
-class JAXNTKComputation(ABC):
+class JAXNTKSubsampling(JAXNTKComputation):
     """
     Class for computing the empirical Neural Tangent Kernel (NTK) using the
-    neural-tangents library (implemented in JAX).
+    neural-tangents library (implemented in JAX) with subsampling.
+
+    This class is a subclass of JAXNTKComputation and adds the functionality of
+    subsampling the data before computing the NTK.
+    Subsampling is useful when the data is too large to compute the NTK on the
+    entire dataset.
+    Subsampling is done by splitting the data randomly into batches of size
+    `ntk_size` and computing the NTK on each part separately.
+    This is equivalent to computing block-diagonal elements of the NTK of size
+    `ntk_size`.
+    The `compute_ntk` method of this class will return a list of len(data) // ntk_size
+    NTK matrices.
     """
 
     def __init__(
         self,
         apply_fn: Callable,
+        ntk_size: int,
+        seed: int = 0,
         batch_size: int = 10,
         ntk_implementation: nt.NtkImplementation = None,
         trace_axes: tuple = (),
@@ -49,7 +63,7 @@ class JAXNTKComputation(ABC):
         flatten: bool = True,
     ):
         """
-        Constructor the JAX NTK computation class.
+        Constructor the JAX NTK computation class with subsampling.
 
         Parameters
         ----------
@@ -63,8 +77,13 @@ class JAXNTKComputation(ABC):
                         return model.apply(
                             params, x, train=False, mutable=['batch_stats']
                         )[0]
+        n_parts : int
+                Number of sub-samples to use for the NTK computation.
+        ntk_size : int
+                Size of the NTK sub-samples.
         batch_size : int
                 Size of batch to use in the NTk calculation.
+                Note that this has to fit with the set `ntk_size`.
         ntk_implementation : Union[None, NtkImplementation] (default = None)
                 Implementation of the NTK computation.
                 The implementation depends on the trace_axes and the model
@@ -87,48 +106,84 @@ class JAXNTKComputation(ABC):
                 If True, the NTK shape is checked and flattened into a 2D matrix, if
                 required.
         """
-        self.apply_fn = apply_fn
-        self.batch_size = batch_size
-        self.ntk_implementation = ntk_implementation
-        self.trace_axes = trace_axes
-        self.store_on_device = store_on_device
-        self.flatten = flatten
-
-        self._ntk_shape = None
-
-        # Prepare NTK calculation
-        if self.ntk_implementation is None:
-            if trace_axes == ():
-                self.ntk_implementation = nt.NtkImplementation.NTK_VECTOR_PRODUCTS
-            else:
-                self.ntk_implementation = nt.NtkImplementation.JACOBIAN_CONTRACTION
-        self.empirical_ntk = nt.batch(
-            nt.empirical_ntk_fn(
-                f=apply_fn,
-                trace_axes=trace_axes,
-                implementation=self.ntk_implementation,
-            ),
+        super().__init__(
+            apply_fn=apply_fn,
             batch_size=batch_size,
+            ntk_implementation=ntk_implementation,
+            trace_axes=trace_axes,
             store_on_device=store_on_device,
+            flatten=flatten,
         )
+        self.ntk_size = ntk_size
+        self.seed = seed
 
-    def _check_shape(self, ntk: np.ndarray) -> np.ndarray:
+        self._sample_indices: List[np.ndarray] = []
+        self.n_parts = None
+
+    def _get_sample_indices(self, x: np.ndarray) -> List[np.ndarray]:
         """
-        Check the shape of the NTK matrix and flatten it if required.
+        Split the data into `n_parts` parts of size `ntk_size`.
 
         Parameters
         ----------
-        ntk : np.ndarray
-            The NTK matrix.
+        x : np.ndarray
+            The input data.
+
+        Returns
+        -------
+        List[np.ndarray]
+            A list of indices for each part of the data. Each index array has
+            length `ntk_size`.
+        """
+        data_len = x.shape[0]
+        self.n_parts = data_len // self.ntk_size
+
+        key = random.PRNGKey(self.seed)
+        indices = random.permutation(key, np.arange(data_len))
+
+        return [
+            indices[i * self.ntk_size : (i + 1) * self.ntk_size]
+            for i in range(self.n_parts)
+        ]
+
+    def _subsample_data(self, x: np.ndarray) -> np.ndarray:
+        """
+        Subsample the data based on self._sample_indices.
+
+        Parameters
+        ----------
+        x : np.ndarray
+            The input data.
+
+        Returns
+        -------
+        np.ndarray
+            The subsampled data.
+        """
+        return [np.take(x, indices, axis=0) for indices in self._sample_indices]
+
+    def _compute_ntk(
+        self, params: dict, x_i: np.ndarray, x_j: Optional[np.ndarray] = None
+    ) -> np.ndarray:
+        """
+        Compute the NTK for the neural network.
+
+        Parameters
+        ----------
+        params : dict
+            The parameters of the neural network.
+        x_i : np.ndarray
+            The input to the neural network.
+        x_j : np.ndarray
+            The input to the neural network.
 
         Returns
         -------
         np.ndarray
             The NTK matrix.
         """
-        self._ntk_shape = ntk.shape
-        if self.flatten and len(self._ntk_shape) > 2:
-            ntk, _ = flatten_rank_4_tensor(ntk)
+        ntk = self.empirical_ntk(x_i, x_j, params)
+        ntk = self._check_shape(ntk)
         return ntk
 
     def compute_ntk(
@@ -139,6 +194,8 @@ class JAXNTKComputation(ABC):
 
         Parameters
         ----------
+        params : dict
+            The parameters of the neural network.
         x_i : np.ndarray
             The input to the neural network.
         x_j : np.ndarray
@@ -149,6 +206,11 @@ class JAXNTKComputation(ABC):
         List[np.ndarray]
             The NTK matrix.
         """
-        ntk = self.empirical_ntk(x_i, x_j, params)
-        ntk = self._check_shape(ntk)
-        return [ntk]
+        self._sample_indices = self._get_sample_indices(x_i)
+        x_i = self._subsample_data(x_i)
+
+        x_j = self._subsample_data(x_j) if x_j is not None else [None] * self.n_parts
+
+        ntks = [self._compute_ntk(params, x_i[i], x_j[i]) for i in range(self.n_parts)]
+
+        return ntks
