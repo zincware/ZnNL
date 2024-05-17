@@ -438,7 +438,7 @@ class LossAwareReservoir(SimpleTraining):
             # Update the recorder properties
             if self.recorders is not None:
                 for item in self.recorders:
-                    item.update_recorder(epoch=i, model=self.model)
+                    item.record(epoch=i, model=self.model)
 
             loading_bar.set_description(f"Epoch: {i}")
 

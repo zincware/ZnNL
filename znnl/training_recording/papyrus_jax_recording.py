@@ -212,7 +212,7 @@ class JaxRecorder(BaseRecorder):
             )
             self.neural_state["ntk"] = ntk
         if self._model:
-            predictions = self._model(self._data_set[list(self._data_set.keys())[0]])
+            predictions = model(self._data_set[list(self._data_set.keys())[0]])
             self.neural_state["predictions"] = [predictions]
 
     def record(self, epoch: int, model: JaxModel, **kwargs):
