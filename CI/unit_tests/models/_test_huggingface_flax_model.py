@@ -81,7 +81,9 @@ class TestFlaxHFModule:
         """
         Test whether the NTK shape is correct.
         """
-        ntk = self.ntk_computation.compute_ntk(self.model.model_state.params, {"inputs": self.x, "targets": None})
+        ntk = self.ntk_computation.compute_ntk(
+            self.model.model_state.params, {"inputs": self.x, "targets": None}
+        )
         assert ntk.shape == (3, 3)
 
 

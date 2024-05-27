@@ -102,7 +102,7 @@ class TestJAXNTKSubsampling:
             ntk_size=3,
             seed=0,
         )
-        
+
         sample_indices = jax_ntk._get_sample_indices(self.dataset["inputs"])
 
         assert len(sample_indices) == 3

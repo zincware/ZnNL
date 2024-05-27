@@ -108,7 +108,7 @@ class JAXNTKSubsampling(JAXNTKComputation):
                 required.
         data_keys : List[str], default ["inputs", "targets"]
                 The keys used to define inputs and targets in the dataset.
-                These keys are used to extract values from the dataset dictionary in 
+                These keys are used to extract values from the dataset dictionary in
                 the `compute_ntk` method.
         """
         super().__init__(
@@ -119,7 +119,6 @@ class JAXNTKSubsampling(JAXNTKComputation):
             store_on_device=store_on_device,
             flatten=flatten,
             data_keys=data_keys,
-
         )
         self.ntk_size = ntk_size
         self.seed = seed

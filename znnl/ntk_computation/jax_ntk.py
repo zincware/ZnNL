@@ -89,7 +89,7 @@ class JAXNTKComputation(ABC):
                 required.
         data_keys : List[str], default ["inputs", "targets"]
                 The keys used to define inputs and targets in the dataset.
-                These keys are used to extract values from the dataset dictionary in 
+                These keys are used to extract values from the dataset dictionary in
                 the `compute_ntk` method.
         """
         self.apply_fn = apply_fn
@@ -101,7 +101,6 @@ class JAXNTKComputation(ABC):
         self.data_keys = data_keys
 
         self._ntk_shape = None
-
 
         # Set default data keys
         if self.data_keys is None:

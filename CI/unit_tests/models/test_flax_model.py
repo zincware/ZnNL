@@ -72,5 +72,7 @@ class TestFlaxModule:
 
         key1, key2 = random.split(random.PRNGKey(1), 2)
         x = random.normal(key1, (3, 8))
-        ntk = ntk_computation.compute_ntk({"params": model.model_state.params}, {"inputs": x, "targets": None})
+        ntk = ntk_computation.compute_ntk(
+            {"params": model.model_state.params}, {"inputs": x, "targets": None}
+        )
         assert np.shape(ntk) == (1, 3, 3)
