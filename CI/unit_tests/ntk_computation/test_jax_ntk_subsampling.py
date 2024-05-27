@@ -81,6 +81,7 @@ class TestJAXNTKSubsampling:
             trace_axes=(),
             store_on_device=False,
             flatten=True,
+            data_keys=["inputs", "targets"],
         )
 
         assert jax_ntk.apply_fn == self.flax_model.ntk_apply_fn
@@ -90,6 +91,7 @@ class TestJAXNTKSubsampling:
         assert jax_ntk.trace_axes == ()
         assert jax_ntk.store_on_device is False
         assert jax_ntk.flatten is True
+        assert jax_ntk.data_keys == ["inputs", "targets"]
 
     def test_get_sample_indices(self):
         """
@@ -100,7 +102,7 @@ class TestJAXNTKSubsampling:
             ntk_size=3,
             seed=0,
         )
-
+        
         sample_indices = jax_ntk._get_sample_indices(self.dataset["inputs"])
 
         assert len(sample_indices) == 3
@@ -140,6 +142,6 @@ class TestJAXNTKSubsampling:
 
         params = {"params": self.flax_model.model_state.params}
 
-        ntk = jax_ntk.compute_ntk(params, self.dataset["inputs"])
+        ntk = jax_ntk.compute_ntk(params, self.dataset)
 
         assert np.shape(ntk) == (3, 6, 6)

@@ -208,7 +208,7 @@ class JaxRecorder(BaseRecorder):
                     "params": model.model_state.params,
                     "batch_stats": model.model_state.batch_stats,
                 },
-                x_i=self._data_set[list(self._data_set.keys())[0]],
+                dataset_i=self._data_set,
             )
             self.neural_state["ntk"] = ntk
         if self._model:

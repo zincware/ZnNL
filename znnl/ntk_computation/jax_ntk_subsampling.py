@@ -61,6 +61,7 @@ class JAXNTKSubsampling(JAXNTKComputation):
         trace_axes: tuple = (),
         store_on_device: bool = False,
         flatten: bool = True,
+        data_keys: Optional[List[str]] = None,
     ):
         """
         Constructor the JAX NTK computation class with subsampling.
@@ -105,6 +106,10 @@ class JAXNTKSubsampling(JAXNTKComputation):
         flatten : bool, default True
                 If True, the NTK shape is checked and flattened into a 2D matrix, if
                 required.
+        data_keys : List[str], default ["inputs", "targets"]
+                The keys used to define inputs and targets in the dataset.
+                These keys are used to extract values from the dataset dictionary in 
+                the `compute_ntk` method.
         """
         super().__init__(
             apply_fn=apply_fn,
@@ -113,6 +118,8 @@ class JAXNTKSubsampling(JAXNTKComputation):
             trace_axes=trace_axes,
             store_on_device=store_on_device,
             flatten=flatten,
+            data_keys=data_keys,
+
         )
         self.ntk_size = ntk_size
         self.seed = seed
@@ -187,7 +194,7 @@ class JAXNTKSubsampling(JAXNTKComputation):
         return ntk
 
     def compute_ntk(
-        self, params: dict, x_i: np.ndarray, x_j: Optional[np.ndarray] = None
+        self, params: dict, dataset_i: dict, dataset_j: Optional[dict] = None
     ) -> List[np.ndarray]:
         """
         Compute the Neural Tangent Kernel (NTK) for the neural network.
@@ -195,17 +202,20 @@ class JAXNTKSubsampling(JAXNTKComputation):
         Parameters
         ----------
         params : dict
-            The parameters of the neural network.
-        x_i : np.ndarray
-            The input to the neural network.
-        x_j : np.ndarray
-            The input to the neural network.
+                The parameters of the neural network.
+        dataset_i : dict
+                The input dataset for the NTK computation.
+        dataset_j : Optional[dict]
+                Optional input dataset for the NTK computation.
 
         Returns
         -------
         List[np.ndarray]
-            The NTK matrix.
+                The NTK matrix.
         """
+        x_i = dataset_i[self.data_keys[0]]
+        x_j = dataset_j[self.data_keys[0]] if dataset_j is not None else None
+
         self._sample_indices = self._get_sample_indices(x_i)
         x_i = self._subsample_data(x_i)
 

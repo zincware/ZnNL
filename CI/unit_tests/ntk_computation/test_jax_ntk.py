@@ -80,6 +80,7 @@ class TestJAXNTKComputation:
         trace_axes = ()
         store_on_device = False
         flatten = True
+        data_keys = ["image", "label"]
 
         jax_ntk_computation = JAXNTKComputation(
             apply_fn=apply_fn,
@@ -88,6 +89,7 @@ class TestJAXNTKComputation:
             trace_axes=trace_axes,
             store_on_device=store_on_device,
             flatten=flatten,
+            data_keys=data_keys,
         )
 
         assert jax_ntk_computation.apply_fn == apply_fn
@@ -95,6 +97,7 @@ class TestJAXNTKComputation:
         assert jax_ntk_computation.trace_axes == trace_axes
         assert jax_ntk_computation.store_on_device == store_on_device
         assert jax_ntk_computation.flatten == flatten
+        assert jax_ntk_computation.data_keys == data_keys
 
         # Default ntk_implementation should be NTK_VECTOR_PRODUCTS
         assert (
@@ -131,13 +134,12 @@ class TestJAXNTKComputation:
         params = {"params": self.flax_model.model_state.params}
 
         # Trace axes is empty and flatten is True
-        trace_axes = ()
         jax_ntk_computation = JAXNTKComputation(
             apply_fn=self.flax_model.ntk_apply_fn,
             trace_axes=(),
             flatten=True,
         )
-        ntk = jax_ntk_computation.compute_ntk(params, self.dataset["inputs"])
+        ntk = jax_ntk_computation.compute_ntk(params, self.dataset)
         assert np.shape(ntk) == (1, 20, 20)
 
         # Trace axes is empty and flatten is False
@@ -146,7 +148,7 @@ class TestJAXNTKComputation:
             trace_axes=(),
             flatten=False,
         )
-        ntk = jax_ntk_computation.compute_ntk(params, self.dataset["inputs"])
+        ntk = jax_ntk_computation.compute_ntk(params, self.dataset)
 
         assert np.shape(ntk) == (1, 10, 10, 2, 2)
 
@@ -156,7 +158,7 @@ class TestJAXNTKComputation:
             trace_axes=(-1,),
             flatten=True,
         )
-        ntk = jax_ntk_computation.compute_ntk(params, self.dataset["inputs"])
+        ntk = jax_ntk_computation.compute_ntk(params, self.dataset)
 
         assert np.shape(ntk) == (1, 10, 10)
 
@@ -166,6 +168,6 @@ class TestJAXNTKComputation:
             trace_axes=(-1,),
             flatten=False,
         )
-        ntk = jax_ntk_computation.compute_ntk(params, self.dataset["inputs"])
+        ntk = jax_ntk_computation.compute_ntk(params, self.dataset)
 
         assert np.shape(ntk) == (1, 10, 10)

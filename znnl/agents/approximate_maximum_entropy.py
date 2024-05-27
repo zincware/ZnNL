@@ -85,7 +85,7 @@ class ApproximateMaximumEntropy(Agent):
         entropy : float
                 Entropy pf the dataset.
         """
-        ntk = self._compute_ntk(dataset)
+        ntk = self._compute_ntk({"inputs": dataset, "targets": None})
 
         entropy_calculator = EntropyAnalysis(matrix=ntk)
 

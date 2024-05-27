@@ -47,6 +47,7 @@ class JAXNTKComputation(ABC):
         trace_axes: tuple = (),
         store_on_device: bool = False,
         flatten: bool = True,
+        data_keys: Optional[List[str]] = None,
     ):
         """
         Constructor the JAX NTK computation class.
@@ -86,6 +87,10 @@ class JAXNTKComputation(ABC):
         flatten : bool, default True
                 If True, the NTK shape is checked and flattened into a 2D matrix, if
                 required.
+        data_keys : List[str], default ["inputs", "targets"]
+                The keys used to define inputs and targets in the dataset.
+                These keys are used to extract values from the dataset dictionary in 
+                the `compute_ntk` method.
         """
         self.apply_fn = apply_fn
         self.batch_size = batch_size
@@ -93,8 +98,14 @@ class JAXNTKComputation(ABC):
         self.trace_axes = trace_axes
         self.store_on_device = store_on_device
         self.flatten = flatten
+        self.data_keys = data_keys
 
         self._ntk_shape = None
+
+
+        # Set default data keys
+        if self.data_keys is None:
+            self.data_keys = ["inputs", "targets"]
 
         # Prepare NTK calculation
         if self.ntk_implementation is None:
@@ -119,12 +130,12 @@ class JAXNTKComputation(ABC):
         Parameters
         ----------
         ntk : np.ndarray
-            The NTK matrix.
+                The NTK matrix.
 
         Returns
         -------
         np.ndarray
-            The NTK matrix.
+                The NTK matrix.
         """
         self._ntk_shape = ntk.shape
         if self.flatten and len(self._ntk_shape) > 2:
@@ -132,23 +143,27 @@ class JAXNTKComputation(ABC):
         return ntk
 
     def compute_ntk(
-        self, params: dict, x_i: np.ndarray, x_j: Optional[np.ndarray] = None
+        self, params: dict, dataset_i: dict, dataset_j: Optional[dict] = None
     ) -> List[np.ndarray]:
         """
         Compute the Neural Tangent Kernel (NTK) for the neural network.
 
         Parameters
         ----------
-        x_i : np.ndarray
-            The input to the neural network.
-        x_j : np.ndarray
-            The input to the neural network.
+        params : dict
+                The parameters of the neural network.
+        dataset_i : dict
+                The input dataset for the NTK computation.
+        dataset_j : Optional[dict]
+                Optional input dataset for the NTK computation.
 
         Returns
         -------
         List[np.ndarray]
-            The NTK matrix.
+                The NTK matrix.
         """
+        x_i = dataset_i[self.data_keys[0]]
+        x_j = dataset_j[self.data_keys[0]] if dataset_j is not None else None
         ntk = self.empirical_ntk(x_i, x_j, params)
         ntk = self._check_shape(ntk)
         return [ntk]

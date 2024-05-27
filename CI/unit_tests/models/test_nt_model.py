@@ -75,11 +75,11 @@ class TestNTModule:
 
         ntk_computation_1 = JAXNTKComputation(nt_model_1.ntk_apply_fn, trace_axes=(-1,))
         ntk_1 = ntk_computation_1.compute_ntk(
-            {"params": nt_model_1.model_state.params}, x1
+            {"params": nt_model_1.model_state.params}, {"inputs": x1, "targets": None}
         )
         ntk_computation_2 = JAXNTKComputation(nt_model_2.ntk_apply_fn, trace_axes=())
         ntk_2 = ntk_computation_2.compute_ntk(
-            {"params": nt_model_2.model_state.params}, x1
+            {"params": nt_model_2.model_state.params}, {"inputs": x1, "targets": None}
         )
 
         assert np.shape(ntk_1) == (1, 3, 3)
