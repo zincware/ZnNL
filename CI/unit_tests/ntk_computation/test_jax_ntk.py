@@ -77,7 +77,7 @@ class TestJAXNTKComputation:
         apply_fn = lambda x: x
         batch_size = 10
         ntk_implementation = None
-        trace_axes = ()
+        trace_axes = (-1,)
         store_on_device = False
         flatten = True
         data_keys = ["image", "label"]
@@ -99,22 +99,28 @@ class TestJAXNTKComputation:
         assert jax_ntk_computation.flatten == flatten
         assert jax_ntk_computation.data_keys == data_keys
 
+    def test_constructor_default(self):
+        """
+        Test the default setting of the constructor of the JAX NTK computation class.
+        """
+        apply_fn = lambda x: x
+
+        jax_ntk_computation = JAXNTKComputation(
+            apply_fn=apply_fn,
+        )
+
+        assert jax_ntk_computation.apply_fn == apply_fn
+        assert jax_ntk_computation.batch_size == 10
+        assert jax_ntk_computation.trace_axes == ()
+        assert jax_ntk_computation.store_on_device == False
+        assert jax_ntk_computation.flatten == True
+        assert jax_ntk_computation.data_keys == ["inputs", "targets"]
+
         # Default ntk_implementation should be NTK_VECTOR_PRODUCTS
         assert (
             jax_ntk_computation.ntk_implementation
             == nt.NtkImplementation.NTK_VECTOR_PRODUCTS
         )
-
-        # Test the default trace_axes
-        jax_ntk_computation = JAXNTKComputation(
-            apply_fn=apply_fn,
-            batch_size=batch_size,
-            ntk_implementation=ntk_implementation,
-            store_on_device=store_on_device,
-            flatten=flatten,
-        )
-
-        assert jax_ntk_computation.trace_axes == ()
 
     def test_check_shape(self):
         """

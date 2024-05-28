@@ -28,6 +28,7 @@ Summary
 from typing import Callable, List, Optional
 
 import jax.numpy as np
+import jax.tree as jt
 import neural_tangents as nt
 from jax import random
 
@@ -110,6 +111,8 @@ class JAXNTKSubsampling(JAXNTKComputation):
                 The keys used to define inputs and targets in the dataset.
                 These keys are used to extract values from the dataset dictionary in
                 the `compute_ntk` method.
+                Note that the first key has to refer the input data and the second key
+                to the targets / labels of the dataset.
         """
         super().__init__(
             apply_fn=apply_fn,
@@ -121,7 +124,7 @@ class JAXNTKSubsampling(JAXNTKComputation):
             data_keys=data_keys,
         )
         self.ntk_size = ntk_size
-        self.seed = seed
+        self.key = random.PRNGKey(seed)
 
         self._sample_indices: List[np.ndarray] = []
         self.n_parts = None
@@ -144,7 +147,8 @@ class JAXNTKSubsampling(JAXNTKComputation):
         data_len = x.shape[0]
         self.n_parts = data_len // self.ntk_size
 
-        key = random.PRNGKey(self.seed)
+        key, self.key = random.split(self.key)
+
         indices = random.permutation(key, np.arange(data_len))
 
         return [
@@ -220,6 +224,6 @@ class JAXNTKSubsampling(JAXNTKComputation):
 
         x_j = self._subsample_data(x_j) if x_j is not None else [None] * self.n_parts
 
-        ntks = [self._compute_ntk(params, x_i[i], x_j[i]) for i in range(self.n_parts)]
+        ntks = jt.map(lambda x_i, x_j: self._compute_ntk(params, x_i, x_j), x_i, x_j)
 
         return ntks

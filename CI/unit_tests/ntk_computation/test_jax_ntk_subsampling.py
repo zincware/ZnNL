@@ -74,24 +74,10 @@ class TestJAXNTKSubsampling:
         Test the constructor of the JAX NTK computation class.
         """
         jax_ntk = JAXNTKSubsampling(
-            apply_fn=self.flax_model.ntk_apply_fn,
-            ntk_size=3,
-            seed=0,
-            batch_size=10,
-            trace_axes=(),
-            store_on_device=False,
-            flatten=True,
-            data_keys=["inputs", "targets"],
+            apply_fn=self.flax_model.ntk_apply_fn, ntk_size=3, seed=0
         )
 
-        assert jax_ntk.apply_fn == self.flax_model.ntk_apply_fn
         assert jax_ntk.ntk_size == 3
-        assert jax_ntk.seed == 0
-        assert jax_ntk.batch_size == 10
-        assert jax_ntk.trace_axes == ()
-        assert jax_ntk.store_on_device is False
-        assert jax_ntk.flatten is True
-        assert jax_ntk.data_keys == ["inputs", "targets"]
 
     def test_get_sample_indices(self):
         """

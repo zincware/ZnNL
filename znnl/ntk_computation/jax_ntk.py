@@ -91,6 +91,8 @@ class JAXNTKComputation(ABC):
                 The keys used to define inputs and targets in the dataset.
                 These keys are used to extract values from the dataset dictionary in
                 the `compute_ntk` method.
+                Note that the first key has to refer the input data and the second key
+                to the targets / labels of the dataset.
         """
         self.apply_fn = apply_fn
         self.batch_size = batch_size
