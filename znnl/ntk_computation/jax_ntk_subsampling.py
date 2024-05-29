@@ -28,9 +28,9 @@ Summary
 from typing import Callable, List, Optional
 
 import jax.numpy as np
-import jax.tree as jt
 import neural_tangents as nt
 from jax import random
+from jax.tree_util import tree_map as jmap
 
 from znnl.ntk_computation.jax_ntk import JAXNTKComputation
 
@@ -224,6 +224,6 @@ class JAXNTKSubsampling(JAXNTKComputation):
 
         x_j = self._subsample_data(x_j) if x_j is not None else [None] * self.n_parts
 
-        ntks = jt.map(lambda x_i, x_j: self._compute_ntk(params, x_i, x_j), x_i, x_j)
+        ntks = jmap(lambda x_i, x_j: self._compute_ntk(params, x_i, x_j), x_i, x_j)
 
         return ntks

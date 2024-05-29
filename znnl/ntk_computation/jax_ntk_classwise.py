@@ -28,9 +28,9 @@ Summary
 from typing import Callable, List, Optional
 
 import jax.numpy as np
-import jax.tree as jt
 import neural_tangents as nt
 from jax import random, vmap
+from jax.tree_util import tree_map as jmap
 
 from znnl.ntk_computation.jax_ntk import JAXNTKComputation
 
@@ -178,7 +178,7 @@ class JAXNTKClassWise(JAXNTKComputation):
         np.ndarray
             The subsampled data.
         """
-        return jt.map(lambda indices: np.take(x, indices, axis=0), sample_indices)
+        return jmap(lambda indices: np.take(x, indices, axis=0), sample_indices)
 
     def _compute_ntk(self, params: dict, x_i: np.ndarray) -> np.ndarray:
         """
@@ -226,7 +226,7 @@ class JAXNTKClassWise(JAXNTKComputation):
 
         x_i = self._subsample_data(dataset[self.data_keys[0]], self._sample_indices)
 
-        ntks = jt.map(lambda x_i: self._compute_ntk(params, x_i), x_i)
+        ntks = jmap(lambda x_i: self._compute_ntk(params, x_i), x_i)
 
         ntks = list(ntks.values())
 
