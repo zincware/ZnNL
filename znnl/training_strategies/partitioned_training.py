@@ -32,8 +32,8 @@ import jax.numpy as np
 from tqdm import trange
 
 from znnl.accuracy_functions.accuracy_function import AccuracyFunction
+from znnl.analysis.jax_ntk import JAXNTKComputation
 from znnl.models.jax_model import JaxModel
-from znnl.ntk_computation.jax_ntk import JAXNTKComputation
 from znnl.optimizers.trace_optimizer import TraceOptimizer
 from znnl.training_recording import JaxRecorder
 from znnl.training_strategies.recursive_mode import RecursiveMode

@@ -32,8 +32,8 @@ from flax import linen as nn
 from jax import random
 from papyrus.utils.matrix_utils import flatten_rank_4_tensor
 
+from znnl.analysis import JAXNTKCombinations
 from znnl.models import FlaxModel
-from znnl.ntk_computation import JAXNTKCombinations
 
 
 class FlaxTestModule(nn.Module):

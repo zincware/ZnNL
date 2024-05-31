@@ -30,8 +30,8 @@ import optax
 from flax import linen as nn
 from jax import random
 
+from znnl.analysis import JAXNTKClassWise
 from znnl.models import FlaxModel
-from znnl.ntk_computation import JAXNTKClassWise
 
 
 class FlaxTestModule(nn.Module):

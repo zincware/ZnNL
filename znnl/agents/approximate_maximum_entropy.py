@@ -30,9 +30,9 @@ import jax.numpy as np
 
 from znnl.agents.agent import Agent
 from znnl.analysis.entropy import EntropyAnalysis
+from znnl.analysis.jax_ntk import JAXNTKComputation
 from znnl.data import DataGenerator
 from znnl.models import JaxModel
-from znnl.ntk_computation.jax_ntk import JAXNTKComputation
 from znnl.utils.prng import PRNGKey
 
 

@@ -32,7 +32,7 @@ import jax.numpy as np
 import neural_tangents as nt
 from papyrus.utils.matrix_utils import flatten_rank_4_tensor, unflatten_rank_4_tensor
 
-from znnl.ntk_computation.jax_ntk import JAXNTKComputation
+from znnl.analysis.jax_ntk import JAXNTKComputation
 
 
 class JAXNTKCombinations(JAXNTKComputation):

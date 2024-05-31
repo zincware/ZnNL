@@ -31,8 +31,8 @@ import numpy as onp
 from papyrus.measurements import BaseMeasurement
 from papyrus.recorders import BaseRecorder
 
+from znnl.analysis import JAXNTKComputation
 from znnl.models import JaxModel
-from znnl.ntk_computation import JAXNTKComputation
 
 
 class JaxRecorder(BaseRecorder):

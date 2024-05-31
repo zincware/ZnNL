@@ -32,9 +32,9 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 import jax.numpy as np
 from neural_tangents import stax
 
+from znnl.analysis import JAXNTKComputation
 from znnl.data import MNISTGenerator
 from znnl.models import NTModel
-from znnl.ntk_computation import JAXNTKComputation
 from znnl.optimizers import TraceOptimizer
 
 

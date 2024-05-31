@@ -32,7 +32,7 @@ import neural_tangents as nt
 from jax import random, vmap
 from jax.tree_util import tree_map as jmap
 
-from znnl.ntk_computation.jax_ntk import JAXNTKComputation
+from znnl.analysis.jax_ntk import JAXNTKComputation
 
 
 class JAXNTKClassWise(JAXNTKComputation):

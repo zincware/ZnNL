@@ -34,8 +34,8 @@ import optax
 from jax import random
 from neural_tangents import stax
 
+from znnl.analysis import JAXNTKComputation
 from znnl.models import NTModel
-from znnl.ntk_computation import JAXNTKComputation
 
 
 class TestNTModule:

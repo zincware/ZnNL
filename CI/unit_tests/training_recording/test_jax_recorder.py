@@ -33,8 +33,8 @@ from flax import linen as nn
 from numpy.testing import assert_raises
 from papyrus.measurements import Accuracy, Loss, NTKTrace
 
+from znnl.analysis import JAXNTKComputation
 from znnl.models import FlaxModel
-from znnl.ntk_computation import JAXNTKComputation
 from znnl.training_recording import JaxRecorder
 
 

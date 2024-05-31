@@ -37,10 +37,10 @@ import numpy as onp
 from znnl.accuracy_functions.accuracy_function import AccuracyFunction
 from znnl.analysis.eigensystem import EigenSpaceAnalysis
 from znnl.analysis.entropy import EntropyAnalysis
+from znnl.analysis.jax_ntk import JAXNTKComputation
 from znnl.analysis.loss_fn_derivative import LossDerivative
 from znnl.loss_functions import SimpleLoss
 from znnl.models.jax_model import JaxModel
-from znnl.ntk_computation.jax_ntk import JAXNTKComputation
 from znnl.training_recording.data_storage import DataStorage
 from znnl.utils.matrix_utils import (
     calculate_trace,
