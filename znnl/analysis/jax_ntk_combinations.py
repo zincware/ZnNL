@@ -273,7 +273,7 @@ class JAXNTKCombinations(JAXNTKComputation):
         ntk = self._check_shape(ntk)
         return ntk
 
-    def compute_ntk(self, params: dict, dataset: dict) -> List[np.ndarray]:
+    def compute_ntk(self, params: dict, dataset_i: dict) -> List[np.ndarray]:
         """
         Compute the Neural Tangent Kernel (NTK) for the neural network.
 
@@ -286,7 +286,7 @@ class JAXNTKCombinations(JAXNTKComputation):
         ----------
         params : dict
                 The parameters of the neural network.
-        dataset : dict
+        dataset_i : dict
                 The input dataset for the NTK computation.
 
         Returns
@@ -298,7 +298,7 @@ class JAXNTKCombinations(JAXNTKComputation):
         """
 
         # Reduce the dataset to the selected class labels
-        dataset_reduced = self._reduce_data_to_labels(dataset)
+        dataset_reduced = self._reduce_data_to_labels(dataset_i)
 
         # Compute the NTK for the reduced dataset
         ntk = self._compute_ntk(params, dataset_reduced[self.data_keys[0]])

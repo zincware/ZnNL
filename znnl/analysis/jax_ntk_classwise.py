@@ -200,7 +200,7 @@ class JAXNTKClassWise(JAXNTKComputation):
         ntk = self._check_shape(ntk)
         return ntk
 
-    def compute_ntk(self, params: dict, dataset: dict) -> List[np.ndarray]:
+    def compute_ntk(self, params: dict, dataset_i: dict) -> List[np.ndarray]:
         """
         Compute the Neural Tangent Kernel (NTK) for the neural network.
 
@@ -223,9 +223,9 @@ class JAXNTKClassWise(JAXNTKComputation):
                 The NTK matrix.
         """
 
-        self._sample_indices = self._get_label_indices(dataset)
+        self._sample_indices = self._get_label_indices(dataset_i)
 
-        x_i = self._subsample_data(dataset[self.data_keys[0]], self._sample_indices)
+        x_i = self._subsample_data(dataset_i[self.data_keys[0]], self._sample_indices)
 
         ntks = jmap(lambda x_i: self._compute_ntk(params, x_i), x_i)
 
