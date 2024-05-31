@@ -103,6 +103,7 @@ class JAXNTKComputation(ABC):
         self.data_keys = data_keys
 
         self._ntk_shape = None
+        self._is_flattened = False
 
         # Set default data keys
         if self.data_keys is None:
@@ -141,6 +142,7 @@ class JAXNTKComputation(ABC):
         self._ntk_shape = ntk.shape
         if self.flatten and len(self._ntk_shape) > 2:
             ntk, _ = flatten_rank_4_tensor(ntk)
+            self._is_flattened = True
         return ntk
 
     def compute_ntk(

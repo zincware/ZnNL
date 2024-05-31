@@ -26,7 +26,6 @@ Summary
 """
 
 import jax.numpy as np
-import neural_tangents as nt
 import optax
 from flax import linen as nn
 from jax import random
@@ -70,11 +69,11 @@ class TestJAXNTKClassWise:
         one_hot_targets = np.eye(3)[targets]
 
         cls.dataset_int = {
-            "inputs": random.normal(random.PRNGKey(0), (10, 8)),
+            "inputs": random.normal(random.PRNGKey(0), (8, 8)),
             "targets": np.expand_dims(targets, axis=1),
         }
         cls.dataset_onehot = {
-            "inputs": random.normal(random.PRNGKey(0), (10, 8)),
+            "inputs": random.normal(random.PRNGKey(0), (8, 8)),
             "targets": one_hot_targets,
         }
 
@@ -89,23 +88,23 @@ class TestJAXNTKClassWise:
         assert jax_ntk.batch_size == 10
         assert jax_ntk._sample_indices == None
 
-    def test_get_sample_indices(self):
+    def test_get_label_indices(self):
         """
-        Test the _get_sample_indices method.
+        Test the _get_label_indices method.
         """
         jax_ntk = JAXNTKClassWise(
             apply_fn=self.flax_model.apply,
         )
 
         # Test the one-hot targets
-        sample_idx_one_hot = jax_ntk._get_sample_indices(self.dataset_onehot)
+        sample_idx_one_hot = jax_ntk._get_label_indices(self.dataset_onehot)
         assert len(sample_idx_one_hot) == 3
         assert len(sample_idx_one_hot[0]) == 4
         assert len(sample_idx_one_hot[1]) == 2
         assert len(sample_idx_one_hot[2]) == 2
 
         # Test the integer targets
-        sample_idx_int = jax_ntk._get_sample_indices(self.dataset_int)
+        sample_idx_int = jax_ntk._get_label_indices(self.dataset_int)
         assert len(sample_idx_int) == 3
         assert len(sample_idx_int[0]) == 4
         assert len(sample_idx_int[1]) == 2
@@ -113,7 +112,7 @@ class TestJAXNTKClassWise:
 
         # Test upper bound of ntk_size
         jax_ntk.ntk_size = 3
-        sample_idx_one_hot = jax_ntk._get_sample_indices(self.dataset_onehot)
+        sample_idx_one_hot = jax_ntk._get_label_indices(self.dataset_onehot)
         assert len(sample_idx_one_hot) == 3
         assert len(sample_idx_one_hot[0]) == 3
         assert len(sample_idx_one_hot[1]) == 2
@@ -130,7 +129,7 @@ class TestJAXNTKClassWise:
         # Test the one-hot targets
         subsampled_data_one_hot = jax_ntk._subsample_data(
             self.dataset_onehot["inputs"],
-            jax_ntk._get_sample_indices(self.dataset_onehot),
+            jax_ntk._get_label_indices(self.dataset_onehot),
         )
         assert len(subsampled_data_one_hot) == 3
         assert subsampled_data_one_hot[0].shape == (4, 8)
@@ -139,7 +138,7 @@ class TestJAXNTKClassWise:
 
         # Test the integer targets
         subsampled_data_int = jax_ntk._subsample_data(
-            self.dataset_int["inputs"], jax_ntk._get_sample_indices(self.dataset_int)
+            self.dataset_int["inputs"], jax_ntk._get_label_indices(self.dataset_int)
         )
         assert len(subsampled_data_int) == 3
         assert subsampled_data_int[0].shape == (4, 8)

@@ -27,10 +27,12 @@ Summary
 
 from znnl.ntk_computation.jax_ntk import JAXNTKComputation
 from znnl.ntk_computation.jax_ntk_classwise import JAXNTKClassWise
+from znnl.ntk_computation.jax_ntk_combinations import JAXNTKCombinations
 from znnl.ntk_computation.jax_ntk_subsampling import JAXNTKSubsampling
 
 __all__ = [
     JAXNTKComputation.__name__,
     JAXNTKClassWise.__name__,
     JAXNTKSubsampling.__name__,
+    JAXNTKCombinations.__name__,
 ]

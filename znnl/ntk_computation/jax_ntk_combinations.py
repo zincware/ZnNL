@@ -25,24 +25,26 @@ Summary
 -------
 """
 
+from itertools import combinations
 from typing import Callable, List, Optional
 
 import jax.numpy as np
 import neural_tangents as nt
-from jax import random, vmap
-from jax.tree_util import tree_map as jmap
+from papyrus.utils.matrix_utils import flatten_rank_4_tensor, unflatten_rank_4_tensor
 
 from znnl.ntk_computation.jax_ntk import JAXNTKComputation
 
 
-class JAXNTKClassWise(JAXNTKComputation):
+class JAXNTKCombinations(JAXNTKComputation):
     """
     Class for computing the empirical Neural Tangent Kernel (NTK) using the
-    neural-tangents library (implemented in JAX) with class-wise subsampling.
+    neural-tangents library (implemented in JAX) of all possible class combinations.
 
-    This class is a subclass of JAXNTKComputation and adds the functionality of
-    subsampling the data according to the classes before computing the NTK.
-    In this way, the NTK is computed for each class separately.
+    This can be understood in the following way:
+    For a dataset of n labels, and a given selection of labels (e.g. 0, 2), the NTK
+    will be computed for all possible combinations made from the selected labels.
+    This means that the NTKs for the combinations
+    (0, 0), (0, 2), (2, 0), (2, 2) and (0+2, 0+2) will be computed.
 
     Note
     ----
@@ -54,16 +56,16 @@ class JAXNTKClassWise(JAXNTKComputation):
     def __init__(
         self,
         apply_fn: Callable,
+        class_labels: List[int],
         batch_size: int = 10,
         ntk_implementation: nt.NtkImplementation = None,
         trace_axes: tuple = (),
         store_on_device: bool = False,
         flatten: bool = True,
         data_keys: Optional[List[str]] = None,
-        ntk_size: int = None,
     ):
         """
-        Constructor the JAX NTK computation class.
+        Constructor the JAX NTK computation class with subsampling.
 
         Parameters
         ----------
@@ -77,6 +79,8 @@ class JAXNTKClassWise(JAXNTKComputation):
                         return model.apply(
                             params, x, train=False, mutable=['batch_stats']
                         )[0]
+        class_labels : List[int]
+                List of class labels to use for
         batch_size : int
                 Size of batch to use in the NTk calculation.
         ntk_implementation : Union[None, NtkImplementation] (default = None)
@@ -106,8 +110,6 @@ class JAXNTKClassWise(JAXNTKComputation):
                 the `compute_ntk` method.
                 Note that the first key has to refer the input data and the second key
                 to the targets / labels of the dataset.
-        ntk_size : int (default = None)
-                Upper limit for the number of samples used for the NTK computation.
         """
         super().__init__(
             apply_fn=apply_fn,
@@ -119,8 +121,41 @@ class JAXNTKClassWise(JAXNTKComputation):
             data_keys=data_keys,
         )
 
-        self._sample_indices = None
-        self.ntk_size = ntk_size
+        self.class_labels = class_labels
+
+        # Compute all possible combinations of the class labels
+        self.label_combinations = self._compute_combinations()
+
+    def _reduce_data_to_labels(self, dataset: dict) -> dict:
+        """
+        Reduce the dataset to only contain the selected class labels.
+
+        Parameters
+        ----------
+        dataset : dict
+                The dataset containing the inputs and targets.
+
+        Returns
+        -------
+        dict
+                The dataset containing only the selected class labels.
+        """
+        targets = dataset[self.data_keys[1]]
+
+        if len(targets.shape) > 1:
+            # If one-hot encoding is used, convert it to class labels
+            if targets.shape[1] > 1:
+                targets = np.argmax(targets, axis=1)
+            # If the targets are already class labels, squeeze the array
+            elif targets.shape[1] == 1:
+                targets = np.squeeze(targets, axis=1)
+
+        mask = np.isin(targets, np.array(self.class_labels))
+        dataset_reduced = {}
+        for key, value in dataset.items():
+            dataset_reduced[key] = np.compress(mask, value, axis=0)
+
+        return dataset_reduced
 
     def _get_label_indices(self, dataset: dict) -> List[np.ndarray]:
         """
@@ -148,37 +183,75 @@ class JAXNTKClassWise(JAXNTKComputation):
             elif targets.shape[1] == 1:
                 targets = np.squeeze(targets, axis=1)
 
-        unique_classes = np.unique(targets)
         _indices = np.arange(targets.shape[0])
         sample_indices = {}
 
-        for class_label in unique_classes:
+        for class_label in self.class_labels:
             # Create mask for samples of the current class
             mask = targets == class_label
             indices = np.compress(mask, _indices, axis=0)
-            if self.ntk_size is not None:
-                indices = indices[: self.ntk_size]
             sample_indices[int(class_label)] = indices
 
         return sample_indices
 
-    def _subsample_data(self, x: np.ndarray, sample_indices: dict) -> np.ndarray:
+    def _compute_combinations(self) -> List[np.ndarray]:
         """
-        Subsample the data based on indices.
+        Compute all possible combinations of the class labels.
+
+        The combinations are computed for all possible pairs of class labels contained
+        in the `
 
         Parameters
         ----------
-        x : np.ndarray
-            The input data.
         sample_indices : dict
-            The indices of the samples to use for the NTK computation.
+                The indices of the samples to use for the NTK computation.
+
+        Returns
+        -------
+        List[np.ndarray]
+                The NTK matrix.
+        """
+        label_combinations = []
+        # Compute all possible combinations of the class labels
+        for i in range(1, len(self.class_labels) + 1):
+            label_combinations.extend(combinations(self.class_labels, i))
+
+        return label_combinations
+
+    def _take_sub_ntk(
+        self, ntk: np.ndarray, label_indices: dict, combination: tuple
+    ) -> np.ndarray:
+        """
+        Take a submatrix of the NTK matrix using np.ix_.
+
+        Parameters
+        ----------
+        ntk : np.ndarray
+                The NTK matrix.
+        label_indices : dict
+                A dictionary containing the indices of the samples for each class, with
+                the class label as the key.
+        combinations : tuple
+                The combination of class labels to use for the submatrix.
 
         Returns
         -------
         np.ndarray
-            The subsampled data.
+                The submatrix of the NTK matrix.
         """
-        return jmap(lambda indices: np.take(x, indices, axis=0), sample_indices)
+        indices = [label_indices[label] for label in combination]
+        indices = np.concatenate(indices)
+
+        # Check if flattening was performed
+        if self._is_flattened:
+            ntk = unflatten_rank_4_tensor(ntk, self._ntk_shape)
+
+        ntk_sub = ntk[np.ix_(indices, indices)]
+
+        if self.flatten:
+            ntk_sub, _ = flatten_rank_4_tensor(ntk_sub)
+
+        return ntk_sub
 
     def _compute_ntk(self, params: dict, x_i: np.ndarray) -> np.ndarray:
         """
@@ -208,35 +281,35 @@ class JAXNTKClassWise(JAXNTKComputation):
         ----
         This method only accepts a single dataset for the NTK computation. This means
         both axes of the NTK matrix correspond to the same dataset.
-        For that reason, this method only takes a single dataset as input.
 
         Parameters
         ----------
         params : dict
                 The parameters of the neural network.
-        dataset_i : dict
+        dataset : dict
                 The input dataset for the NTK computation.
 
         Returns
         -------
         List[np.ndarray]
-                The NTK matrix.
+                List of NTK matrices for all possible class combinations.
+                What class combinations each NTK corresponds to can be found in the
+                `label_combinations` attribute.
         """
 
-        self._sample_indices = self._get_label_indices(dataset)
+        # Reduce the dataset to the selected class labels
+        dataset_reduced = self._reduce_data_to_labels(dataset)
 
-        x_i = self._subsample_data(dataset[self.data_keys[0]], self._sample_indices)
+        # Compute the NTK for the reduced dataset
+        ntk = self._compute_ntk(params, dataset_reduced[self.data_keys[0]])
 
-        ntks = jmap(lambda x_i: self._compute_ntk(params, x_i), x_i)
+        # Get the label indices referencing to the reduced dataset
+        label_indices = self._get_label_indices(dataset_reduced)
 
-        ntks = list(ntks.values())
-
-        # Get the maximum key in the sample indices i
-        max_key = max(self._sample_indices.keys())
-
-        # Fill in the missing classes with empty NTKs
-        for i in range(max_key):
-            if i not in self._sample_indices.keys():
-                ntks.insert(i, np.zeros((0, 0)))
+        # Create copies of the NTK for all possible class combinations
+        ntks = []
+        for combination in self.label_combinations:
+            sub_ntk = self._take_sub_ntk(ntk, label_indices, combination)
+            ntks.append(sub_ntk)
 
         return ntks

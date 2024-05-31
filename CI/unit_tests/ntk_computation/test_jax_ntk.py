@@ -131,6 +131,7 @@ class TestJAXNTKComputation:
         ntk = np.ones((10, 10, 3, 3))
         ntk_ = jax_ntk_computation._check_shape(ntk)
 
+        assert jax_ntk_computation._is_flattened == True
         assert ntk_.shape == (30, 30)
 
     def test_compute_ntk(self):
