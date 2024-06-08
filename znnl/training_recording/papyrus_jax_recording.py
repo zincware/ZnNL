@@ -27,7 +27,6 @@ Summary
 
 from typing import List
 
-import numpy as onp
 from papyrus.measurements import BaseMeasurement
 from papyrus.recorders import BaseRecorder
 
@@ -52,6 +51,8 @@ class JaxRecorder(BaseRecorder):
             The size of the chunks in which the data will be stored.
     overwrite : bool (default=False)
             Whether to overwrite the existing data in the database.
+    update_rate : int (default=1)
+            The rate at which the recorder will update the neural state.
     neural_state_keys : List[str]
             The keys of the neural state that the recorder takes as input.
             A neural state is a dictionary of numpy arrays that represent the state of
@@ -96,6 +97,8 @@ class JaxRecorder(BaseRecorder):
                 The size of the chunks in which the data will be stored.
         overwrite : bool (default=False)
                 Whether to overwrite the existing data in the database.
+        update_rate : int (default=1)
+                The rate at which the recorder will update the neural state.
         """
         super().__init__(name, storage_path, measurements, chunk_size, overwrite)
         self.update_rate = update_rate
