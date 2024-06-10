@@ -18,7 +18,6 @@ jobs:
             pip3 install nbmake
         - name: Install package
           run: |
-            git config --global url."https://${{ secrets.PAPYRUS_ACCESS }}@github".insteadOf https://github
             pip3 install .
         - name: Notebook test
           run: |
