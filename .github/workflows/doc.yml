@@ -13,8 +13,11 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install dependencies
+        env: 
+          super_secret: ${{ secrets.PAPYRUS_ACCESS }}
         run: |
           sudo apt install pandoc
+          git config --global url."https://${{ secrets.PAPYRUS_ACCESS }}@github".insteadOf https://github
           pip install -r dev-requirements.txt
           pip install -r requirements.txt
           pip install .

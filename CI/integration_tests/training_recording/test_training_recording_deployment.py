@@ -37,8 +37,10 @@ import numpy as onp
 import optax
 from neural_tangents import stax
 from numpy import testing
+from papyrus.measurements import NTK, Accuracy, Loss
 
-import znnl as rnd
+import znnl as nl
+from znnl.analysis import JAXNTKComputation
 
 
 class TestRecorderDeployment:
@@ -56,7 +58,7 @@ class TestRecorderDeployment:
         Prepare the class for running.
         """
         # Data Generator
-        cls.data_generator = rnd.data.MNISTGenerator(ds_size=10)
+        cls.data_generator = nl.data.MNISTGenerator(ds_size=10)
 
         # Make a network
         network = stax.serial(
@@ -64,28 +66,50 @@ class TestRecorderDeployment:
         )
 
         # Set the class assigned recorders
-        cls.train_recorder = rnd.training_recording.JaxRecorder(
-            loss=True, accuracy=True, update_rate=1, chunk_size=11, name="trainer"
+        cls.train_recorder = nl.training_recording.JaxRecorder(
+            storage_path=".",
+            name="trainer",
+            update_rate=1,
+            chunk_size=11,
+            measurements=[
+                Loss(apply_fn=nl.loss_functions.MeanPowerLoss(order=2)),
+                Accuracy(apply_fn=nl.accuracy_functions.LabelAccuracy()),
+            ],
         )
-        cls.test_recorder = rnd.training_recording.JaxRecorder(
-            loss=True, accuracy=True, ntk=True, update_rate=5
+        cls.test_recorder = nl.training_recording.JaxRecorder(
+            storage_path=".",
+            name="tester",
+            update_rate=5,
+            measurements=[
+                Loss(apply_fn=nl.loss_functions.MeanPowerLoss(order=2)),
+                Accuracy(apply_fn=nl.accuracy_functions.LabelAccuracy()),
+                NTK(),
+            ],
         )
 
         # Define the model
-        cls.production_model = rnd.models.NTModel(
+        cls.production_model = nl.models.NTModel(
             nt_module=network,
             optimizer=optax.adam(learning_rate=0.01),
             input_shape=(1, 28, 28, 1),
         )
 
-        cls.train_recorder.instantiate_recorder(data_set=cls.data_generator.train_ds)
-        cls.test_recorder.instantiate_recorder(data_set=cls.data_generator.test_ds)
+        cls.train_recorder.instantiate_recorder(
+            data_set=cls.data_generator.train_ds,
+            model=cls.production_model,
+            ntk_computation=JAXNTKComputation(cls.production_model.ntk_apply_fn),
+        )
+        cls.test_recorder.instantiate_recorder(
+            data_set=cls.data_generator.test_ds,
+            model=cls.production_model,
+            ntk_computation=JAXNTKComputation(cls.production_model.ntk_apply_fn),
+        )
 
         # Define training strategy
-        cls.training_strategy = rnd.training_strategies.SimpleTraining(
+        cls.training_strategy = nl.training_strategies.SimpleTraining(
             model=cls.production_model,
-            loss_fn=rnd.loss_functions.CrossEntropyLoss(),
-            accuracy_fn=rnd.accuracy_functions.LabelAccuracy(),
+            loss_fn=nl.loss_functions.CrossEntropyLoss(),
+            accuracy_fn=nl.accuracy_functions.LabelAccuracy(),
             recorders=[cls.train_recorder, cls.test_recorder],
         )
         # Train the model with the recorders
@@ -109,33 +133,44 @@ class TestRecorderDeployment:
         """
         Test that the recorder internally holds the correct values.
         """
-        assert len(self.train_recorder._loss_array) == 10
-        assert onp.sum(self.train_recorder._loss_array) > 0
-        assert len(self.train_recorder._accuracy_array) == 10
-        assert onp.sum(self.train_recorder._accuracy_array) > 0
+        assert len(self.train_recorder._results["loss"]) == 10
+        assert onp.sum(self.train_recorder._results["loss"]) > 0
+        assert len(self.train_recorder._results["accuracy"]) == 10
+        assert onp.sum(self.train_recorder._results["accuracy"]) > 0
 
-        assert len(self.test_recorder._loss_array) == 2
-        assert len(self.test_recorder._accuracy_array) == 2
-        assert onp.sum(self.test_recorder._loss_array) > 0
-        assert onp.sum(self.test_recorder._accuracy_array) > 0
+        assert len(self.test_recorder._results["loss"]) == 2
+        assert len(self.test_recorder._results["accuracy"]) == 2
+        assert onp.sum(self.test_recorder._results["loss"]) > 0
+        assert onp.sum(self.test_recorder._results["accuracy"]) > 0
 
     def test_data_dump(self):
         """
         Test that the data dumping works correctly.
         """
         with tempfile.TemporaryDirectory() as directory:
+
             new_model = copy.deepcopy(self.production_model)
-            train_recorder = copy.deepcopy(self.train_recorder)
-            train_recorder.storage_path = directory
+
+            train_recorder = nl.training_recording.JaxRecorder(
+                storage_path=directory,
+                name="trainer",
+                update_rate=1,
+                chunk_size=11,
+                measurements=[
+                    Loss(apply_fn=nl.loss_functions.MeanPowerLoss(order=2)),
+                    Accuracy(apply_fn=nl.accuracy_functions.LabelAccuracy()),
+                ],
+            )
             train_recorder.instantiate_recorder(
-                train_recorder._data_set, overwrite=True
+                data_set=self.data_generator.train_ds,
+                model=new_model,
             )
 
             # Define the training strategy
-            training_strategy = rnd.training_strategies.SimpleTraining(
+            training_strategy = nl.training_strategies.SimpleTraining(
                 model=new_model,
-                loss_fn=rnd.loss_functions.CrossEntropyLoss(),
-                accuracy_fn=rnd.accuracy_functions.LabelAccuracy(),
+                loss_fn=nl.loss_functions.CrossEntropyLoss(),
+                accuracy_fn=nl.accuracy_functions.LabelAccuracy(),
                 recorders=[train_recorder],
             )
 
@@ -147,16 +182,19 @@ class TestRecorderDeployment:
                 epochs=20,
             )
 
+            # Print all files in the directory
+            print(f"Files in directory: {os.listdir(directory)}")
+
             # Check if there is data in database
             with hf.File(f"{directory}/trainer.h5", "r") as db:
                 db_loss = onp.array(db["loss"])
                 db_accuracy = onp.array(db["accuracy"])
 
-                class_loss = onp.array(train_recorder._loss_array)
-                class_accuracy = onp.array(train_recorder._accuracy_array)
+                class_loss = onp.array(train_recorder._results["loss"])
+                class_accuracy = onp.array(train_recorder._results["accuracy"])
 
-                assert db_loss.shape == (11,)
-                assert class_loss.shape == (9,)
+                assert db_loss.shape == (11, 1)
+                assert class_loss.shape == (9, 1)
                 testing.assert_raises(
                     AssertionError,
                     testing.assert_array_equal,
@@ -164,8 +202,8 @@ class TestRecorderDeployment:
                     class_loss.sum(),
                 )
 
-                assert db_accuracy.shape == (11,)
-                assert class_accuracy.shape == (9,)
+                assert db_accuracy.shape == (11, 1)
+                assert class_accuracy.shape == (9, 1)
                 testing.assert_raises(
                     AssertionError,
                     testing.assert_array_equal,
@@ -177,19 +215,19 @@ class TestRecorderDeployment:
         """
         Test that the reports are exported correctly.
         """
-        train_report = self.train_recorder.gather_recording()
-        test_report = self.test_recorder.gather_recording()
+        train_report = self.train_recorder.gather()
+        test_report = self.test_recorder.gather()
 
-        assert len(train_report.loss) == 10
-        assert onp.sum(train_report.loss) > 0
-        assert len(train_report.accuracy) == 10
-        assert onp.sum(train_report.accuracy) > 0
+        assert len(train_report["loss"]) == 10
+        assert onp.sum(train_report["loss"]) > 0
+        assert len(train_report["accuracy"]) == 10
+        assert onp.sum(train_report["accuracy"]) > 0
 
         # Arrays should be resized now.
-        assert len(test_report.loss) == 2
-        assert onp.sum(test_report.loss) > 0
-        assert len(test_report.accuracy) == 2
-        assert onp.sum(test_report.accuracy) > 0
+        assert len(test_report["loss"]) == 2
+        assert onp.sum(test_report["loss"]) > 0
+        assert len(test_report["accuracy"]) == 2
+        assert onp.sum(test_report["accuracy"]) > 0
 
     def test_export_function_db(self):
         """
@@ -197,16 +235,27 @@ class TestRecorderDeployment:
         """
         with tempfile.TemporaryDirectory() as directory:
             new_model = copy.deepcopy(self.production_model)
-            train_recorder = copy.deepcopy(self.train_recorder)
-            train_recorder.storage_path = directory
-            train_recorder.instantiate_recorder(
-                train_recorder._data_set, overwrite=True
+
+            train_recorder = nl.training_recording.JaxRecorder(
+                storage_path=directory,
+                name="trainer",
+                update_rate=1,
+                chunk_size=11,
+                measurements=[
+                    Loss(apply_fn=nl.loss_functions.MeanPowerLoss(order=2)),
+                    Accuracy(apply_fn=nl.accuracy_functions.LabelAccuracy()),
+                ],
             )
-            # Define the training strategy
-            training_strategy = rnd.training_strategies.SimpleTraining(
+            train_recorder.instantiate_recorder(
+                data_set=self.data_generator.train_ds,
                 model=new_model,
-                loss_fn=rnd.loss_functions.CrossEntropyLoss(),
-                accuracy_fn=rnd.accuracy_functions.LabelAccuracy(),
+            )
+
+            # Define the training strategy
+            training_strategy = nl.training_strategies.SimpleTraining(
+                model=new_model,
+                loss_fn=nl.loss_functions.CrossEntropyLoss(),
+                accuracy_fn=nl.accuracy_functions.LabelAccuracy(),
                 recorders=[train_recorder],
             )
 
@@ -218,19 +267,8 @@ class TestRecorderDeployment:
                 epochs=20,
             )
 
-            report = train_recorder.gather_recording()
-            assert report.loss.shape[0] == 20
-            testing.assert_array_equal(report.loss[11:], train_recorder._loss_array)
-
-    def test_export_function_no_db_custom_selection(self):
-        """
-        Test that the reports are exported correctly.
-        """
-        # Note, NTK is not recorded, it should be caught and removed.
-        train_report = self.train_recorder.gather_recording(
-            selected_properties=["loss", "ntk"]
-        )
-
-        assert len(train_report.loss) == 10
-        assert onp.sum(train_report.loss) > 0
-        assert "ntk" not in list(train_report.__dict__)
+            report = train_recorder.gather()
+            assert report["loss"].shape[0] == 20
+            testing.assert_array_equal(
+                report["loss"][11:], train_recorder._results["loss"]
+            )

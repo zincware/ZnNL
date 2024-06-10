@@ -27,10 +27,18 @@ Summary
 
 from znnl.analysis.eigensystem import EigenSpaceAnalysis
 from znnl.analysis.entropy import EntropyAnalysis
+from znnl.analysis.jax_ntk import JAXNTKComputation
+from znnl.analysis.jax_ntk_classwise import JAXNTKClassWise
+from znnl.analysis.jax_ntk_combinations import JAXNTKCombinations
+from znnl.analysis.jax_ntk_subsampling import JAXNTKSubsampling
 from znnl.analysis.loss_fn_derivative import LossDerivative
 
 __all__ = [
     EntropyAnalysis.__name__,
     EigenSpaceAnalysis.__name__,
     LossDerivative.__name__,
+    JAXNTKComputation.__name__,
+    JAXNTKClassWise.__name__,
+    JAXNTKSubsampling.__name__,
+    JAXNTKCombinations.__name__,
 ]

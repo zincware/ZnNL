@@ -36,6 +36,7 @@ from flax.training.train_state import TrainState
 from tqdm import trange
 
 from znnl.accuracy_functions.accuracy_function import AccuracyFunction
+from znnl.analysis.jax_ntk import JAXNTKComputation
 from znnl.models.jax_model import JaxModel
 from znnl.optimizers.trace_optimizer import TraceOptimizer
 from znnl.training_recording import JaxRecorder
@@ -108,13 +109,6 @@ class SimpleTraining:
         self.rng = PRNGKey(seed)
 
         self.review_metric = None
-
-        # Add the loss and accuracy function to the recorders and re-instantiate them
-        if self.recorders is not None:
-            for item in self.recorders:
-                item.loss_fn = loss_fn
-                item.accuracy_fn = accuracy_fn
-                item.instantiate_recorder()
 
         # Initialize the train step
         self._train_step = None
@@ -368,6 +362,11 @@ class SimpleTraining:
         """
         state = self.model.model_state
 
+        if isinstance(self.model.optimizer, TraceOptimizer):
+            ntk_computation = JAXNTKComputation(
+                self.model.ntk_apply_fn, trace_axes=(-1,), batch_size=batch_size
+            )
+
         loading_bar = trange(
             0, epochs, ncols=100, unit="batch", disable=self.disable_loading_bar
         )
@@ -378,7 +377,7 @@ class SimpleTraining:
             # Update the recorder properties
             if self.recorders is not None:
                 for item in self.recorders:
-                    item.update_recorder(epoch=i, model=self.model)
+                    item.record(epoch=i, model=self.model)
 
             loading_bar.set_description(f"Epoch: {i}")
 
@@ -386,7 +385,7 @@ class SimpleTraining:
                 state = self.model.optimizer.apply_optimizer(
                     model_state=state,
                     data_set=train_ds["inputs"],
-                    ntk_fn=self.model.compute_ntk,
+                    ntk_fn=ntk_computation.compute_ntk,
                     epoch=i,
                 )
 

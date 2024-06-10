@@ -26,10 +26,10 @@ Summary
 """
 
 import optax
-import pytest
 from jax import random
 from transformers import FlaxResNetForImageClassification, ResNetConfig
 
+from znnl.analysis import JAXNTKComputation
 from znnl.models import HuggingFaceFlaxModel
 
 
@@ -68,30 +68,27 @@ class TestFlaxHFModule:
         cls.model = HuggingFaceFlaxModel(
             hf_model,
             optax.adam(learning_rate=0.001),
-            batch_size=3,
         )
 
         key = random.PRNGKey(0)
         cls.x = random.normal(key, (3, 2, 8, 8))
 
+        cls.ntk_computation = JAXNTKComputation(
+            cls.model.ntk_apply_fn, trace_axes=(-1,)
+        )
+
     def test_ntk_shape(self):
         """
         Test whether the NTK shape is correct.
         """
-        ntk = self.model.compute_ntk(self.x)["empirical"]
+        ntk = self.ntk_computation.compute_ntk(
+            self.model.model_state.params, {"inputs": self.x, "targets": None}
+        )
         assert ntk.shape == (3, 3)
-
-    def test_infinite_failure(self):
-        """
-        Test that the call to the infinite NTK fails.
-        """
-        with pytest.raises(NotImplementedError):
-            self.model.compute_ntk(self.x, infinite=True)
 
 
 if __name__ == "__main__":
     test_class = TestFlaxHFModule()
     test_class.setup_class()
 
-    # test_class.test_infinite_failure()
     test_class.test_ntk_shape()

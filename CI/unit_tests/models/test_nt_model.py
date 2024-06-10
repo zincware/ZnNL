@@ -29,10 +29,12 @@ import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
+import jax.numpy as np
 import optax
 from jax import random
 from neural_tangents import stax
 
+from znnl.analysis import JAXNTKComputation
 from znnl.models import NTModel
 
 
@@ -61,7 +63,6 @@ class TestNTModule:
             nt_module=test_model,
             optimizer=optax.adam(learning_rate=0.001),
             input_shape=(1, 8),
-            batch_size=1,
             seed=17,
         )
 
@@ -69,13 +70,17 @@ class TestNTModule:
             nt_module=test_model,
             optimizer=optax.adam(learning_rate=0.001),
             input_shape=(1, 8),
-            batch_size=1,
             seed=17,
-            trace_axes=(),
         )
 
-        ntk_1 = nt_model_1.compute_ntk(x1)["empirical"]
-        ntk_2 = nt_model_2.compute_ntk(x1)["empirical"]
+        ntk_computation_1 = JAXNTKComputation(nt_model_1.ntk_apply_fn, trace_axes=(-1,))
+        ntk_1 = ntk_computation_1.compute_ntk(
+            {"params": nt_model_1.model_state.params}, {"inputs": x1, "targets": None}
+        )
+        ntk_computation_2 = JAXNTKComputation(nt_model_2.ntk_apply_fn, trace_axes=())
+        ntk_2 = ntk_computation_2.compute_ntk(
+            {"params": nt_model_2.model_state.params}, {"inputs": x1, "targets": None}
+        )
 
-        assert ntk_1.shape == (3, 3)
-        assert ntk_2.shape == (3, 3, 5, 5)
+        assert np.shape(ntk_1) == (1, 3, 3)
+        assert np.shape(ntk_2) == (1, 15, 15)

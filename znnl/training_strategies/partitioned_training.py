@@ -32,6 +32,7 @@ import jax.numpy as np
 from tqdm import trange
 
 from znnl.accuracy_functions.accuracy_function import AccuracyFunction
+from znnl.analysis.jax_ntk import JAXNTKComputation
 from znnl.models.jax_model import JaxModel
 from znnl.optimizers.trace_optimizer import TraceOptimizer
 from znnl.training_recording import JaxRecorder
@@ -262,6 +263,11 @@ class PartitionedTraining(SimpleTraining):
         """
         state = self.model.model_state
 
+        if isinstance(self.model.optimizer, TraceOptimizer):
+            ntk_computation = JAXNTKComputation(
+                self.model.ntk_apply_fn, trace_axes=(-1,), batch_size=batch_size
+            )
+
         loading_bar = trange(
             1,
             np.sum(epochs) + 1,
@@ -282,7 +288,7 @@ class PartitionedTraining(SimpleTraining):
             # Update the recorder properties
             if self.recorders is not None:
                 for item in self.recorders:
-                    item.update_recorder(epoch=i, model=self.model)
+                    item.record(epoch=i, model=self.model)
 
             loading_bar.set_description(f"Phase: {training_phase+1}, Epoch: {i}")
 
@@ -297,7 +303,7 @@ class PartitionedTraining(SimpleTraining):
                 state = self.model.optimizer.apply_optimizer(
                     model_state=state,
                     data_set=train_data["inputs"],
-                    ntk_fn=self.model.compute_ntk,
+                    ntk_fn=ntk_computation.compute_ntk,
                     epoch=i,
                 )
 

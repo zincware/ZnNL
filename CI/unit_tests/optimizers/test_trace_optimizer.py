@@ -32,6 +32,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 import jax.numpy as np
 from neural_tangents import stax
 
+from znnl.analysis import JAXNTKComputation
 from znnl.data import MNISTGenerator
 from znnl.models import NTModel
 from znnl.optimizers import TraceOptimizer
@@ -81,18 +82,23 @@ class TestTraceOptimizer:
             optimizer=optimizer,
             input_shape=(1, 28, 28, 1),
             nt_module=network,
-            batch_size=5,
+        )
+        ntk_computation = JAXNTKComputation(
+            model.ntk_apply_fn, trace_axes=(-1,), batch_size=5
         )
 
         # Get theoretical values
-        ntk = model.compute_ntk(data.train_ds["inputs"])["empirical"]
+        ntk = ntk_computation.compute_ntk(
+            {"params": model.model_state.params}, data.train_ds
+        )
+        ntk = np.array(ntk).mean(axis=0)
         expected_lr = scale_factor / np.trace(ntk)
 
         # Compute actual values
         actual_lr = optimizer.apply_optimizer(
             model_state=model.model_state,
-            data_set=data.train_ds["inputs"],
-            ntk_fn=model.compute_ntk,
+            data_set=data.train_ds,
+            ntk_fn=ntk_computation.compute_ntk,
             epoch=1,
         ).opt_state
 

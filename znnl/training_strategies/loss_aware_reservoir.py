@@ -35,6 +35,7 @@ from flax.training.train_state import TrainState
 from tqdm import trange
 
 from znnl.accuracy_functions.accuracy_function import AccuracyFunction
+from znnl.analysis.jax_ntk import JAXNTKComputation
 from znnl.distance_metrics import DistanceMetric
 from znnl.models.jax_model import JaxModel
 from znnl.optimizers.trace_optimizer import TraceOptimizer
@@ -422,6 +423,11 @@ class LossAwareReservoir(SimpleTraining):
         state = self.model.model_state
         self.train_data_size = len(train_ds["targets"])
 
+        if isinstance(self.model.optimizer, TraceOptimizer):
+            ntk_computation = JAXNTKComputation(
+                self.model.ntk_apply_fn, trace_axes=(-1,), batch_size=batch_size
+            )
+
         loading_bar = trange(
             1, epochs + 1, ncols=100, unit="batch", disable=self.disable_loading_bar
         )
@@ -432,7 +438,7 @@ class LossAwareReservoir(SimpleTraining):
             # Update the recorder properties
             if self.recorders is not None:
                 for item in self.recorders:
-                    item.update_recorder(epoch=i, model=self.model)
+                    item.record(epoch=i, model=self.model)
 
             loading_bar.set_description(f"Epoch: {i}")
 
@@ -449,7 +455,7 @@ class LossAwareReservoir(SimpleTraining):
                 state = self.model.optimizer.apply_optimizer(
                     model_state=state,
                     data_set=train_ds["inputs"][full_dataset_idx],
-                    ntk_fn=self.model.compute_ntk,
+                    ntk_fn=ntk_computation.compute_ntk,
                     epoch=i,
                 )
 

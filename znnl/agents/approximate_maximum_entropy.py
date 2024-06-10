@@ -30,6 +30,7 @@ import jax.numpy as np
 
 from znnl.agents.agent import Agent
 from znnl.analysis.entropy import EntropyAnalysis
+from znnl.analysis.jax_ntk import JAXNTKComputation
 from znnl.data import DataGenerator
 from znnl.models import JaxModel
 from znnl.utils.prng import PRNGKey
@@ -66,6 +67,9 @@ class ApproximateMaximumEntropy(Agent):
 
         self.target_set: np.ndarray
         self.target_indices: list
+        self.ntk_computation = JAXNTKComputation(
+            target_network.ntk_apply_fn, trace_axes=(-1,)
+        )
 
     def _compute_entropy(self, dataset: np.ndarray):
         """
@@ -81,7 +85,7 @@ class ApproximateMaximumEntropy(Agent):
         entropy : float
                 Entropy pf the dataset.
         """
-        ntk = self._compute_ntk(dataset)
+        ntk = self._compute_ntk({"inputs": dataset, "targets": None})
 
         entropy_calculator = EntropyAnalysis(matrix=ntk)
 
@@ -96,7 +100,9 @@ class ApproximateMaximumEntropy(Agent):
         empirical_ntk : np.ndarray
                 The empirical NTK matrix of the target network.
         """
-        return self.target_network.compute_ntk(dataset)["empirical"]
+        return self._compute_ntk.compute_ntk(
+            {"params": self.target_network.model_state.params}, dataset
+        )
 
     def build_dataset(
         self, target_size: int = None, visualize: bool = False, report: bool = True
