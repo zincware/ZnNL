@@ -262,7 +262,6 @@ class JaxRecorder(BaseRecorder):
 
         # Perform recording if do_record is True
         if do_record:
-            print(f"Recording at epoch {epoch}")
             # Compute the neural state
             self._compute_neural_state(model)
             # Add all other kwargs to the neural state dictionary
@@ -275,3 +274,4 @@ class JaxRecorder(BaseRecorder):
             self._measure(**self.neural_state)
             # Store the measurements
             self.store(ignore_chunk_size=False)
+            
